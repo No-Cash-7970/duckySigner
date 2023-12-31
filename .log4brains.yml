@@ -1,0 +1,5 @@
+project:
+  name: duckySigner
+  tz: America/Los_Angeles
+  adrFolder: ./docs/decisions
+  packages: []
