@@ -1,8 +1,8 @@
-# Algorand Wallet for Desktop
+# Build Algorand Desktop Wallet
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2023-12-31
+- Date: 2024-01-01
 
 ## Context and Problem Statement
 
@@ -25,14 +25,16 @@ There is no easy-to-use desktop wallet, that is not a website or a browser exten
 
 Chose to build a desktop wallet from scratch, because if built correctly, the desktop wallet from scratch would be the most secure and possibly longest-lasting solution while giving the developer a chance to build something that is not a website. However, some of KMD's designs can be used as a guide for building a desktop wallet from scratch.
 
+**Certainty:** Medium. Building a desktop wallet should be feasible with a reasonable amount of time and effort. However, despite there being some architecture design ideas to achieve the goals for the desktop app, it is unclear if those design ideas will pan out.
+
 ## Pros and Cons of the Options
 
 ### Build Desktop Wallet from Scratch
 
-Build a wallet for desktop that is not a website or a browser extension. The user would download and install the desktop wallet software. The user's keys would stored only on their computer.
+Build a wallet for desktop that is not a website or a browser extension. The user would download and install the desktop wallet app. The user's keys would stored only on their computer.
 
 - Pro: If built correctly, a desktop wallet that does not depend on the user's browser would be the most secure wallet option for desktop.
-- Pro: Desktop wallet software that is downloaded and installed allows the user more control over the wallet software and more privacy.
+- Pro: Desktop wallet app that is downloaded and installed allows the user more control over the wallet app and more privacy.
 - Pro: This would be a challenge that provides the developer an opportunity to build something potentially useful that is not a website or trivial tutorial.
 - Con: Risky. If the wallet is built insecurely, there could be a massive mess like the MyAlgo breach.
 - Con: Among the options, this requires the most time, effort, and research to do well. The ways for users to utilize Algorand's more esoteric and advanced features would have to built from scratch using an Algorand SDK.
