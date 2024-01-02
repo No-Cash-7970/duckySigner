@@ -1,8 +1,8 @@
 # Build Using Go and TypeScript
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-01-01
+- Date: 2024-01-02
 
 ## Context and Problem Statement
 
@@ -28,7 +28,7 @@ Which programming language(s) should be used to implement the Algorand wallet fo
 
 Chose to use Go with TypeScript/JavaScript because Go is an easy-to-learn language that can be easily compiled for the multiple operating systems. With [Wails](https://wails.io/), the flexibility of JavaScript and TypeScript can be utilized to build a user interface (UI) for a backend built in Go that can better utilize computing resources in a manner that looks native to the user's operating system.
 
-**Confidence**: Medium. It is not clear if the Go with TypeScript/JavaScript combination will allow for the desired results.
+**Confidence**: Medium. It is not clear if the Go and TypeScript/JavaScript combination will allow for the desired results.
 
 ## Pros and Cons of the Options
 
@@ -38,21 +38,20 @@ Chose to use Go with TypeScript/JavaScript because Go is an easy-to-learn langua
 - Pro: Easy to get started
 - Pro: Cross-platform support by default
 - Pro: Popular language with many libraries, tools and tutorials
-- Pro: Wails is a free and open source framework that can be used to build performant and flexible desktop apps
 - Con: Will take some time to learn
 - Con: Not commonly known for being used to develop desktop apps
 
 ### TypeScript/JavaScript
 
-- Pro: Developer is familiar with JavaScript and TypeScript
-- Pro: Some cross-platform without a browser with certain tooling
-- Con: TypeScript/JavaScript framework options for building cross-platform desktop apps, like [Electron](https://www.electronjs.org/), tend to be resource hogs because they include a full browser
+- Pro: Developer is proficient in using JavaScript and TypeScript
+- Pro: Cross-platform, with a browser or Node.js
+- Con: Pure TypeScript/JavaScript framework options for building cross-platform desktop apps, like [Electron](https://www.electronjs.org/), tend to be resource hogs because they embed a full browser
 
 ### Rust
 
 - Pro: It is a performant language
 - Pro: Cross-platform by default
-- Con: Requires a lot of time to learn proficiently (at least 2 weeks)
+- Con: Requires a lot of time to learn proficiently (at least a month)
 - Con: Number of tools and libraries are limited, although the community and the tooling is growing
 - Con: Developer doesn't care to learn it
 
@@ -60,7 +59,6 @@ Chose to use Go with TypeScript/JavaScript because Go is an easy-to-learn langua
 
 - Pro: Developer is familiar with Python
 - Con: Difficult to cross-compile
-- Con: Very few free and open source options for building modern-looking desktop apps
 
 ## Links
 
