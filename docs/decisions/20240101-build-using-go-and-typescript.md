@@ -61,3 +61,7 @@ Chose to use Go with TypeScript/JavaScript because Go is an easy-to-learn langua
 - Pro: Developer is familiar with Python
 - Con: Difficult to cross-compile
 - Con: Very few free and open source options for building modern-looking desktop apps
+
+## Links
+
+- Relates to [Use Wails UI Framework](20240101-use-wails-ui-framework.md)
