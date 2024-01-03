@@ -1,8 +1,8 @@
 # Use Wails UI Framework
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-01-01
+- Date: 2024-01-02
 
 ## Context and Problem Statement
 
@@ -11,11 +11,11 @@ What framework(s) should be used to build the desktop wallet app's graphical use
 ## Decision Drivers
 
 - **Ease of use:** Prefer a framework that has a short learning curve and is flexible enough to accommodate fluctuating requirements
-- **Appearance:** Must be a framework that easily allow to make a modern and good-looking UI
-- **Feature set:** Prefer a framework with a wide array of UI element to choose from
+- **Appearance:** Must be a framework that can be used to easily make a modern and good-looking UI
+- **Feature set:** Prefer a framework with a wide array of UI elements to choose from
 - **Documentation and help:** Prefer a framework with clear documentation and an active community that can help with questions
-- **Programming Language(s):** Must be a framework that can be written in one or more the chosen languages (Refer to: [Build Using Go and TypeScript](20240101-build-using-go-and-typescript.md)). Prefer a framework in a single language, but a framework that is divided into a backend language and a UI language is acceptable as long it allows the developer (No-Cash-7970) to use her past development experience.
-- **Cross-platform:** Must be able to be compiled on Linux, Mac and Windows
+- **Programming Language(s):** Must be a framework that can be written in one or more of the chosen languages (Refer to: [Build Using Go and TypeScript](20240101-build-using-go-and-typescript.md)). Prefer a framework in a single language, but a framework that is divided into a backend language and a frontend UI language is acceptable as long it allows the developer (No-Cash-7970) to use her past development experience.
+- **Cross-platform:** Must compile for Linux, Mac and Windows
 - **Free and open source:** Must be a framework where the code can be examined and the license allows for commercial use
 
 ## Considered Options
@@ -41,7 +41,7 @@ Wails is a desktop app framework for building with Go and web technologies (HTML
 Website: <https://wails.io/>
 
 - Pro: The developer can utilize her knowledge in frontend web development to build a good-looking modern UI
-- Pro: Utilizes Go, which offers great cross-platform support
+- Pro: Utilizes Go, which a language with a lower learning curve that offers great cross-platform support
 - Pro: There is an active Discord server with helpful people who can answer questions
 - Pro: Free and open source under MIT license
 - Con: The documentation is messy and many things are not explained clearly.
@@ -94,11 +94,11 @@ Website: <https://tauri.app/>
 
 - Pro: The developer can utilize her knowledge in frontend web development to build a good-looking modern UI
 - Pro: Has great cross-platform support
-- Pro: Designed to be cross-platform
+- Pro: Many features and UI elements
 - Pro: Free and open source under MIT license
 - Pro: Emphasis on security, which is important for a desktop wallet
 - Pro: Plenty of documentation that is clear and well-organized
-- Con: Uses Rust as the backend. Rust has a steep learning curve that would perhaps require months to overcome.
+- Con: Uses Rust as the backend. Rust has a steep learning curve that may require months to overcome.
 
 ## Links
 
