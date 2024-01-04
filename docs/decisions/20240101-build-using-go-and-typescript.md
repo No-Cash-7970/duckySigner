@@ -38,6 +38,7 @@ Chose to use Go with TypeScript/JavaScript because Go is an easy-to-learn langua
 - Pro: Easy to get started
 - Pro: Cross-platform support by default
 - Pro: Popular language with many libraries, tools and tutorials
+- Pro: May be able to borrow code from Algorand's Key Management Daemon (KMD)
 - Con: Will take some time to learn
 - Con: Not commonly known for being used to develop desktop apps
 
