@@ -1,8 +1,8 @@
 # Integrate KMD Wallet Management Code
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-02-19
+- Date: 2024-02-20
 
 ## Context and Problem Statement
 
