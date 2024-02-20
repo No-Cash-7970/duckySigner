@@ -1,8 +1,8 @@
 # Open Source Under GNU AGPL v3.0
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-02-19
+- Date: 2024-02-20
 
 ## Context and Problem Statement
 
