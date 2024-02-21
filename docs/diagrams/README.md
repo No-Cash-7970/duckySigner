@@ -16,13 +16,6 @@ To edit the diagrams, edit the `workspace.dsl` file. Although the `workspace.dsl
 
 Changes to the diagrams through the `workspace.dsl` file are automatically published. [Structurizr Mini](https://github.com/bensmithett/structurizr-mini) is used to create a website for browsing the latest version of the diagrams.
 
-Upgrading Structurizr Mini:
-
-1. Switch to `gh-pages` branch
-2. Delete all files within `/diagrams` folder except for `workspace.json` and `nav.json`
-3. Download and unzip the .tar.gz file somewhere for the [latest release](https://github.com/bensmithett/structurizr-mini/releases/latest)
-4. Move all contents within the unzipped folder except `workspace.json` and `nav.json` into the `/diagrams` folder
-
 ## More information
 
 - [Structurizr documentation](https://docs.structurizr.com/)
