@@ -31,7 +31,6 @@ jobs:
           args: 'export -workspace docs/diagrams/graphviz.dsl -format json'
       - name: Move workspace.json
         run: |
-          mkdir .structurizr
           mv docs/diagrams/workspace.json .structurizr/workspace.json
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
