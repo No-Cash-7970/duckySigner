@@ -1,0 +1,625 @@
+{
+  "id" : 0,
+  "name" : "Name",
+  "description" : "Description",
+  "properties" : {
+    "structurizr.dsl" : "d29ya3NwYWNlIHsKCiAgICBtb2RlbCB7CiAgICAgICAgdXNlciA9IHBlcnNvbiAiQWxnb3JhbmQgVXNlciIgIkEgdXNlciBvZiBteSBzb2Z0d2FyZSBzeXN0ZW0uIgogICAgICAgIHdhbGxldCA9IHNvZnR3YXJlU3lzdGVtICJkdWNreVNpZ25lciIgIkFsZ29yYW5kIHdhbGxldCBhcHAiIHsKICAgICAgICAgICAgd2FsbGV0VUkgPSBjb250YWluZXIgIlVzZXIgSW50ZXJmYWNlIiAiIgogICAgICAgICAgICB3YWxsZXRTZXJ2ZXIgPSBjb250YWluZXIgIldhbGxldCBDb25uZWN0aW9uIFNlcnZlciIgIiIKICAgICAgICAgICAga2V5U3RvcmUgPSBjb250YWluZXIgIktleSBTdG9yZSIgIkVuY3J5cHRlZCBzdG9yYWdlIG9mIHRoZSBwcml2YXRlIGtleXMgZm9yIHRoZSB1c2VyJ3MgYWNjb3VudHMiIHsKICAgICAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UKICAgICAgICAgICAgfQogICAgICAgICAgICBncmFudFN0b3JlID0gY29udGFpbmVyICJEQXBwIEdyYW50cyBTdG9yZSIgIlN0b3JhZ2UgZm9yIGNyZWRlbnRpYWxzIGFuZCBwZXJtaXNzaW9ucyBncmFudGVkIHRvIERBcHBzIiB7CiAgICAgICAgICAgICAgICB0YWdzIERhdGFiYXNlCiAgICAgICAgICAgIH0KICAgICAgICAgICAgc2V0dGluZ3NTdG9yZSA9IGNvbnRhaW5lciAiU2V0dGluZ3MgU3RvcmUiICJTdG9yYWdlIGZvciB0aGUgdXNlcidzIHdhbGxldCBzZXR0aW5ncy4gTWF5YmUgYSBmaWxlIG9yIGxvY2FsU3RvcmFnZS4iIHsKICAgICAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICBkYXBwID0gc29mdHdhcmVTeXN0ZW0gIkRBcHAiICJBcHAgdXNpbmcgQWxnb3JhbmQiIHsKICAgICAgICAgICAgdGFncyBEQXBwIEV4dGVybmFsCiAgICAgICAgfQogICAgICAgIGFsZ29yYW5kID0gc29mdHdhcmVTeXN0ZW0gIkFsZ29yYW5kIiAiQmxvY2tjaGFpbiBuZXR3b3JrIiB7CiAgICAgICAgICAgIHRhZ3MgQWxnb3JhbmQgRXh0ZXJuYWwKICAgICAgICB9CiAgICAgICAgbGVkZ2VyRGV2aWNlID0gc29mdHdhcmVTeXN0ZW0gIkxlZGdlciBEZXZpY2UiICJMZWRnZXIgaGFyZHdhcmUgd2FsbGV0IiB7CiAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UgRXh0ZXJuYWwKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgIyBTeXN0ZW0gbGFuZHNjYXBlIHJlbGF0aW9uc2hpcHMKICAgICAgICB1c2VyIC0+IHdhbGxldCAiVXNlcyIKICAgICAgICB1c2VyIC0+IGRhcHAgIkludGVyYWN0cyB3aXRoIgogICAgICAgIGRhcHAgLT4gd2FsbGV0ICJDb21tdW5pY2F0ZXMgd2l0aCIgIkhUVFAvMiIKICAgICAgICBkYXBwIC0+IGFsZ29yYW5kICJJbnRlcmFjdHMgd2l0aCIKICAgICAgICB1c2VyIC0+IGxlZGdlckRldmljZSAiU2lnbnMgdXNpbmciCiAgICAgICAgbGVkZ2VyRGV2aWNlIC0+IHVzZXIgIlJlcXVlc3RzIGFwcHJvdmFsIHRvIHNpZ24gZnJvbSIKICAgICAgICAjIHdhbGxldCAtPiBhbGdvcmFuZCAiSW50ZXJhY3RzIHdpdGgiCiAgICAgICAgCiAgICAgICAgIyBXYWxsZXQgcmVsYXRpb25zaGlwcwogICAgICAgIHVzZXIgLT4gd2FsbGV0VUkgIkludGVyZmFjZXMgd2l0aCIKICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJSZXF1ZXN0cyBpbnB1dCBmcm9tIgogICAgICAgIGRhcHAgLT4gd2FsbGV0U2VydmVyICJNYWtlcyByZXF1ZXN0cyB0byIgIkhUVFAvMiIKICAgICAgICB3YWxsZXRVSSAtPiB3YWxsZXRTZXJ2ZXIgIk5vdGlmaWVzIG9mIHVzZXIgcmVzcG9uc2UiICJFdmVudCIKICAgICAgICB3YWxsZXRTZXJ2ZXIgLT4gd2FsbGV0VUkgIk5vdGlmaWVzIG9mIERBcHAgcmVxdWVzdCIgIkV2ZW50IgogICAgICAgIHdhbGxldFVJIC0+IGtleVN0b3JlICJUZW1wb3JhcmlseSByZXRyaWV2ZXMga2V5IGZyb20iICJXaXRoIHBhc3N3b3JkIGZyb20gdXNlciIKICAgICAgICB3YWxsZXRVSSAtPiBzZXR0aW5nc1N0b3JlICJSZXRyaWV2ZXMgdXNlciBwcmVmZXJlbmNlcyBmcm9tIiAiIgogICAgICAgIHdhbGxldFVJIC0+IGdyYW50U3RvcmUgIlNhdmVzIGNyZWRlbnRpYWxzICYgcGVybXMgZ2l2ZW4gdG8gREFwcHMiICIiCiAgICAgICAgd2FsbGV0VUkgLT4gbGVkZ2VyRGV2aWNlICJTZW5kcyBzaWduaW5nIHJlcXVlc3QgdG8iCiAgICAgICAgIyB3YWxsZXRTZXJ2ZXIgLT4gZ3JhbnRTdG9yZSAiIiAiIgogICAgICAgIAogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1sYW5kc2NhcGUgIlN5c3RlbUxhbmRzY2FwZSIgIlN5c3RlbS13aWRlIHZpZXciIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICB9CiAgICAKICAgICAgICBzeXN0ZW1Db250ZXh0IHdhbGxldCAiV2FsbGV0Q29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dAogICAgICAgIH0KICAgICAgICAKICAgICAgICBjb250YWluZXIgd2FsbGV0ICJDb250YWluZXJzIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQogICAgICAgIAogICAgICAgIGR5bmFtaWMgd2FsbGV0IERBcHBDb25uZWN0ICJEQXBwIGVzdGFibGlzaCBjb25uZWN0aW9uIHdpdGggd2FsbGV0IiB7CiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICAgICAgCiAgICAgICAgICAgIHVzZXIgLT4gZGFwcCAiSW5pdGlhdGVzIGFjdGlvbiB0aGF0IHJlcXVpcmVzIGNvbm5lY3RpbmcgdG8gd2FsbGV0IHdpdGhpbiIKICAgICAgICAgICAgZGFwcCAtPiB3YWxsZXRTZXJ2ZXIgIlNlbmQgcmVxdWVzdCBmb3IgYXV0aGVudGljYXRpb24gY3JlZGVudGlhbHMgZnJvbSIKICAgICAgICAgICAgd2FsbGV0U2VydmVyIC0+IHdhbGxldFVJICJGb3J3YXJkcyByZXF1ZXN0IHRvIGFwcHJvdmUgREFwcCBjb25uZWN0aW9uIHRvIgogICAgICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJSZXF1ZXN0cyBhcHByb3ZhbCBmb3IgREFwcCBjb25uZWN0aW9uIGZyb20iCiAgICAgICAgICAgIHVzZXIgLT4gd2FsbGV0VUkgIkFwcHJvdmVzIERBcHAgY29ubmVjdGlvbiB1c2luZyIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gZ3JhbnRTdG9yZSAiU2F2ZXMgREFwcCBjb25uZWN0aW9uIGFwcHJvdmFsIGRhdGEgaW50byIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gd2FsbGV0U2VydmVyICJGb3J3YXJkcyBEQXBwIGNvbm5lY3Rpb24gYXBwcm92YWwgZGF0YSB0byIKICAgICAgICAgICAgd2FsbGV0U2VydmVyIC0+IGRhcHAgIlJlc3BvbmRzIHdpdGggdGhlIHNldCBvZiBhdXRoZW50aWNhdGlvbiBjcmVkZW50aWFscyBjcmVhdGVkIGZyb20gYXBwcm92YWwgZGF0YSB0byIKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgZHluYW1pYyB3YWxsZXQgU2lnblRyYW5zYWN0aW9uICJEQXBwIHJlcXVlc3RzIHVzZXIgdG8gc2lnbiBhIHRyYW5zYWN0aW9uIiB7CiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICAgICAgCiAgICAgICAgICAgIHVzZXIgLT4gZGFwcCAiSW5pdGlhdGVzIGFjdGlvbiB0aGF0IHJlcXVpcmVzIHNpZ25pbmcgYSB0cmFuc2FjdGlvbiB3aXRoaW4iCiAgICAgICAgICAgIGRhcHAgLT4gd2FsbGV0U2VydmVyICJTZW5kcyByZXF1ZXN0IHRvIHNpZ24gdHJhbnNhY3Rpb24gdG8iCiAgICAgICAgICAgIHdhbGxldFNlcnZlciAtPiB3YWxsZXRVSSAiRm9yd2FyZHMgcmVxdWVzdCB0byBzaWduIHRyYW5zYWN0aW9uIHRvIgogICAgICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJBc2tzIGZvciBwYXNzd29yZCB0byByZXRyaWV2ZSBrZXkgdG8gc2lnbiB0cmFuc2FjdGlvbiBmcm9tIgogICAgICAgICAgICB1c2VyIC0+IHdhbGxldFVJICJFbnRlcnMgcGFzc3dvcmQgaW50byIKICAgICAgICAgICAgd2FsbGV0VUkgLT4ga2V5U3RvcmUgIlJldHJpZXZlcyBrZXkgZm9yIHNpZ25pbmcgZnJvbSIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gd2FsbGV0U2VydmVyICJDcmVhdGVzIHNpZ25lZCB0cmFuc2FjdGlvbiBkYXRhICYgZm9yd2FyZHMgaXQgdG8iCiAgICAgICAgICAgIHdhbGxldFNlcnZlciAtPiBkYXBwICJSZXNwb25kcyB3aXRoIHNpZ25lZCB0cmFuc2FjdGlvbiBkYXRhIHRvIgogICAgICAgICAgICBkYXBwIC0+IGFsZ29yYW5kICJTZW5kcyBzaWduZWQgdHJhbnNhY3Rpb24gdG8iCiAgICAgICAgfQogICAgICAgIAogICAgICAgIHRoZW1lIGRlZmF1bHQKCiAgICAgICAgc3R5bGVzIHsKICAgICAgICAgICAgZWxlbWVudCBFeHRlcm5hbCB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNlMGQ1ZTUKICAgICAgICAgICAgICAgIGNvbG9yICMyMjIyMjIKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50IERBcHAgewogICAgICAgICAgICAgICAgc2hhcGUgRWxsaXBzZQogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgQWxnb3JhbmQgewogICAgICAgICAgICAgICAgc2hhcGUgSGV4YWdvbgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgRGF0YWJhc2UgewogICAgICAgICAgICAgICAgc2hhcGUgQ3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KICAgIAp9Cg=="
+  },
+  "configuration" : { },
+  "model" : {
+    "people" : [ {
+      "id" : "1",
+      "tags" : "Element,Person",
+      "properties" : {
+        "structurizr.dsl.identifier" : "user"
+      },
+      "name" : "Algorand User",
+      "description" : "A user of my software system.",
+      "relationships" : [ {
+        "id" : "11",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "3d5380ea-89bd-4f0e-aec9-31137cc1ae81"
+        },
+        "sourceId" : "1",
+        "destinationId" : "2",
+        "description" : "Uses"
+      }, {
+        "id" : "12",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "ad32b6a8-30c2-4917-87fb-0e0aa6bcfe66"
+        },
+        "sourceId" : "1",
+        "destinationId" : "8",
+        "description" : "Interacts with"
+      }, {
+        "id" : "15",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "ee3c7e61-d83e-457c-b1a3-3f38e551211c"
+        },
+        "sourceId" : "1",
+        "destinationId" : "10",
+        "description" : "Signs using"
+      }, {
+        "id" : "17",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "f1ef5abc-a564-4e0b-8616-51592c8e39ce"
+        },
+        "sourceId" : "1",
+        "destinationId" : "3",
+        "description" : "Interfaces with"
+      } ],
+      "location" : "Unspecified"
+    } ],
+    "softwareSystems" : [ {
+      "id" : "2",
+      "tags" : "Element,Software System",
+      "properties" : {
+        "structurizr.dsl.identifier" : "wallet"
+      },
+      "name" : "duckySigner",
+      "description" : "Algorand wallet app",
+      "relationships" : [ {
+        "id" : "19",
+        "sourceId" : "2",
+        "destinationId" : "1",
+        "description" : "Requests input from",
+        "linkedRelationshipId" : "18"
+      }, {
+        "id" : "27",
+        "sourceId" : "2",
+        "destinationId" : "10",
+        "description" : "Sends signing request to",
+        "linkedRelationshipId" : "26"
+      } ],
+      "location" : "Unspecified",
+      "containers" : [ {
+        "id" : "5",
+        "tags" : "Element,Container,Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "keystore"
+        },
+        "name" : "Key Store",
+        "description" : "Encrypted storage of the private keys for the user's accounts",
+        "documentation" : { }
+      }, {
+        "id" : "6",
+        "tags" : "Element,Container,Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "grantstore"
+        },
+        "name" : "DApp Grants Store",
+        "description" : "Storage for credentials and permissions granted to DApps",
+        "documentation" : { }
+      }, {
+        "id" : "4",
+        "tags" : "Element,Container",
+        "properties" : {
+          "structurizr.dsl.identifier" : "walletserver"
+        },
+        "name" : "Wallet Connection Server",
+        "relationships" : [ {
+          "id" : "22",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "299cb0e9-98ca-42a5-9fe1-a5bda3db0b24"
+          },
+          "sourceId" : "4",
+          "destinationId" : "3",
+          "description" : "Notifies of DApp request",
+          "technology" : "Event"
+        } ],
+        "documentation" : { }
+      }, {
+        "id" : "7",
+        "tags" : "Element,Container,Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "settingsstore"
+        },
+        "name" : "Settings Store",
+        "description" : "Storage for the user's wallet settings. Maybe a file or localStorage.",
+        "documentation" : { }
+      }, {
+        "id" : "3",
+        "tags" : "Element,Container",
+        "properties" : {
+          "structurizr.dsl.identifier" : "walletui"
+        },
+        "name" : "User Interface",
+        "relationships" : [ {
+          "id" : "18",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "4e37423f-4f29-4b6a-a449-192c6180c622"
+          },
+          "sourceId" : "3",
+          "destinationId" : "1",
+          "description" : "Requests input from"
+        }, {
+          "id" : "21",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "b25c792f-dffa-43a3-a910-cb8560bfa297"
+          },
+          "sourceId" : "3",
+          "destinationId" : "4",
+          "description" : "Notifies of user response",
+          "technology" : "Event"
+        }, {
+          "id" : "23",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "b183f213-8dcc-4ef4-befc-8c8626bbbe55"
+          },
+          "sourceId" : "3",
+          "destinationId" : "5",
+          "description" : "Temporarily retrieves key from",
+          "technology" : "With password from user"
+        }, {
+          "id" : "24",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "a4d1f8e7-cf2b-4fb1-b3d0-4df1c2070e90"
+          },
+          "sourceId" : "3",
+          "destinationId" : "7",
+          "description" : "Retrieves user preferences from"
+        }, {
+          "id" : "25",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "6a276d79-4683-4755-a2c0-75f1a768b1d7"
+          },
+          "sourceId" : "3",
+          "destinationId" : "6",
+          "description" : "Saves credentials & perms given to DApps"
+        }, {
+          "id" : "26",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "03dcd748-e7e5-411c-948c-6ca159a76806"
+          },
+          "sourceId" : "3",
+          "destinationId" : "10",
+          "description" : "Sends signing request to"
+        } ],
+        "documentation" : { }
+      } ],
+      "documentation" : { }
+    }, {
+      "id" : "8",
+      "tags" : "Element,Software System,DApp,External",
+      "properties" : {
+        "structurizr.dsl.identifier" : "dapp"
+      },
+      "name" : "DApp",
+      "description" : "App using Algorand",
+      "relationships" : [ {
+        "id" : "13",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "078f4086-5d6f-4c26-b99b-b86061faa9f1"
+        },
+        "sourceId" : "8",
+        "destinationId" : "2",
+        "description" : "Communicates with",
+        "technology" : "HTTP/2"
+      }, {
+        "id" : "14",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "0dbab6dc-d351-4a45-bb30-301244aa56f2"
+        },
+        "sourceId" : "8",
+        "destinationId" : "9",
+        "description" : "Interacts with"
+      }, {
+        "id" : "20",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "0e63bb7e-7db9-413b-adf4-6d565d168e3a"
+        },
+        "sourceId" : "8",
+        "destinationId" : "4",
+        "description" : "Makes requests to",
+        "technology" : "HTTP/2"
+      } ],
+      "location" : "Unspecified",
+      "documentation" : { }
+    }, {
+      "id" : "9",
+      "tags" : "Element,Software System,Algorand,External",
+      "properties" : {
+        "structurizr.dsl.identifier" : "algorand"
+      },
+      "name" : "Algorand",
+      "description" : "Blockchain network",
+      "location" : "Unspecified",
+      "documentation" : { }
+    }, {
+      "id" : "10",
+      "tags" : "Element,Software System,Database,External",
+      "properties" : {
+        "structurizr.dsl.identifier" : "ledgerdevice"
+      },
+      "name" : "Ledger Device",
+      "description" : "Ledger hardware wallet",
+      "relationships" : [ {
+        "id" : "16",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "e156a4bd-1abc-423b-99cb-b8664a23da34"
+        },
+        "sourceId" : "10",
+        "destinationId" : "1",
+        "description" : "Requests approval to sign from"
+      } ],
+      "location" : "Unspecified",
+      "documentation" : { }
+    } ]
+  },
+  "documentation" : { },
+  "views" : {
+    "systemLandscapeViews" : [ {
+      "key" : "SystemLandscape",
+      "order" : 1,
+      "description" : "System-wide view",
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "enterpriseBoundaryVisible" : true,
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "relationships" : [ {
+        "id" : "27"
+      }, {
+        "id" : "16"
+      }, {
+        "id" : "15"
+      }, {
+        "id" : "14"
+      }, {
+        "id" : "13"
+      }, {
+        "id" : "11"
+      }, {
+        "id" : "12"
+      }, {
+        "id" : "19"
+      } ]
+    } ],
+    "systemContextViews" : [ {
+      "key" : "WalletContext",
+      "order" : 2,
+      "softwareSystemId" : "2",
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "enterpriseBoundaryVisible" : true,
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "2",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "relationships" : [ {
+        "id" : "16"
+      }, {
+        "id" : "27"
+      }, {
+        "id" : "15"
+      }, {
+        "id" : "13"
+      }, {
+        "id" : "11"
+      }, {
+        "id" : "12"
+      }, {
+        "id" : "19"
+      } ]
+    } ],
+    "containerViews" : [ {
+      "key" : "Containers",
+      "order" : 3,
+      "softwareSystemId" : "2",
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "externalSoftwareSystemBoundariesVisible" : true,
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "7",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "10",
+        "x" : 0,
+        "y" : 0
+      } ],
+      "relationships" : [ {
+        "id" : "18"
+      }, {
+        "id" : "17"
+      }, {
+        "id" : "16"
+      }, {
+        "id" : "15"
+      }, {
+        "id" : "26"
+      }, {
+        "id" : "25"
+      }, {
+        "id" : "24"
+      }, {
+        "id" : "23"
+      }, {
+        "id" : "12"
+      }, {
+        "id" : "22"
+      }, {
+        "id" : "21"
+      }, {
+        "id" : "20"
+      } ]
+    } ],
+    "dynamicViews" : [ {
+      "key" : "DAppConnect",
+      "order" : 4,
+      "description" : "DApp establish connection with wallet",
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "elementId" : "2",
+      "externalBoundariesVisible" : true,
+      "relationships" : [ {
+        "id" : "12",
+        "description" : "Initiates action that requires connecting to wallet within",
+        "order" : "1",
+        "response" : false
+      }, {
+        "id" : "20",
+        "description" : "Send request for authentication credentials from",
+        "order" : "2",
+        "response" : false
+      }, {
+        "id" : "22",
+        "description" : "Forwards request to approve DApp connection to",
+        "order" : "3",
+        "response" : false
+      }, {
+        "id" : "18",
+        "description" : "Requests approval for DApp connection from",
+        "order" : "4",
+        "response" : false
+      }, {
+        "id" : "17",
+        "description" : "Approves DApp connection using",
+        "order" : "5",
+        "response" : false
+      }, {
+        "id" : "25",
+        "description" : "Saves DApp connection approval data into",
+        "order" : "6",
+        "response" : false
+      }, {
+        "id" : "21",
+        "description" : "Forwards DApp connection approval data to",
+        "order" : "7",
+        "response" : false
+      }, {
+        "id" : "20",
+        "description" : "Responds with the set of authentication credentials created from approval data to",
+        "order" : "8",
+        "response" : true
+      } ],
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "6",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      } ]
+    }, {
+      "key" : "SignTransaction",
+      "order" : 5,
+      "description" : "DApp requests user to sign a transaction",
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "elementId" : "2",
+      "externalBoundariesVisible" : true,
+      "relationships" : [ {
+        "id" : "12",
+        "description" : "Initiates action that requires signing a transaction within",
+        "order" : "1",
+        "response" : false
+      }, {
+        "id" : "20",
+        "description" : "Sends request to sign transaction to",
+        "order" : "2",
+        "response" : false
+      }, {
+        "id" : "22",
+        "description" : "Forwards request to sign transaction to",
+        "order" : "3",
+        "response" : false
+      }, {
+        "id" : "18",
+        "description" : "Asks for password to retrieve key to sign transaction from",
+        "order" : "4",
+        "response" : false
+      }, {
+        "id" : "17",
+        "description" : "Enters password into",
+        "order" : "5",
+        "response" : false
+      }, {
+        "id" : "23",
+        "description" : "Retrieves key for signing from",
+        "order" : "6",
+        "response" : false
+      }, {
+        "id" : "21",
+        "description" : "Creates signed transaction data & forwards it to",
+        "order" : "7",
+        "response" : false
+      }, {
+        "id" : "20",
+        "description" : "Responds with signed transaction data to",
+        "order" : "8",
+        "response" : true
+      }, {
+        "id" : "14",
+        "description" : "Sends signed transaction to",
+        "order" : "9",
+        "response" : false
+      } ],
+      "elements" : [ {
+        "id" : "1",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "3",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "4",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "5",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "8",
+        "x" : 0,
+        "y" : 0
+      }, {
+        "id" : "9",
+        "x" : 0,
+        "y" : 0
+      } ]
+    } ],
+    "configuration" : {
+      "branding" : { },
+      "styles" : {
+        "elements" : [ {
+          "tag" : "External",
+          "background" : "#e0d5e5",
+          "color" : "#222222"
+        }, {
+          "tag" : "DApp",
+          "shape" : "Ellipse"
+        }, {
+          "tag" : "Algorand",
+          "shape" : "Hexagon"
+        }, {
+          "tag" : "Database",
+          "shape" : "Cylinder"
+        } ]
+      },
+      "themes" : [ "https://static.structurizr.com/themes/default/theme.json" ],
+      "terminology" : { }
+    }
+  }
+}
