@@ -15,11 +15,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20
-      - name: Copy nav.json
+      - name: Set up Structurizr Mini
         run: |
           mkdir .structurizr
-          cp docs/diagrams/nav.json .structurizr/nav.json
-      - name: Setup Graphviz
+          wget https://github.com/bensmithett/structurizr-mini/releases/download/v1.1.2/structurizr_mini_v1.1.2.tar.gz
+          tar -xvzf structurizr_mini_v1.1.2.tar.gz -C .structurizr
+          cp -f docs/diagrams/nav.json .structurizr/nav.json
+      - name: Set up Graphviz
         uses: ts-graphviz/setup-graphviz@v2
       - name: Export Structurizr workspace to JSON
         uses: docker://structurizr/cli:2024.01.02
@@ -33,7 +35,7 @@ jobs:
       - name: Move and rename graphviz.json
         # Use the wrapped version should have the auto-layout
         run: |
-          mv docs/diagrams/graphviz.json .structurizr/workspace.json
+          mv -f docs/diagrams/graphviz.json .structurizr/workspace.json
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
