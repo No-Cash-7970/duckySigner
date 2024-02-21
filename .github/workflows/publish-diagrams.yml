@@ -22,11 +22,11 @@ jobs:
       - name: Setup Graphviz
         uses: ts-graphviz/setup-graphviz@v2
       - name: Export Structurizr workspace to JSON
-        uses: gilbertotcc/structurizr-action@v1
+        uses: docker://structurizr/cli:2024.01.02
         with:
           args: 'export -workspace docs/diagrams/workspace.dsl -format json'
       - name: Add auto-layout to Structurizr workspace JSON using Graphviz
-        uses: gilbertotcc/structurizr-action@v1
+        uses: docker://structurizr/cli:2024.01.02
         with:
           args: 'export -workspace docs/diagrams/graphviz.dsl -format json'
       - name: Move workspace.json
