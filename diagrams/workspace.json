@@ -3,7 +3,7 @@
   "name" : "Name",
   "description" : "Description",
   "properties" : {
-    "structurizr.dsl" : "d29ya3NwYWNlIHsKCiAgICBtb2RlbCB7CiAgICAgICAgdXNlciA9IHBlcnNvbiAiQWxnb3JhbmQgVXNlciIgIkEgdXNlciBvZiBteSBzb2Z0d2FyZSBzeXN0ZW0uIgogICAgICAgIHdhbGxldCA9IHNvZnR3YXJlU3lzdGVtICJkdWNreVNpZ25lciIgIkFsZ29yYW5kIHdhbGxldCBhcHAiIHsKICAgICAgICAgICAgd2FsbGV0VUkgPSBjb250YWluZXIgIlVzZXIgSW50ZXJmYWNlIiAiIgogICAgICAgICAgICB3YWxsZXRTZXJ2ZXIgPSBjb250YWluZXIgIldhbGxldCBDb25uZWN0aW9uIFNlcnZlciIgIiIKICAgICAgICAgICAga2V5U3RvcmUgPSBjb250YWluZXIgIktleSBTdG9yZSIgIkVuY3J5cHRlZCBzdG9yYWdlIG9mIHRoZSBwcml2YXRlIGtleXMgZm9yIHRoZSB1c2VyJ3MgYWNjb3VudHMiIHsKICAgICAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UKICAgICAgICAgICAgfQogICAgICAgICAgICBncmFudFN0b3JlID0gY29udGFpbmVyICJEQXBwIEdyYW50cyBTdG9yZSIgIlN0b3JhZ2UgZm9yIGNyZWRlbnRpYWxzIGFuZCBwZXJtaXNzaW9ucyBncmFudGVkIHRvIERBcHBzIiB7CiAgICAgICAgICAgICAgICB0YWdzIERhdGFiYXNlCiAgICAgICAgICAgIH0KICAgICAgICAgICAgc2V0dGluZ3NTdG9yZSA9IGNvbnRhaW5lciAiU2V0dGluZ3MgU3RvcmUiICJTdG9yYWdlIGZvciB0aGUgdXNlcidzIHdhbGxldCBzZXR0aW5ncy4gTWF5YmUgYSBmaWxlIG9yIGxvY2FsU3RvcmFnZS4iIHsKICAgICAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UKICAgICAgICAgICAgfQogICAgICAgIH0KICAgICAgICBkYXBwID0gc29mdHdhcmVTeXN0ZW0gIkRBcHAiICJBcHAgdXNpbmcgQWxnb3JhbmQiIHsKICAgICAgICAgICAgdGFncyBEQXBwIEV4dGVybmFsCiAgICAgICAgfQogICAgICAgIGFsZ29yYW5kID0gc29mdHdhcmVTeXN0ZW0gIkFsZ29yYW5kIiAiQmxvY2tjaGFpbiBuZXR3b3JrIiB7CiAgICAgICAgICAgIHRhZ3MgQWxnb3JhbmQgRXh0ZXJuYWwKICAgICAgICB9CiAgICAgICAgbGVkZ2VyRGV2aWNlID0gc29mdHdhcmVTeXN0ZW0gIkxlZGdlciBEZXZpY2UiICJMZWRnZXIgaGFyZHdhcmUgd2FsbGV0IiB7CiAgICAgICAgICAgIHRhZ3MgRGF0YWJhc2UgRXh0ZXJuYWwKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgIyBTeXN0ZW0gbGFuZHNjYXBlIHJlbGF0aW9uc2hpcHMKICAgICAgICB1c2VyIC0+IHdhbGxldCAiVXNlcyIKICAgICAgICB1c2VyIC0+IGRhcHAgIkludGVyYWN0cyB3aXRoIgogICAgICAgIGRhcHAgLT4gd2FsbGV0ICJDb21tdW5pY2F0ZXMgd2l0aCIgIkhUVFAvMiIKICAgICAgICBkYXBwIC0+IGFsZ29yYW5kICJJbnRlcmFjdHMgd2l0aCIKICAgICAgICB1c2VyIC0+IGxlZGdlckRldmljZSAiU2lnbnMgdXNpbmciCiAgICAgICAgbGVkZ2VyRGV2aWNlIC0+IHVzZXIgIlJlcXVlc3RzIGFwcHJvdmFsIHRvIHNpZ24gZnJvbSIKICAgICAgICAjIHdhbGxldCAtPiBhbGdvcmFuZCAiSW50ZXJhY3RzIHdpdGgiCiAgICAgICAgCiAgICAgICAgIyBXYWxsZXQgcmVsYXRpb25zaGlwcwogICAgICAgIHVzZXIgLT4gd2FsbGV0VUkgIkludGVyZmFjZXMgd2l0aCIKICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJSZXF1ZXN0cyBpbnB1dCBmcm9tIgogICAgICAgIGRhcHAgLT4gd2FsbGV0U2VydmVyICJNYWtlcyByZXF1ZXN0cyB0byIgIkhUVFAvMiIKICAgICAgICB3YWxsZXRVSSAtPiB3YWxsZXRTZXJ2ZXIgIk5vdGlmaWVzIG9mIHVzZXIgcmVzcG9uc2UiICJFdmVudCIKICAgICAgICB3YWxsZXRTZXJ2ZXIgLT4gd2FsbGV0VUkgIk5vdGlmaWVzIG9mIERBcHAgcmVxdWVzdCIgIkV2ZW50IgogICAgICAgIHdhbGxldFVJIC0+IGtleVN0b3JlICJUZW1wb3JhcmlseSByZXRyaWV2ZXMga2V5IGZyb20iICJXaXRoIHBhc3N3b3JkIGZyb20gdXNlciIKICAgICAgICB3YWxsZXRVSSAtPiBzZXR0aW5nc1N0b3JlICJSZXRyaWV2ZXMgdXNlciBwcmVmZXJlbmNlcyBmcm9tIiAiIgogICAgICAgIHdhbGxldFVJIC0+IGdyYW50U3RvcmUgIlNhdmVzIGNyZWRlbnRpYWxzICYgcGVybXMgZ2l2ZW4gdG8gREFwcHMiICIiCiAgICAgICAgd2FsbGV0VUkgLT4gbGVkZ2VyRGV2aWNlICJTZW5kcyBzaWduaW5nIHJlcXVlc3QgdG8iCiAgICAgICAgIyB3YWxsZXRTZXJ2ZXIgLT4gZ3JhbnRTdG9yZSAiIiAiIgogICAgICAgIAogICAgfQoKICAgIHZpZXdzIHsKICAgICAgICBzeXN0ZW1sYW5kc2NhcGUgIlN5c3RlbUxhbmRzY2FwZSIgIlN5c3RlbS13aWRlIHZpZXciIHsKICAgICAgICAgICAgaW5jbHVkZSAqCiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICB9CiAgICAKICAgICAgICBzeXN0ZW1Db250ZXh0IHdhbGxldCAiV2FsbGV0Q29udGV4dCIgewogICAgICAgICAgICBpbmNsdWRlICoKICAgICAgICAgICAgYXV0b0xheW91dAogICAgICAgIH0KICAgICAgICAKICAgICAgICBjb250YWluZXIgd2FsbGV0ICJDb250YWluZXJzIiB7CiAgICAgICAgICAgIGluY2x1ZGUgKgogICAgICAgICAgICBhdXRvTGF5b3V0CiAgICAgICAgfQogICAgICAgIAogICAgICAgIGR5bmFtaWMgd2FsbGV0IERBcHBDb25uZWN0ICJEQXBwIGVzdGFibGlzaCBjb25uZWN0aW9uIHdpdGggd2FsbGV0IiB7CiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICAgICAgCiAgICAgICAgICAgIHVzZXIgLT4gZGFwcCAiSW5pdGlhdGVzIGFjdGlvbiB0aGF0IHJlcXVpcmVzIGNvbm5lY3RpbmcgdG8gd2FsbGV0IHdpdGhpbiIKICAgICAgICAgICAgZGFwcCAtPiB3YWxsZXRTZXJ2ZXIgIlNlbmQgcmVxdWVzdCBmb3IgYXV0aGVudGljYXRpb24gY3JlZGVudGlhbHMgZnJvbSIKICAgICAgICAgICAgd2FsbGV0U2VydmVyIC0+IHdhbGxldFVJICJGb3J3YXJkcyByZXF1ZXN0IHRvIGFwcHJvdmUgREFwcCBjb25uZWN0aW9uIHRvIgogICAgICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJSZXF1ZXN0cyBhcHByb3ZhbCBmb3IgREFwcCBjb25uZWN0aW9uIGZyb20iCiAgICAgICAgICAgIHVzZXIgLT4gd2FsbGV0VUkgIkFwcHJvdmVzIERBcHAgY29ubmVjdGlvbiB1c2luZyIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gZ3JhbnRTdG9yZSAiU2F2ZXMgREFwcCBjb25uZWN0aW9uIGFwcHJvdmFsIGRhdGEgaW50byIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gd2FsbGV0U2VydmVyICJGb3J3YXJkcyBEQXBwIGNvbm5lY3Rpb24gYXBwcm92YWwgZGF0YSB0byIKICAgICAgICAgICAgd2FsbGV0U2VydmVyIC0+IGRhcHAgIlJlc3BvbmRzIHdpdGggdGhlIHNldCBvZiBhdXRoZW50aWNhdGlvbiBjcmVkZW50aWFscyBjcmVhdGVkIGZyb20gYXBwcm92YWwgZGF0YSB0byIKICAgICAgICB9CiAgICAgICAgCiAgICAgICAgZHluYW1pYyB3YWxsZXQgU2lnblRyYW5zYWN0aW9uICJEQXBwIHJlcXVlc3RzIHVzZXIgdG8gc2lnbiBhIHRyYW5zYWN0aW9uIiB7CiAgICAgICAgICAgIGF1dG9MYXlvdXQKICAgICAgICAgICAgCiAgICAgICAgICAgIHVzZXIgLT4gZGFwcCAiSW5pdGlhdGVzIGFjdGlvbiB0aGF0IHJlcXVpcmVzIHNpZ25pbmcgYSB0cmFuc2FjdGlvbiB3aXRoaW4iCiAgICAgICAgICAgIGRhcHAgLT4gd2FsbGV0U2VydmVyICJTZW5kcyByZXF1ZXN0IHRvIHNpZ24gdHJhbnNhY3Rpb24gdG8iCiAgICAgICAgICAgIHdhbGxldFNlcnZlciAtPiB3YWxsZXRVSSAiRm9yd2FyZHMgcmVxdWVzdCB0byBzaWduIHRyYW5zYWN0aW9uIHRvIgogICAgICAgICAgICB3YWxsZXRVSSAtPiB1c2VyICJBc2tzIGZvciBwYXNzd29yZCB0byByZXRyaWV2ZSBrZXkgdG8gc2lnbiB0cmFuc2FjdGlvbiBmcm9tIgogICAgICAgICAgICB1c2VyIC0+IHdhbGxldFVJICJFbnRlcnMgcGFzc3dvcmQgaW50byIKICAgICAgICAgICAgd2FsbGV0VUkgLT4ga2V5U3RvcmUgIlJldHJpZXZlcyBrZXkgZm9yIHNpZ25pbmcgZnJvbSIKICAgICAgICAgICAgd2FsbGV0VUkgLT4gd2FsbGV0U2VydmVyICJDcmVhdGVzIHNpZ25lZCB0cmFuc2FjdGlvbiBkYXRhICYgZm9yd2FyZHMgaXQgdG8iCiAgICAgICAgICAgIHdhbGxldFNlcnZlciAtPiBkYXBwICJSZXNwb25kcyB3aXRoIHNpZ25lZCB0cmFuc2FjdGlvbiBkYXRhIHRvIgogICAgICAgICAgICBkYXBwIC0+IGFsZ29yYW5kICJTZW5kcyBzaWduZWQgdHJhbnNhY3Rpb24gdG8iCiAgICAgICAgfQogICAgICAgIAogICAgICAgIHRoZW1lIGRlZmF1bHQKCiAgICAgICAgc3R5bGVzIHsKICAgICAgICAgICAgZWxlbWVudCBFeHRlcm5hbCB7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kICNlMGQ1ZTUKICAgICAgICAgICAgICAgIGNvbG9yICMyMjIyMjIKICAgICAgICAgICAgfQogICAgICAgICAgICBlbGVtZW50IERBcHAgewogICAgICAgICAgICAgICAgc2hhcGUgRWxsaXBzZQogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgQWxnb3JhbmQgewogICAgICAgICAgICAgICAgc2hhcGUgSGV4YWdvbgogICAgICAgICAgICB9CiAgICAgICAgICAgIGVsZW1lbnQgRGF0YWJhc2UgewogICAgICAgICAgICAgICAgc2hhcGUgQ3lsaW5kZXIKICAgICAgICAgICAgfQogICAgICAgIH0KICAgIH0KICAgIAp9Cg=="
+    "structurizr.dsl" : "d29ya3NwYWNlIGV4dGVuZHMgd29ya3NwYWNlLmpzb24gewogICAgIXNjcmlwdCBncm9vdnkgewogICAgICAgIG5ldyBjb20uc3RydWN0dXJpenIuZ3JhcGh2aXouR3JhcGh2aXpBdXRvbWF0aWNMYXlvdXQoKS5hcHBseSh3b3Jrc3BhY2UpOwogICAgfQp9Cg=="
   },
   "configuration" : { },
   "model" : {
@@ -16,19 +16,19 @@
       "name" : "Algorand User",
       "description" : "A user of my software system.",
       "relationships" : [ {
-        "id" : "11",
+        "id" : "17",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "3d5380ea-89bd-4f0e-aec9-31137cc1ae81"
+          "structurizr.dsl.identifier" : "006c4fab-a276-4ff3-b878-9d4f7a09132f"
         },
         "sourceId" : "1",
-        "destinationId" : "2",
-        "description" : "Uses"
+        "destinationId" : "3",
+        "description" : "Interfaces with"
       }, {
         "id" : "12",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "ad32b6a8-30c2-4917-87fb-0e0aa6bcfe66"
+          "structurizr.dsl.identifier" : "5356dbb0-b214-4e5a-ae00-1e323a9afeb3"
         },
         "sourceId" : "1",
         "destinationId" : "8",
@@ -37,20 +37,20 @@
         "id" : "15",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "ee3c7e61-d83e-457c-b1a3-3f38e551211c"
+          "structurizr.dsl.identifier" : "0fa6c63d-6bae-4260-b4d3-568f5b072006"
         },
         "sourceId" : "1",
         "destinationId" : "10",
         "description" : "Signs using"
       }, {
-        "id" : "17",
+        "id" : "11",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "f1ef5abc-a564-4e0b-8616-51592c8e39ce"
+          "structurizr.dsl.identifier" : "a7d62edb-b1df-4105-a224-e8a6e3a1eda0"
         },
         "sourceId" : "1",
-        "destinationId" : "3",
-        "description" : "Interfaces with"
+        "destinationId" : "2",
+        "description" : "Uses"
       } ],
       "location" : "Unspecified"
     } ],
@@ -77,24 +77,6 @@
       } ],
       "location" : "Unspecified",
       "containers" : [ {
-        "id" : "5",
-        "tags" : "Element,Container,Database",
-        "properties" : {
-          "structurizr.dsl.identifier" : "keystore"
-        },
-        "name" : "Key Store",
-        "description" : "Encrypted storage of the private keys for the user's accounts",
-        "documentation" : { }
-      }, {
-        "id" : "6",
-        "tags" : "Element,Container,Database",
-        "properties" : {
-          "structurizr.dsl.identifier" : "grantstore"
-        },
-        "name" : "DApp Grants Store",
-        "description" : "Storage for credentials and permissions granted to DApps",
-        "documentation" : { }
-      }, {
         "id" : "4",
         "tags" : "Element,Container",
         "properties" : {
@@ -105,13 +87,22 @@
           "id" : "22",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "299cb0e9-98ca-42a5-9fe1-a5bda3db0b24"
+            "structurizr.dsl.identifier" : "1e0faaba-7857-4663-ab1d-94d70d791695"
           },
           "sourceId" : "4",
           "destinationId" : "3",
           "description" : "Notifies of DApp request",
           "technology" : "Event"
         } ],
+        "documentation" : { }
+      }, {
+        "id" : "5",
+        "tags" : "Element,Container,Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "keystore"
+        },
+        "name" : "Key Store",
+        "description" : "Encrypted storage of the private keys for the user's accounts",
         "documentation" : { }
       }, {
         "id" : "7",
@@ -123,6 +114,15 @@
         "description" : "Storage for the user's wallet settings. Maybe a file or localStorage.",
         "documentation" : { }
       }, {
+        "id" : "6",
+        "tags" : "Element,Container,Database",
+        "properties" : {
+          "structurizr.dsl.identifier" : "grantstore"
+        },
+        "name" : "DApp Grants Store",
+        "description" : "Storage for credentials and permissions granted to DApps",
+        "documentation" : { }
+      }, {
         "id" : "3",
         "tags" : "Element,Container",
         "properties" : {
@@ -130,48 +130,10 @@
         },
         "name" : "User Interface",
         "relationships" : [ {
-          "id" : "18",
-          "tags" : "Relationship",
-          "properties" : {
-            "structurizr.dsl.identifier" : "4e37423f-4f29-4b6a-a449-192c6180c622"
-          },
-          "sourceId" : "3",
-          "destinationId" : "1",
-          "description" : "Requests input from"
-        }, {
-          "id" : "21",
-          "tags" : "Relationship",
-          "properties" : {
-            "structurizr.dsl.identifier" : "b25c792f-dffa-43a3-a910-cb8560bfa297"
-          },
-          "sourceId" : "3",
-          "destinationId" : "4",
-          "description" : "Notifies of user response",
-          "technology" : "Event"
-        }, {
-          "id" : "23",
-          "tags" : "Relationship",
-          "properties" : {
-            "structurizr.dsl.identifier" : "b183f213-8dcc-4ef4-befc-8c8626bbbe55"
-          },
-          "sourceId" : "3",
-          "destinationId" : "5",
-          "description" : "Temporarily retrieves key from",
-          "technology" : "With password from user"
-        }, {
-          "id" : "24",
-          "tags" : "Relationship",
-          "properties" : {
-            "structurizr.dsl.identifier" : "a4d1f8e7-cf2b-4fb1-b3d0-4df1c2070e90"
-          },
-          "sourceId" : "3",
-          "destinationId" : "7",
-          "description" : "Retrieves user preferences from"
-        }, {
           "id" : "25",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "6a276d79-4683-4755-a2c0-75f1a768b1d7"
+            "structurizr.dsl.identifier" : "598cebb7-8287-4702-876a-cba25cb90d73"
           },
           "sourceId" : "3",
           "destinationId" : "6",
@@ -180,14 +142,62 @@
           "id" : "26",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "03dcd748-e7e5-411c-948c-6ca159a76806"
+            "structurizr.dsl.identifier" : "b9a95212-1233-47ab-ac6d-bd283c463649"
           },
           "sourceId" : "3",
           "destinationId" : "10",
           "description" : "Sends signing request to"
+        }, {
+          "id" : "21",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "aedc363f-3e07-4ca3-8de4-acaf7b2da554"
+          },
+          "sourceId" : "3",
+          "destinationId" : "4",
+          "description" : "Notifies of user response",
+          "technology" : "Event"
+        }, {
+          "id" : "18",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "cfc9715c-de62-42dd-be71-0fef411303b9"
+          },
+          "sourceId" : "3",
+          "destinationId" : "1",
+          "description" : "Requests input from"
+        }, {
+          "id" : "24",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "3bac400b-dfea-4d2d-b4b1-4ad0cc47f648"
+          },
+          "sourceId" : "3",
+          "destinationId" : "7",
+          "description" : "Retrieves user preferences from"
+        }, {
+          "id" : "23",
+          "tags" : "Relationship",
+          "properties" : {
+            "structurizr.dsl.identifier" : "13e4d006-f1a9-4c75-9905-95e5f3f2d292"
+          },
+          "sourceId" : "3",
+          "destinationId" : "5",
+          "description" : "Temporarily retrieves key from",
+          "technology" : "With password from user"
         } ],
         "documentation" : { }
       } ],
+      "documentation" : { }
+    }, {
+      "id" : "9",
+      "tags" : "Element,Software System,Algorand,External",
+      "properties" : {
+        "structurizr.dsl.identifier" : "algorand"
+      },
+      "name" : "Algorand",
+      "description" : "Blockchain network",
+      "location" : "Unspecified",
       "documentation" : { }
     }, {
       "id" : "8",
@@ -201,7 +211,7 @@
         "id" : "13",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "078f4086-5d6f-4c26-b99b-b86061faa9f1"
+          "structurizr.dsl.identifier" : "8a3dc880-402d-4a69-90ff-bcf26235ccb8"
         },
         "sourceId" : "8",
         "destinationId" : "2",
@@ -211,7 +221,7 @@
         "id" : "14",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "0dbab6dc-d351-4a45-bb30-301244aa56f2"
+          "structurizr.dsl.identifier" : "50b12b1c-d03d-4ce8-972f-0bbb7663a037"
         },
         "sourceId" : "8",
         "destinationId" : "9",
@@ -220,23 +230,13 @@
         "id" : "20",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "0e63bb7e-7db9-413b-adf4-6d565d168e3a"
+          "structurizr.dsl.identifier" : "acd494fb-90ae-4516-8db7-10d0e8a32baa"
         },
         "sourceId" : "8",
         "destinationId" : "4",
         "description" : "Makes requests to",
         "technology" : "HTTP/2"
       } ],
-      "location" : "Unspecified",
-      "documentation" : { }
-    }, {
-      "id" : "9",
-      "tags" : "Element,Software System,Algorand,External",
-      "properties" : {
-        "structurizr.dsl.identifier" : "algorand"
-      },
-      "name" : "Algorand",
-      "description" : "Blockchain network",
       "location" : "Unspecified",
       "documentation" : { }
     }, {
@@ -251,7 +251,7 @@
         "id" : "16",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "e156a4bd-1abc-423b-99cb-b8664a23da34"
+          "structurizr.dsl.identifier" : "38d5abf5-d836-41a1-aed5-18e8282d2b64"
         },
         "sourceId" : "10",
         "destinationId" : "1",
@@ -267,6 +267,11 @@
       "key" : "SystemLandscape",
       "order" : 1,
       "description" : "System-wide view",
+      "paperSize" : "A3_Landscape",
+      "dimensions" : {
+        "width" : 2604,
+        "height" : 2516
+      },
       "automaticLayout" : {
         "implementation" : "Graphviz",
         "rankDirection" : "TopBottom",
@@ -279,24 +284,24 @@
       "enterpriseBoundaryVisible" : true,
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 1117,
+        "y" : 208
       }, {
         "id" : "2",
-        "x" : 0,
-        "y" : 0
+        "x" : 1117,
+        "y" : 1408
       }, {
         "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "x" : 1946,
+        "y" : 808
       }, {
         "id" : "9",
-        "x" : 0,
-        "y" : 0
+        "x" : 1946,
+        "y" : 1408
       }, {
         "id" : "10",
-        "x" : 0,
-        "y" : 0
+        "x" : 208,
+        "y" : 2008
       } ],
       "relationships" : [ {
         "id" : "27"
@@ -320,6 +325,11 @@
       "key" : "WalletContext",
       "order" : 2,
       "softwareSystemId" : "2",
+      "paperSize" : "A3_Landscape",
+      "dimensions" : {
+        "width" : 2604,
+        "height" : 2516
+      },
       "automaticLayout" : {
         "implementation" : "Graphviz",
         "rankDirection" : "TopBottom",
@@ -332,20 +342,20 @@
       "enterpriseBoundaryVisible" : true,
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 1117,
+        "y" : 208
       }, {
         "id" : "2",
-        "x" : 0,
-        "y" : 0
+        "x" : 1117,
+        "y" : 1408
       }, {
         "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "x" : 1946,
+        "y" : 808
       }, {
         "id" : "10",
-        "x" : 0,
-        "y" : 0
+        "x" : 208,
+        "y" : 2008
       } ],
       "relationships" : [ {
         "id" : "16"
@@ -367,6 +377,11 @@
       "key" : "Containers",
       "order" : 3,
       "softwareSystemId" : "2",
+      "paperSize" : "A3_Landscape",
+      "dimensions" : {
+        "width" : 4525,
+        "height" : 2020
+      },
       "automaticLayout" : {
         "implementation" : "Graphviz",
         "rankDirection" : "TopBottom",
@@ -379,47 +394,59 @@
       "externalSoftwareSystemBoundariesVisible" : true,
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 3108,
+        "y" : 208
       }, {
         "id" : "3",
-        "x" : 0,
-        "y" : 0
+        "x" : 2367,
+        "y" : 808
       }, {
         "id" : "4",
-        "x" : 0,
-        "y" : 0
+        "x" : 867,
+        "y" : 1408
       }, {
         "id" : "5",
-        "x" : 0,
-        "y" : 0
+        "x" : 1617,
+        "y" : 1408
       }, {
         "id" : "6",
-        "x" : 0,
-        "y" : 0
+        "x" : 2367,
+        "y" : 1408
       }, {
         "id" : "7",
-        "x" : 0,
-        "y" : 0
+        "x" : 3117,
+        "y" : 1408
       }, {
         "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "x" : 208,
+        "y" : 808
       }, {
         "id" : "10",
-        "x" : 0,
-        "y" : 0
+        "x" : 3867,
+        "y" : 1408
       } ],
       "relationships" : [ {
         "id" : "18"
       }, {
         "id" : "17"
       }, {
-        "id" : "16"
+        "id" : "16",
+        "vertices" : [ {
+          "x" : 3896,
+          "y" : 704
+        } ]
       }, {
-        "id" : "15"
+        "id" : "15",
+        "vertices" : [ {
+          "x" : 3596,
+          "y" : 704
+        } ]
       }, {
-        "id" : "26"
+        "id" : "26",
+        "vertices" : [ {
+          "x" : 3746,
+          "y" : 1408
+        } ]
       }, {
         "id" : "25"
       }, {
@@ -427,7 +454,11 @@
       }, {
         "id" : "23"
       }, {
-        "id" : "12"
+        "id" : "12",
+        "vertices" : [ {
+          "x" : 687,
+          "y" : 704
+        } ]
       }, {
         "id" : "22"
       }, {
@@ -440,6 +471,11 @@
       "key" : "DAppConnect",
       "order" : 4,
       "description" : "DApp establish connection with wallet",
+      "paperSize" : "A4_Landscape",
+      "dimensions" : {
+        "width" : 2504,
+        "height" : 2054
+      },
       "automaticLayout" : {
         "implementation" : "Graphviz",
         "rankDirection" : "TopBottom",
@@ -494,29 +530,34 @@
       } ],
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 1829,
+        "y" : 929
       }, {
         "id" : "3",
-        "x" : 0,
-        "y" : 0
+        "x" : 704,
+        "y" : 329
       }, {
         "id" : "4",
-        "x" : 0,
-        "y" : 0
+        "x" : 329,
+        "y" : 929
       }, {
         "id" : "6",
-        "x" : 0,
-        "y" : 0
+        "x" : 1079,
+        "y" : 929
       }, {
         "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "x" : 1079,
+        "y" : 1529
       } ]
     }, {
       "key" : "SignTransaction",
       "order" : 5,
       "description" : "DApp requests user to sign a transaction",
+      "paperSize" : "A3_Portrait",
+      "dimensions" : {
+        "width" : 2504,
+        "height" : 2654
+      },
       "automaticLayout" : {
         "implementation" : "Graphviz",
         "rankDirection" : "TopBottom",
@@ -576,28 +617,28 @@
       } ],
       "elements" : [ {
         "id" : "1",
-        "x" : 0,
-        "y" : 0
+        "x" : 1829,
+        "y" : 929
       }, {
         "id" : "3",
-        "x" : 0,
-        "y" : 0
+        "x" : 704,
+        "y" : 329
       }, {
         "id" : "4",
-        "x" : 0,
-        "y" : 0
+        "x" : 329,
+        "y" : 929
       }, {
         "id" : "5",
-        "x" : 0,
-        "y" : 0
+        "x" : 1079,
+        "y" : 929
       }, {
         "id" : "8",
-        "x" : 0,
-        "y" : 0
+        "x" : 1079,
+        "y" : 1529
       }, {
         "id" : "9",
-        "x" : 0,
-        "y" : 0
+        "x" : 1079,
+        "y" : 2129
       } ]
     } ],
     "configuration" : {
