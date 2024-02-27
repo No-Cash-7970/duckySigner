@@ -8,6 +8,27 @@
 
 **Participants**: No-Cash-7970
 
+<!-- omit in toc -->
+## Table of Contents
+
+- [Threat Model Information](#threat-model-information)
+  - [External Dependencies](#external-dependencies)
+    - [EXTERN-00: Algorand Network](#extern-00-algorand-network)
+    - [EXTERN-01: User's Computer](#extern-01-users-computer)
+    - [EXTERN-{{ID\_NUMBER}}: {{Add name of external dependency here}}](#extern-id_number-add-name-of-external-dependency-here)
+  - [Entry Points](#entry-points)
+    - [ENTRY-00: Wallet GUI](#entry-00-wallet-gui)
+    - [ENTRY-{{ID\_NUM}}: {{Add name of entry point here}}](#entry-id_num-add-name-of-entry-point-here)
+  - [Exit Points](#exit-points)
+    - [EXIT-00: Wallet GUI](#exit-00-wallet-gui)
+    - [EXIT-{{ID\_NUM}}: {{Add name of exit point here}}](#exit-id_num-add-name-of-exit-point-here)
+  - [Assets](#assets)
+    - [ASSET-00: Account private keys](#asset-00-account-private-keys)
+    - [ASSET-{{ID\_NUM}}: {{Add name of asset here}}](#asset-id_num-add-name-of-asset-here)
+  - [Trust Levels](#trust-levels)
+    - [TRUST-00: Anonymous User](#trust-00-anonymous-user)
+    - [TRUST-01: Authenticated user](#trust-01-authenticated-user)
+
 ## External Dependencies
 
 ### EXTERN-00: Algorand Network
