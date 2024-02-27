@@ -18,9 +18,9 @@ All Algorand wallet account data (except for secrets like the private key) are s
 
 TODO: Add description about the user's computer being an external dependency
 
-### EXTERN-[ID_NUMBER]: [Add name of external dependency here]
+### EXTERN-{{ID_NUMBER}}: {{Add name of external dependency here}}
 
-[Insert description here]
+{{Insert description here}}
 
 ## Entry Points
 
@@ -35,15 +35,15 @@ This is the main method in which the user is supposed to interact with the walle
 1. Anonymous user
 2. Authenticated user
 
-### ENTRY-[ID_NUM]: [Add name of entry point here]
+### ENTRY-{{ID_NUM}}: {{Add name of entry point here}}
 
-[Insert description here]
+{{Insert description here}}
 
 **Trust Levels**:
 
-1. [Lowest level of trust]
-2. [Next lowest level of trust]
-3. [Highest level of trust]
+1. {{Lowest level of trust}}
+2. {{Next lowest level of trust}}
+3. {{Highest level of trust}}
 
 ## Exit Points
 
@@ -58,15 +58,15 @@ One of the main purposes of the GUI is to display information. However, it is po
 1. Anonymous user
 2. Authenticated user
 
-### EXIT-[ID_NUM]: [Add name of exit point here]
+### EXIT-{{ID_NUM}}: {{Add name of exit point here}}
 
-[Insert description here]
+{{Insert description here}}
 
 **Trust Levels**:
 
-1. [Lowest level of trust]
-2. [Next lowest level of trust]
-3. [Highest level of trust]
+1. {{Lowest level of trust}}
+2. {{Next lowest level of trust}}
+3. {{Highest level of trust}}
 
 ## Assets
 
@@ -79,15 +79,15 @@ An account's private key is the most valuable asset a wallet can contain. The pr
 1. Anonymous user
 2. Authenticated user
 
-### ASSET-[ID_NUM]: [Add name of asset here]
+### ASSET-{{ID_NUM}}: {{Add name of asset here}}
 
-[Insert description here]
+{{Insert description here}}
 
 **Trust Levels**:
 
-1. [Lowest level of trust]
-2. [Next lowest level of trust]
-3. [Highest level of trust]
+1. {{Lowest level of trust}}
+2. {{Next lowest level of trust}}
+3. {{Highest level of trust}}
 
 ## Trust Levels
 
