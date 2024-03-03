@@ -13,9 +13,10 @@
 
 - [Threat Model Information](#threat-model-information)
   - [External Dependencies](#external-dependencies)
-    - [EXTERN-00: Algorand Network](#extern-00-algorand-network)
-    - [EXTERN-01: User's Computer](#extern-01-users-computer)
-    - [EXTERN-{{ID\_NUMBER}}: {{Add name of external dependency here}}](#extern-id_number-add-name-of-external-dependency-here)
+    - [EXTERN-00: Algorand network](#extern-00-algorand-network)
+    - [EXTERN-01: User's machine](#extern-01-users-machine)
+    - [EXTERN-02: Algorand node](#extern-02-algorand-node)
+    - [EXTERN-03: Hardware wallet device](#extern-03-hardware-wallet-device)
   - [Entry Points](#entry-points)
     - [ENTRY-00: Wallet GUI](#entry-00-wallet-gui)
     - [ENTRY-{{ID\_NUM}}: {{Add name of entry point here}}](#entry-id_num-add-name-of-entry-point-here)
@@ -31,17 +32,21 @@
 
 ## External Dependencies
 
-### EXTERN-00: Algorand Network
+### EXTERN-00: Algorand network
 
-All Algorand wallet account data (except for secrets like the private key) are stored on a public blockchain network. The most notable data is the amount of funds within an account in the form of "Algos" or some "Algorand Standard Asset" (ASA). In addition to the account data, the network stores every Algorand transaction that has occurred on that network's chain. There are three main networks for Algorand: MainNet, TestNet, and BetaNet. MainNet is the definitive network for assets linked to valuable resources outside the network (like money). TestNet and BetaNet are for testing.
+All data regarding an Algorand wallet account (except for secrets like the private key) is stored on a public blockchain network. The most notable datum is the amount of funds within an account in the form of Algos or some Algorand Standard Asset (ASA). In addition to the account data, the network stores every successful Algorand transaction that has occurred on that network's chain. There are three main networks for Algorand: MainNet, TestNet and BetaNet. MainNet is the definitive network for assets linked to valuable resources in the real world (like money). TestNet and BetaNet are for testing.
 
-### EXTERN-01: User's Computer
+### EXTERN-01: User's machine
 
-TODO: Add description about the user's computer being an external dependency
+The user's machine is most likely to be a laptop or desktop computer, but it could also be a type of tablet computer. The "user's machine" not only refers to the physical machine owned by the user, but it also refers to the machine's "soft" components such as memory, operating system and file system.
 
-### EXTERN-{{ID_NUMBER}}: {{Add name of external dependency here}}
+### EXTERN-02: Algorand node
 
-{{Insert description here}}
+An Algorand node is a special type of server that is required to connect to and communicate with the [Algorand Network](#extern-00-algorand-network). Oftentimes, a node runs 24/7 like many servers on the internet. However, a node can be a small machine, such as a Raspberry Pi, in a local network. Alternatively, a cloud server can be used to create and host a node remotely. Node services, such as [Nodely (AlgoNode)](https://nodely.io/), are commonly used in many projects in the Algorand ecosystem. It is also possible for a user to setup a node on a machine not dedicated for running a node, such as a home or work computer. The node in this instance would not be running 24/7 and would have stale data after being turned off.
+
+### EXTERN-03: Hardware wallet device
+
+A hardware wallet device allows a user to use their wallet account keys to sign transactions without exposing the keys to any system outside the device. Currently, the only hardware wallet that Algorand supports is Ledger. All Ledger devices can connect to a computer or mobile device using USB, but some models can connect using Bluetooth. It is possible for multiple hardware wallets to be connected to the desktop wallet at the same time.
 
 ## Entry Points
 
