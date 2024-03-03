@@ -17,6 +17,11 @@
     - [EXTERN-01: User's machine](#extern-01-users-machine)
     - [EXTERN-02: Algorand node](#extern-02-algorand-node)
     - [EXTERN-03: Hardware wallet device](#extern-03-hardware-wallet-device)
+  - [Trust Levels](#trust-levels)
+    - [TRUST-00: Anonymous wallet user](#trust-00-anonymous-wallet-user)
+    - [TRUST-01: Authenticated wallet user](#trust-01-authenticated-wallet-user)
+    - [TRUST-02: DApp](#trust-02-dapp)
+    - [TRUST-03: Ledger device owner](#trust-03-ledger-device-owner)
   - [Entry Points](#entry-points)
     - [ENTRY-00: Wallet GUI](#entry-00-wallet-gui)
     - [ENTRY-{{ID\_NUM}}: {{Add name of entry point here}}](#entry-id_num-add-name-of-entry-point-here)
@@ -26,9 +31,6 @@
   - [Assets](#assets)
     - [ASSET-00: Account private keys](#asset-00-account-private-keys)
     - [ASSET-{{ID\_NUM}}: {{Add name of asset here}}](#asset-id_num-add-name-of-asset-here)
-  - [Trust Levels](#trust-levels)
-    - [TRUST-00: Anonymous User](#trust-00-anonymous-user)
-    - [TRUST-01: Authenticated user](#trust-01-authenticated-user)
 
 ## External Dependencies
 
@@ -47,6 +49,26 @@ An Algorand node is a special type of server that is required to connect to and 
 ### EXTERN-03: Hardware wallet device
 
 A hardware wallet device allows a user to use their wallet account keys to sign transactions without exposing the keys to any system outside the device. Currently, the only hardware wallet that Algorand supports is Ledger. All Ledger devices can connect to a computer or mobile device using USB, but some models can connect using Bluetooth. It is possible for multiple hardware wallets to be connected to the desktop wallet at the same time.
+
+## Trust Levels
+
+The trust levels listed in this section are not in any particular order.
+
+### TRUST-00: Anonymous wallet user
+
+An anonymous wallet user is a user, typically a human, who **has not** authenticated themselves by provided a set of credentials (e.g. username and password) to access the protected parts of the desktop wallet that provide sensitive Algorand wallet account information and allow for the user to use account keys. It is assumed that an anonymous user has access to the machine and the desktop wallet installed on it. It is possible for this type of user to not be the owner of the private keys stored within the desktop wallet or be the owner of the machine itself. It may be possible for there to be more than one anonymous user at the same time.
+
+### TRUST-01: Authenticated wallet user
+
+An authenticated wallet user is a user, typically a human, who **has** somehow authenticated themselves by provided a set of credentials (e.g. username and password) to access the protected parts of the desktop wallet that provide sensitive Algorand wallet account information. Typically, there should be at most one authenticated wallet user accessing the protected parts of the desktop wallet at any given time.
+
+### TRUST-02: DApp
+
+For this document, a dApp ("decentralized" application) is simply software that uses the Algorand blockchain in some manner. The degree of centralization of the dApp software and its functionality is irrelevant. Consequently, a "dApp" in the context of this document does not need to be decentralized, contrary to other commonly accepted definitions of "dApp." DApps are typically web applications run using a web browser. However, with a desktop wallet that does not depend on a web browser, it is possible for a dApp to be software that is installed on the user's machine that also does not depend on a web browser. This makes it more likely that more than one dApp will try to connect to and communicate with the desktop wallet at the same time.
+
+### TRUST-03: Ledger device owner
+
+The ledger device owner is the human who owns and controls a Ledger device that is connected to the desktop wallet. The ledger device owner may not be the same person as the [Anonymous wallet user](#trust-00-anonymous-wallet-user) or the [Authenticated wallet user](#trust-01-authenticated-wallet-user). Additionally, it is possible for there to be multiple Ledger device owners if there are multiple Ledger devices connected to the desktop wallet.
 
 ## Entry Points
 
@@ -114,13 +136,3 @@ An account's private key is the most valuable asset a wallet can contain. The pr
 1. {{Lowest level of trust}}
 2. {{Next lowest level of trust}}
 3. {{Highest level of trust}}
-
-## Trust Levels
-
-### TRUST-00: Anonymous User
-
-A user who **has not** provided a set of credentials (e.g. username and password) to access the protected parts of the wallet software that provide sensitive Algorand wallet account information and allow for the user to use account keys.
-
-### TRUST-01: Authenticated user
-
-A user who **has** provided a set of credentials (e.g. username and password) to access the protected parts of the wallet software that provide sensitive Algorand wallet account information.
