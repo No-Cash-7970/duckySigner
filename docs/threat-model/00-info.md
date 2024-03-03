@@ -24,7 +24,12 @@
     - [TRUST-03: Ledger device owner](#trust-03-ledger-device-owner)
   - [Entry Points](#entry-points)
     - [ENTRY-00: Wallet GUI](#entry-00-wallet-gui)
-    - [ENTRY-{{ID\_NUM}}: {{Add name of entry point here}}](#entry-id_num-add-name-of-entry-point-here)
+    - [ENTRY-01: Ledger device connection](#entry-01-ledger-device-connection)
+    - [ENTRY-02: Configuration files](#entry-02-configuration-files)
+    - [ENTRY-03: Database files](#entry-03-database-files)
+    - [ENTRY-04: Memory](#entry-04-memory)
+    - [ENTRY-05: Wallet connection server API](#entry-05-wallet-connection-server-api)
+    - [ENTRY-06: Algorand node API](#entry-06-algorand-node-api)
   - [Exit Points](#exit-points)
     - [EXIT-00: Wallet GUI](#exit-00-wallet-gui)
     - [EXIT-{{ID\_NUM}}: {{Add name of exit point here}}](#exit-id_num-add-name-of-exit-point-here)
@@ -72,26 +77,75 @@ The ledger device owner is the human who owns and controls a Ledger device that 
 
 ## Entry Points
 
-NOTE: A trust level of 1 is the lowest trust level
+The trust levels for each entry point are listed from the highest level of trust to the lowest level of trust.
 
 ### ENTRY-00: Wallet GUI
 
-This is the main method in which the user is supposed to interact with the wallet to manage their key(s). The GUI is intended to be used by people who may have very little technical knowledge about Algorand, computers (in general), and blockchain (in general). It is also intended to be used by people who have higher levels of expertise in those subjects.
+This is the primary method in which the user is supposed to interact with the wallet to manage their keys. The GUI is intended to be used by people who may have very little technical knowledge about Algorand, computers or blockchain. It is also intended to be flexible enough to be allow for those with higher levels of expertise in those subjects to customize the desktop wallet according to their needs.
 
 **Trust Levels**:
 
-1. Anonymous user
-2. Authenticated user
+1. Authenticated wallet user
+2. Anonymous wallet user
 
-### ENTRY-{{ID_NUM}}: {{Add name of entry point here}}
+### ENTRY-01: Ledger device connection
 
-{{Insert description here}}
+A computer or mobile device can connect and communicate with Ledger device over a USB or Bluetooth connection to sign transactions. Data (e.g. signed transaction) is sent from a Ledger device to the user's computer or mobile device.
 
 **Trust Levels**:
 
-1. {{Lowest level of trust}}
-2. {{Next lowest level of trust}}
-3. {{Highest level of trust}}
+1. Authenticated wallet user
+2. Ledger device owner
+3. DApp
+4. Anonymous wallet user
+
+### ENTRY-02: Configuration files
+
+The desktop wallet will most likely store some kind of user configuration in at least one file. In this case, the wallet will read and load the configuration data contained within this file when it initializes. Therefore, a configuration file would determine the behavior of the wallet.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### ENTRY-03: Database files
+
+The desktop wallet may retrieve data from a file-based database, such as SQLite. The wallet will most likely obtain the user's Algorand account private keys from a database file. Also, it is possible for a [configuration file](#entry-02-configuration-files) to be a database file.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### ENTRY-04: Memory
+
+Like all software, the desktop wallet requires reading data stored temporarily into memory. Modifications to the data in memory would change the behavior of the wallet. Paging or swapping may occur where some data in memory is temporarily stored onto the disk. This often occurs if the amount of available memory is low.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. Anonymous wallet user
+
+### ENTRY-05: Wallet connection server API
+
+The wallet connection server API is for allowing for other software, dApps in particular, to communicate with the desktop wallet. This communication would be through HTTP. It is possible for multiple applications to attempt to communicate with the desktop wallet at the same time.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### ENTRY-06: Algorand node API
+
+Any interaction with the Algorand blockchain must be done through an Algorand node. This interaction is typically done through an HTTP REST API. Therefore, a node will typically respond with data to a request sent to it. As is typical of a HTTP REST API server, the nature of the data in the node's response depends on the data it received in the request. If a Algorand node service is used, that service most likely imposes limits on the number and size of requests.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. Anonymous wallet user
 
 ## Exit Points
 
