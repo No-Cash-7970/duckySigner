@@ -32,7 +32,12 @@
     - [ENTRY-06: Algorand node API](#entry-06-algorand-node-api)
   - [Exit Points](#exit-points)
     - [EXIT-00: Wallet GUI](#exit-00-wallet-gui)
-    - [EXIT-{{ID\_NUM}}: {{Add name of exit point here}}](#exit-id_num-add-name-of-exit-point-here)
+    - [EXIT-01: Ledger device connection](#exit-01-ledger-device-connection)
+    - [EXIT-02: Configuration files](#exit-02-configuration-files)
+    - [EXIT-03: Database files](#exit-03-database-files)
+    - [EXIT-04: Memory](#exit-04-memory)
+    - [EXIT-05: Wallet connection server API](#exit-05-wallet-connection-server-api)
+    - [EXIT-06: Algorand node API](#exit-06-algorand-node-api)
   - [Assets](#assets)
     - [ASSET-00: Account private keys](#asset-00-account-private-keys)
     - [ASSET-{{ID\_NUM}}: {{Add name of asset here}}](#asset-id_num-add-name-of-asset-here)
@@ -149,26 +154,74 @@ Any interaction with the Algorand blockchain must be done through an Algorand no
 
 ## Exit Points
 
-NOTE: A trust level of 1 is the lowest trust level
+The trust levels for each exit point are listed from the highest level of trust to the lowest level of trust.
 
 ### EXIT-00: Wallet GUI
 
-One of the main purposes of the GUI is to display information. However, it is possible it can display *too much* information in the form of error messages and account status(es).
+One of the main purposes of the GUI is to display information. However, it is possible it can display *too much* information in the form of error messages and Algorand account statuses.
 
 **Trust Levels**:
 
-1. Anonymous user
-2. Authenticated user
+1. Authenticated wallet user
+2. Anonymous wallet user
 
-### EXIT-{{ID_NUM}}: {{Add name of exit point here}}
+### EXIT-01: Ledger device connection
 
-{{Insert description here}}
+In order sign a transaction using a key stored on a Ledger device, the unsigned transaction data must be sent to the Ledger device.
 
 **Trust Levels**:
 
-1. {{Lowest level of trust}}
-2. {{Next lowest level of trust}}
-3. {{Highest level of trust}}
+1. Authenticated wallet user
+2. Ledger device owner
+3. DApp
+4. Anonymous wallet user
+
+### EXIT-02: Configuration files
+
+The desktop wallet may write or edit configuration files that store the desktop wallet's configuration. The configuration stored in the file may give too much information about how the user is using the wallet.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. Anonymous wallet user
+
+### EXIT-03: Database files
+
+The desktop wallet may write to and update a file-based database, such as SQLite. The wallet will most likely add the user's wallet account private keys to a database file.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### EXIT-04: Memory
+
+Like all software, the desktop wallet requires writing data into memory. However, some data in memory may be temporarily stored onto the disk if the amount of memory is low.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### EXIT-05: Wallet connection server API
+
+The wallet connection server API responds with data when requested by some entity. Typically, this entity should be a dApp approved by the user.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### EXIT-06: Algorand node API
+
+Changing the state of something (e.g. account, smart contract) on the Algorand blockchain requires submitting a transaction. Submitting a transaction requires sending the signed transaction data to Algorand node through its HTTP REST API.
+
+**Trust Levels**:
+
+1. Anonymous wallet user
 
 ## Assets
 
