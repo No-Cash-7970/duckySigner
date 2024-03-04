@@ -21,19 +21,23 @@ workspace {
         algorand = softwareSystem "Algorand" "Blockchain network" {
             tags Algorand External
         }
+        algoNode = softwareSystem "Algorand Node" {
+            tags AlgoNode External
+        }
         ledgerDevice = softwareSystem "Ledger Device" "Ledger hardware wallet" {
             tags Database External
         }
-        
+
         # System landscape relationships
         user -> wallet "Uses"
         user -> dapp "Interacts with"
         dapp -> wallet "Communicates with" "HTTP/2"
-        dapp -> algorand "Interacts with"
+        dapp -> algoNode "Interacts with"
+        algoNode -> algorand "Connected to"
         user -> ledgerDevice "Signs using"
         ledgerDevice -> user "Requests approval to sign from"
         # wallet -> algorand "Interacts with"
-        
+
         # Wallet relationships
         user -> walletUI "Interfaces with"
         walletUI -> user "Requests input from"
@@ -45,7 +49,7 @@ workspace {
         walletUI -> grantStore "Saves credentials & perms given to DApps" ""
         walletUI -> ledgerDevice "Sends signing request to"
         # walletServer -> grantStore "" ""
-        
+
     }
 
     views {
@@ -53,20 +57,20 @@ workspace {
             include *
             autoLayout
         }
-    
+
         systemContext wallet "WalletContext" {
             include *
             autoLayout
         }
-        
+
         container wallet "Containers" {
             include *
             autoLayout
         }
-        
+
         dynamic wallet DAppConnect "DApp establish connection with wallet" {
             autoLayout
-            
+
             user -> dapp "Initiates action that requires connecting to wallet within"
             dapp -> walletServer "Send request for authentication credentials from"
             walletServer -> walletUI "Forwards request to approve DApp connection to"
@@ -76,10 +80,10 @@ workspace {
             walletUI -> walletServer "Forwards DApp connection approval data to"
             walletServer -> dapp "Responds with the set of authentication credentials created from approval data to"
         }
-        
+
         dynamic wallet SignTransaction "DApp requests user to sign a transaction" {
             autoLayout
-            
+
             user -> dapp "Initiates action that requires signing a transaction within"
             dapp -> walletServer "Sends request to sign transaction to"
             walletServer -> walletUI "Forwards request to sign transaction to"
@@ -88,9 +92,9 @@ workspace {
             walletUI -> keyStore "Retrieves key for signing from"
             walletUI -> walletServer "Creates signed transaction data & forwards it to"
             walletServer -> dapp "Responds with signed transaction data to"
-            dapp -> algorand "Sends signed transaction to"
+            dapp -> algoNode "Sends signed transaction using"
         }
-        
+
         theme default
 
         styles {
@@ -99,15 +103,18 @@ workspace {
                 color #222222
             }
             element DApp {
-                shape Ellipse
+                shape Hexagon
+            }
+            element AlgoNode {
+                shape Hexagon
             }
             element Algorand {
-                shape Hexagon
+                shape Ellipse
             }
             element Database {
                 shape Cylinder
             }
         }
     }
-    
+
 }
