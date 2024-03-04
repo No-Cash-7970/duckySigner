@@ -45,6 +45,10 @@
 
 ## External Dependencies
 
+> External dependencies are items external to the code of the application that may pose a threat to the application. These items are typically still within the control of the organization, but possibly not within the control of the development team.
+>
+> — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#external-dependencies)
+
 ### EXTERN-01: Algorand network
 
 All data regarding an Algorand wallet account (except for secrets like the private key) is stored on a public blockchain network. The most notable datum is the amount of funds within an account in the form of Algos or some Algorand Standard Asset (ASA). In addition to the account data, the network stores every successful Algorand transaction that has occurred on that network's chain. There are three main networks for Algorand: MainNet, TestNet and BetaNet. MainNet is the definitive network for assets linked to valuable resources in the real world (like money). TestNet and BetaNet are for testing.
@@ -62,6 +66,10 @@ An Algorand node is a special type of server that is required to connect to and 
 A hardware wallet device allows a user to use their wallet account keys to sign transactions without exposing the keys to any system outside the device. Currently, the only hardware wallet that Algorand supports is Ledger. All Ledger devices can connect to a computer or mobile device using USB, but some models can connect using Bluetooth. It is possible for multiple hardware wallets to be connected to the desktop wallet at the same time.
 
 ## Trust Levels
+
+> Trust levels represent the access rights that the application will grant to external entities. The trust levels are cross-referenced with the entry points and assets. This allows us to define the access rights or privileges required at each entry point, and those required to interact with each asset.
+>
+> — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#trust-levels)
 
 The trust levels listed in this section are not in any particular order.
 
@@ -82,6 +90,14 @@ For this document, a dApp ("decentralized" application) is simply software that 
 The ledger device owner is the human who owns and controls a Ledger device that is connected to the desktop wallet. The ledger device owner may not be the same person as the [Anonymous wallet user](#trust-01-anonymous-wallet-user) or the [Authenticated wallet user](#trust-02-authenticated-wallet-user). Additionally, it is possible for there to be multiple Ledger device owners if there are multiple Ledger devices connected to the desktop wallet.
 
 ## Entry Points
+
+> Entry points define the interfaces through which potential attackers can interact with the application or supply it with data. In order for a potential attacker to attack an application, entry points must exist.
+>
+> ...
+>
+> \[They\] show where data enters the system (i.e. input fields, methods) and exit points are where it leaves the system (i.e. dynamic output, methods), respectively.
+>
+> — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#entry-points)
 
 The trust levels for each entry point are listed from the highest level of trust to the lowest level of trust.
 
@@ -155,6 +171,14 @@ Any interaction with the Algorand blockchain must be done through an Algorand no
 
 ## Exit Points
 
+> Exit points might prove useful when attacking the client: for example, cross-site-scripting vulnerabilities and information disclosure vulnerabilities both require an exit point for the attack to complete.
+>
+> In the case of exit points from components handling confidential data (e.g. data access components), exit points lacking security controls to protect confidentiality and integrity can lead to disclosure of such confidential information to an unauthorized user.
+>
+> In many cases threats enabled by exit points are related to the threats of the corresponding entry point.
+>
+> — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#exit-points)
+
 The trust levels for each exit point are listed from the highest level of trust to the lowest level of trust.
 
 ### EXIT-01: Wallet GUI
@@ -225,6 +249,12 @@ Changing the state of something (e.g. account, smart contract) on the Algorand b
 1. Anonymous wallet user
 
 ## Assets
+
+> Assets are essentially targets for attackers, i.e. they are the reason threats will exist. Assets can be both physical assets and abstract assets. For example, an asset of an application might be a list of clients and their personal information; this is a physical asset. An abstract asset might be the reputation of an organization.
+>
+> — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#assets)
+
+The trust levels for each asset are listed from the highest level of trust to the lowest level of trust.
 
 ### ASSET-01: Account private keys
 
