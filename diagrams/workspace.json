@@ -13,40 +13,40 @@
       "properties" : {
         "structurizr.dsl.identifier" : "user"
       },
-      "name" : "Algorand User",
-      "description" : "A user of my software system.",
+      "name" : "User",
+      "description" : "A user of the Ducky Signer desktop wallet",
       "relationships" : [ {
-        "id" : "17",
+        "id" : "19",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "acd3bf61-db3f-4fb7-b216-366d4a74f5dd"
+          "structurizr.dsl.identifier" : "fd460ee0-0426-4cd0-b2ef-9f5486494441"
         },
         "sourceId" : "1",
         "destinationId" : "3",
         "description" : "Interfaces with"
       }, {
-        "id" : "12",
+        "id" : "13",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "71bfc2b2-f59f-4823-b227-77b4e1bd9762"
+          "structurizr.dsl.identifier" : "65464f4d-f4a0-4e66-aa3d-b29074d2e321"
         },
         "sourceId" : "1",
         "destinationId" : "8",
         "description" : "Interacts with"
       }, {
-        "id" : "15",
+        "id" : "17",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "5ee5c70f-ad69-4890-bbeb-250e453d35f2"
+          "structurizr.dsl.identifier" : "b25abe74-bb8b-4d62-b0b2-9a920181c09a"
         },
         "sourceId" : "1",
-        "destinationId" : "10",
+        "destinationId" : "11",
         "description" : "Signs using"
       }, {
-        "id" : "11",
+        "id" : "12",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "61ed156c-4696-4fb4-987a-09216a13eead"
+          "structurizr.dsl.identifier" : "7f1e9d90-abc0-4dde-8d42-b4688652be3c"
         },
         "sourceId" : "1",
         "destinationId" : "2",
@@ -60,20 +60,20 @@
       "properties" : {
         "structurizr.dsl.identifier" : "wallet"
       },
-      "name" : "duckySigner",
-      "description" : "Algorand wallet app",
+      "name" : "Ducky Signer",
+      "description" : "Algorand wallet software for desktop computers",
       "relationships" : [ {
-        "id" : "19",
+        "id" : "21",
         "sourceId" : "2",
         "destinationId" : "1",
         "description" : "Requests input from",
-        "linkedRelationshipId" : "18"
+        "linkedRelationshipId" : "20"
       }, {
-        "id" : "27",
+        "id" : "29",
         "sourceId" : "2",
-        "destinationId" : "10",
+        "destinationId" : "11",
         "description" : "Sends signing request to",
-        "linkedRelationshipId" : "26"
+        "linkedRelationshipId" : "28"
       } ],
       "location" : "Unspecified",
       "containers" : [ {
@@ -84,14 +84,14 @@
         },
         "name" : "Wallet Connection Server",
         "relationships" : [ {
-          "id" : "22",
+          "id" : "24",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "bccb70b6-c144-4b18-9aa2-b5368c646327"
+            "structurizr.dsl.identifier" : "f3fd5474-7f60-4077-a8b7-2ce02c55990b"
           },
           "sourceId" : "4",
           "destinationId" : "3",
-          "description" : "Notifies of DApp request",
+          "description" : "Notifies of dApp request",
           "technology" : "Event"
         } ],
         "documentation" : { }
@@ -120,7 +120,7 @@
           "structurizr.dsl.identifier" : "grantstore"
         },
         "name" : "DApp Grants Store",
-        "description" : "Storage for credentials and permissions granted to DApps",
+        "description" : "Storage for credentials and permissions granted to dApps",
         "documentation" : { }
       }, {
         "id" : "3",
@@ -130,56 +130,56 @@
         },
         "name" : "User Interface",
         "relationships" : [ {
-          "id" : "25",
+          "id" : "27",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "40a93f52-d84d-4680-9f28-c665a76c1624"
+            "structurizr.dsl.identifier" : "40668608-cf26-411c-96ee-dddeb27749c8"
           },
           "sourceId" : "3",
           "destinationId" : "6",
-          "description" : "Saves credentials & perms given to DApps"
+          "description" : "Saves credentials & perms given to dApps"
         }, {
-          "id" : "26",
+          "id" : "28",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "9a583caa-504b-4108-8201-1a5655de897b"
+            "structurizr.dsl.identifier" : "7e895c62-c168-4632-bb36-bb5e2da98755"
           },
           "sourceId" : "3",
-          "destinationId" : "10",
+          "destinationId" : "11",
           "description" : "Sends signing request to"
         }, {
-          "id" : "21",
+          "id" : "23",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "39b4724e-5607-4122-8aeb-80bb3e83ced6"
+            "structurizr.dsl.identifier" : "b65ca6f4-06f1-4cb9-8299-f7c71d29a302"
           },
           "sourceId" : "3",
           "destinationId" : "4",
           "description" : "Notifies of user response",
           "technology" : "Event"
         }, {
-          "id" : "18",
+          "id" : "20",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "9f2dd971-98e4-4d45-bf86-62c05aba67c7"
+            "structurizr.dsl.identifier" : "89cb15cf-012e-41e8-82ac-2dba3c6bcdc5"
           },
           "sourceId" : "3",
           "destinationId" : "1",
           "description" : "Requests input from"
         }, {
-          "id" : "24",
+          "id" : "26",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "83305313-54aa-4c82-8fd8-c54f03c27d3a"
+            "structurizr.dsl.identifier" : "39f2f663-e046-4ae2-a8e9-75d1b031b1ef"
           },
           "sourceId" : "3",
           "destinationId" : "7",
           "description" : "Retrieves user preferences from"
         }, {
-          "id" : "23",
+          "id" : "25",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "c3e6f19d-1cc1-49a6-8369-f458240a210b"
+            "structurizr.dsl.identifier" : "e9e95b59-4491-47cd-9179-73ceba5de6d0"
           },
           "sourceId" : "3",
           "destinationId" : "5",
@@ -208,29 +208,29 @@
       "name" : "DApp",
       "description" : "App using Algorand",
       "relationships" : [ {
-        "id" : "13",
+        "id" : "14",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "50279589-408d-4736-9be0-5be83678ced4"
+          "structurizr.dsl.identifier" : "636351de-1e4f-4d56-8c5d-ab6a4be131a9"
         },
         "sourceId" : "8",
         "destinationId" : "2",
         "description" : "Communicates with",
         "technology" : "HTTP/2"
       }, {
-        "id" : "14",
+        "id" : "15",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "2851bdc1-7c02-46f7-b436-485e483335de"
+          "structurizr.dsl.identifier" : "8032c46d-f9e5-4386-87a1-339c154e0c54"
         },
         "sourceId" : "8",
-        "destinationId" : "9",
+        "destinationId" : "10",
         "description" : "Interacts with"
       }, {
-        "id" : "20",
+        "id" : "22",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "d0f134cd-b4a8-468f-9579-c9954d5c14d3"
+          "structurizr.dsl.identifier" : "6d78513f-0a99-4a7a-8d68-a78b88831ae6"
         },
         "sourceId" : "8",
         "destinationId" : "4",
@@ -241,19 +241,38 @@
       "documentation" : { }
     }, {
       "id" : "10",
+      "tags" : "Element,Software System,AlgoNode,External",
+      "properties" : {
+        "structurizr.dsl.identifier" : "algonode"
+      },
+      "name" : "Algorand Node",
+      "relationships" : [ {
+        "id" : "16",
+        "tags" : "Relationship",
+        "properties" : {
+          "structurizr.dsl.identifier" : "c64d7e40-007c-444b-9ade-082523bca49c"
+        },
+        "sourceId" : "10",
+        "destinationId" : "9",
+        "description" : "Connected to"
+      } ],
+      "location" : "Unspecified",
+      "documentation" : { }
+    }, {
+      "id" : "11",
       "tags" : "Element,Software System,Database,External",
       "properties" : {
         "structurizr.dsl.identifier" : "ledgerdevice"
       },
       "name" : "Ledger Device",
-      "description" : "Ledger hardware wallet",
+      "description" : "Hardware wallet device",
       "relationships" : [ {
-        "id" : "16",
+        "id" : "18",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "20070e52-6136-4c86-9d7c-52c245a1eb4a"
+          "structurizr.dsl.identifier" : "ce6b02ae-a1c0-491a-8a28-f23af8bc779e"
         },
-        "sourceId" : "10",
+        "sourceId" : "11",
         "destinationId" : "1",
         "description" : "Requests approval to sign from"
       } ],
@@ -283,6 +302,10 @@
       },
       "enterpriseBoundaryVisible" : true,
       "elements" : [ {
+        "id" : "11",
+        "x" : 208,
+        "y" : 2008
+      }, {
         "id" : "1",
         "x" : 1117,
         "y" : 208
@@ -297,14 +320,18 @@
       }, {
         "id" : "9",
         "x" : 1946,
-        "y" : 1408
+        "y" : 2008
       }, {
         "id" : "10",
-        "x" : 208,
-        "y" : 2008
+        "x" : 1946,
+        "y" : 1408
       } ],
       "relationships" : [ {
-        "id" : "27"
+        "id" : "29"
+      }, {
+        "id" : "18"
+      }, {
+        "id" : "17"
       }, {
         "id" : "16"
       }, {
@@ -314,11 +341,9 @@
       }, {
         "id" : "13"
       }, {
-        "id" : "11"
-      }, {
         "id" : "12"
       }, {
-        "id" : "19"
+        "id" : "21"
       } ]
     } ],
     "systemContextViews" : [ {
@@ -341,6 +366,10 @@
       },
       "enterpriseBoundaryVisible" : true,
       "elements" : [ {
+        "id" : "11",
+        "x" : 208,
+        "y" : 2008
+      }, {
         "id" : "1",
         "x" : 1117,
         "y" : 208
@@ -352,25 +381,21 @@
         "id" : "8",
         "x" : 1946,
         "y" : 808
-      }, {
-        "id" : "10",
-        "x" : 208,
-        "y" : 2008
       } ],
       "relationships" : [ {
-        "id" : "16"
+        "id" : "18"
       }, {
-        "id" : "27"
+        "id" : "29"
       }, {
-        "id" : "15"
+        "id" : "17"
+      }, {
+        "id" : "14"
       }, {
         "id" : "13"
       }, {
-        "id" : "11"
-      }, {
         "id" : "12"
       }, {
-        "id" : "19"
+        "id" : "21"
       } ]
     } ],
     "containerViews" : [ {
@@ -379,8 +404,8 @@
       "softwareSystemId" : "2",
       "paperSize" : "A3_Landscape",
       "dimensions" : {
-        "width" : 4525,
-        "height" : 2020
+        "width" : 3970,
+        "height" : 2054
       },
       "automaticLayout" : {
         "implementation" : "Graphviz",
@@ -393,78 +418,70 @@
       },
       "externalSoftwareSystemBoundariesVisible" : true,
       "elements" : [ {
+        "id" : "11",
+        "x" : 208,
+        "y" : 329
+      }, {
         "id" : "1",
-        "x" : 3108,
-        "y" : 208
+        "x" : 208,
+        "y" : 929
       }, {
         "id" : "3",
-        "x" : 2367,
-        "y" : 808
+        "x" : 958,
+        "y" : 329
       }, {
         "id" : "4",
-        "x" : 867,
-        "y" : 1408
+        "x" : 958,
+        "y" : 929
       }, {
         "id" : "5",
-        "x" : 1617,
-        "y" : 1408
+        "x" : 1708,
+        "y" : 929
       }, {
         "id" : "6",
-        "x" : 2367,
-        "y" : 1408
+        "x" : 2458,
+        "y" : 929
       }, {
         "id" : "7",
-        "x" : 3117,
-        "y" : 1408
+        "x" : 3208,
+        "y" : 929
       }, {
         "id" : "8",
-        "x" : 208,
-        "y" : 808
-      }, {
-        "id" : "10",
-        "x" : 3867,
-        "y" : 1408
+        "x" : 583,
+        "y" : 1529
       } ],
       "relationships" : [ {
         "id" : "18"
       }, {
         "id" : "17"
       }, {
-        "id" : "16",
+        "id" : "28",
         "vertices" : [ {
-          "x" : 3896,
-          "y" : 704
+          "x" : 933,
+          "y" : 479
         } ]
       }, {
-        "id" : "15",
-        "vertices" : [ {
-          "x" : 3596,
-          "y" : 704
-        } ]
+        "id" : "27"
       }, {
         "id" : "26",
         "vertices" : [ {
-          "x" : 3746,
-          "y" : 1408
+          "x" : 3058,
+          "y" : 929
         } ]
       }, {
         "id" : "25"
       }, {
         "id" : "24"
       }, {
-        "id" : "23"
+        "id" : "13"
       }, {
-        "id" : "12",
-        "vertices" : [ {
-          "x" : 687,
-          "y" : 704
-        } ]
+        "id" : "23"
       }, {
         "id" : "22"
       }, {
-        "id" : "21"
-      }, {
         "id" : "20"
+      }, {
+        "id" : "19"
       } ]
     } ],
     "dynamicViews" : [ {
@@ -488,42 +505,42 @@
       "elementId" : "2",
       "externalBoundariesVisible" : true,
       "relationships" : [ {
-        "id" : "12",
+        "id" : "13",
         "description" : "Initiates action that requires connecting to wallet within",
         "order" : "1",
         "response" : false
       }, {
-        "id" : "20",
+        "id" : "22",
         "description" : "Send request for authentication credentials from",
         "order" : "2",
         "response" : false
       }, {
-        "id" : "22",
-        "description" : "Forwards request to approve DApp connection to",
+        "id" : "24",
+        "description" : "Forwards request to approve dApp connection to",
         "order" : "3",
         "response" : false
       }, {
-        "id" : "18",
-        "description" : "Requests approval for DApp connection from",
+        "id" : "20",
+        "description" : "Requests approval for dApp connection from",
         "order" : "4",
         "response" : false
       }, {
-        "id" : "17",
+        "id" : "19",
         "description" : "Approves DApp connection using",
         "order" : "5",
         "response" : false
       }, {
-        "id" : "25",
+        "id" : "27",
         "description" : "Saves DApp connection approval data into",
         "order" : "6",
         "response" : false
       }, {
-        "id" : "21",
-        "description" : "Forwards DApp connection approval data to",
+        "id" : "23",
+        "description" : "Forwards dApp connection approval data to",
         "order" : "7",
         "response" : false
       }, {
-        "id" : "20",
+        "id" : "22",
         "description" : "Responds with the set of authentication credentials created from approval data to",
         "order" : "8",
         "response" : true
@@ -570,48 +587,48 @@
       "elementId" : "2",
       "externalBoundariesVisible" : true,
       "relationships" : [ {
-        "id" : "12",
+        "id" : "13",
         "description" : "Initiates action that requires signing a transaction within",
         "order" : "1",
         "response" : false
       }, {
-        "id" : "20",
+        "id" : "22",
         "description" : "Sends request to sign transaction to",
         "order" : "2",
         "response" : false
       }, {
-        "id" : "22",
+        "id" : "24",
         "description" : "Forwards request to sign transaction to",
         "order" : "3",
         "response" : false
       }, {
-        "id" : "18",
+        "id" : "20",
         "description" : "Asks for password to retrieve key to sign transaction from",
         "order" : "4",
         "response" : false
       }, {
-        "id" : "17",
+        "id" : "19",
         "description" : "Enters password into",
         "order" : "5",
         "response" : false
       }, {
-        "id" : "23",
+        "id" : "25",
         "description" : "Retrieves key for signing from",
         "order" : "6",
         "response" : false
       }, {
-        "id" : "21",
+        "id" : "23",
         "description" : "Creates signed transaction data & forwards it to",
         "order" : "7",
         "response" : false
       }, {
-        "id" : "20",
+        "id" : "22",
         "description" : "Responds with signed transaction data to",
         "order" : "8",
         "response" : true
       }, {
-        "id" : "14",
-        "description" : "Sends signed transaction to",
+        "id" : "15",
+        "description" : "Sends signed transaction using",
         "order" : "9",
         "response" : false
       } ],
@@ -636,7 +653,7 @@
         "x" : 1079,
         "y" : 1529
       }, {
-        "id" : "9",
+        "id" : "10",
         "x" : 1079,
         "y" : 2129
       } ]
@@ -650,10 +667,13 @@
           "color" : "#222222"
         }, {
           "tag" : "DApp",
-          "shape" : "Ellipse"
+          "shape" : "Hexagon"
+        }, {
+          "tag" : "AlgoNode",
+          "shape" : "Hexagon"
         }, {
           "tag" : "Algorand",
-          "shape" : "Hexagon"
+          "shape" : "Ellipse"
         }, {
           "tag" : "Database",
           "shape" : "Cylinder"
