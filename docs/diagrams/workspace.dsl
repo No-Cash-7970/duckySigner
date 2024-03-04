@@ -1,14 +1,14 @@
 workspace {
 
     model {
-        user = person "Algorand User" "A user of my software system."
-        wallet = softwareSystem "duckySigner" "Algorand wallet app" {
+        user = person "User" "A user of the Ducky Signer desktop wallet"
+        wallet = softwareSystem "Ducky Signer" "Algorand wallet software for desktop computers" {
             walletUI = container "User Interface" ""
             walletServer = container "Wallet Connection Server" ""
             keyStore = container "Key Store" "Encrypted storage of the private keys for the user's accounts" {
                 tags Database
             }
-            grantStore = container "DApp Grants Store" "Storage for credentials and permissions granted to DApps" {
+            grantStore = container "DApp Grants Store" "Storage for credentials and permissions granted to dApps" {
                 tags Database
             }
             settingsStore = container "Settings Store" "Storage for the user's wallet settings. Maybe a file or localStorage." {
@@ -24,7 +24,7 @@ workspace {
         algoNode = softwareSystem "Algorand Node" {
             tags AlgoNode External
         }
-        ledgerDevice = softwareSystem "Ledger Device" "Ledger hardware wallet" {
+        ledgerDevice = softwareSystem "Ledger Device" "Hardware wallet device" {
             tags Database External
         }
 
@@ -43,10 +43,10 @@ workspace {
         walletUI -> user "Requests input from"
         dapp -> walletServer "Makes requests to" "HTTP/2"
         walletUI -> walletServer "Notifies of user response" "Event"
-        walletServer -> walletUI "Notifies of DApp request" "Event"
+        walletServer -> walletUI "Notifies of dApp request" "Event"
         walletUI -> keyStore "Temporarily retrieves key from" "With password from user"
         walletUI -> settingsStore "Retrieves user preferences from" ""
-        walletUI -> grantStore "Saves credentials & perms given to DApps" ""
+        walletUI -> grantStore "Saves credentials & perms given to dApps" ""
         walletUI -> ledgerDevice "Sends signing request to"
         # walletServer -> grantStore "" ""
 
@@ -73,11 +73,11 @@ workspace {
 
             user -> dapp "Initiates action that requires connecting to wallet within"
             dapp -> walletServer "Send request for authentication credentials from"
-            walletServer -> walletUI "Forwards request to approve DApp connection to"
-            walletUI -> user "Requests approval for DApp connection from"
+            walletServer -> walletUI "Forwards request to approve dApp connection to"
+            walletUI -> user "Requests approval for dApp connection from"
             user -> walletUI "Approves DApp connection using"
             walletUI -> grantStore "Saves DApp connection approval data into"
-            walletUI -> walletServer "Forwards DApp connection approval data to"
+            walletUI -> walletServer "Forwards dApp connection approval data to"
             walletServer -> dapp "Responds with the set of authentication credentials created from approval data to"
         }
 
