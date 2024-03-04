@@ -40,7 +40,8 @@
     - [EXIT-06: Algorand node API](#exit-06-algorand-node-api)
   - [Assets](#assets)
     - [ASSET-00: Account private keys](#asset-00-account-private-keys)
-    - [ASSET-{{ID\_NUM}}: {{Add name of asset here}}](#asset-id_num-add-name-of-asset-here)
+    - [ASSET-01: User preferences](#asset-01-user-preferences)
+    - [ASSET-02: Algorand account information](#asset-02-algorand-account-information)
 
 ## External Dependencies
 
@@ -227,19 +228,30 @@ Changing the state of something (e.g. account, smart contract) on the Algorand b
 
 ### ASSET-00: Account private keys
 
-An account's private key is the most valuable asset a wallet can contain. The private key is needed to transfer funds from the account and interact with the network through smart contracts (also known as "applications"). The private key is usually encoded into the form of a 25-word mnemonic to make it easier for the user to record into some non-digital medium. The purpose of wallet software is to safely store private keys in a way that makes it easier for users to use them to authenticate as their accounts to authorize interactions with the network.
+An account's private key is the most valuable asset any wallet software can contain. The private key is needed to transfer funds from the account and interact with the network through smart contracts (also known as "applications"). The private key is usually encoded into the form of a 25-word mnemonic to make it easier for the user to record it into some secure, typically non-digital, medium. The purpose of wallet software is to safely store private keys in a way that makes it easier or possible for users to use them to authorize their account's interactions with the network.
 
 **Trust Levels**:
 
-1. Anonymous user
-2. Authenticated user
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
 
-### ASSET-{{ID_NUM}}: {{Add name of asset here}}
+### ASSET-01: User preferences
 
-{{Insert description here}}
+The user's preferences for the desktop wallet may prove useful for an attacker, especially for phishing.
 
 **Trust Levels**:
 
-1. {{Lowest level of trust}}
-2. {{Next lowest level of trust}}
-3. {{Highest level of trust}}
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
+
+### ASSET-02: Algorand account information
+
+Although the information about an Algorand account is publicly available for free for anyone willing to look for it, the user may not want to reveal details about their account by having it displayed on a screen that anyone can read from a distance. This is because revealing such information can lead to harm to the user in the real world, such as a ["$5 wrench attack"](https://xkcd.com/538/).
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. DApp
+3. Anonymous wallet user
