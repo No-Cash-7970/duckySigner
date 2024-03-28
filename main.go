@@ -14,7 +14,7 @@ import (
 // made available to the frontend.
 // See https://pkg.go.dev/embed for more information.
 
-//go:embed frontend/dist
+//go:embed all:frontend/dist
 var assets embed.FS
 
 // main function serves as the application's entry point. It initializes the application, creates a window,
@@ -28,8 +28,8 @@ func main() {
 	// 'Bind' is a list of Go struct instances. The frontend has access to the methods of these instances.
 	// 'Mac' options tailor the application when running an macOS.
 	app := application.New(application.Options{
-		Name:        "duckySigner",
-		Description: "A demo of using raw HTML & CSS",
+		Name:        "Ducky Signer",
+		Description: "Experimental desktop wallet for Algorand",
 		Bind: []any{
 			&GreetService{},
 		},
@@ -47,14 +47,18 @@ func main() {
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
 	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
-		Title: "Window 1",
+		Title: "Test App",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
-		BackgroundColour: application.NewRGB(27, 38, 54),
-		URL:              "/",
+		// BackgroundColour: application.NewRGB(27, 38, 54),
+		URL:      "/",
+		Width:    1024,
+		Height:   768,
+		Centered: true,
+		// StartState: application.WindowStateMaximised,
 	})
 
 	// Create a goroutine that emits an event containing the current time every second.
