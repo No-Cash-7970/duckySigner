@@ -24,7 +24,7 @@ cmd = "go mod tidy"
 blocking = true
 
 [[config.executes]]
-cmd = "wails3 task build"
+cmd = "wails3 task dev:build"
 blocking = true
 
 [[config.executes]]
