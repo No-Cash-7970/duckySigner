@@ -4,3 +4,4 @@
 /bin
 /*.syso
 /wails
+.vscode
