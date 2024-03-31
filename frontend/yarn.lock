@@ -429,6 +429,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@wailsio/runtime@npm:^3.0.0-alpha.20":
+  version: 3.0.0-alpha.20
+  resolution: "@wailsio/runtime@npm:3.0.0-alpha.20"
+  checksum: 10c0/2b65a7e5974e2d80d9463ae5846b8a25f6228e2271c8d243dc83343d2365b8dbb74cfe234256da0eb6c7974300eaf6a1edb920dfe014fd54cd738e524df600a4
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^2.0.0":
   version: 2.0.0
   resolution: "abbrev@npm:2.0.0"
@@ -1728,6 +1735,7 @@ __metadata:
     "@types/node": "npm:^20"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
+    "@wailsio/runtime": "npm:^3.0.0-alpha.20"
     autoprefixer: "npm:^10.0.1"
     daisyui: "npm:^4.9.0"
     eslint: "npm:^8"
