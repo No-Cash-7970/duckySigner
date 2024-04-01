@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	_ "embed"
 	"encoding/base64"
 	"encoding/json"
 	"log"
