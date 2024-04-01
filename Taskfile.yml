@@ -10,27 +10,35 @@ tasks:
 
   build:
     summary: Builds the application
+    deps:
+      - task: build:frontend
+      - task: go:mod:tidy
+      - task: generate:icons
     cmds:
       # Build for current OS
       - task: build:{{OS}}
-      - task: build:frontend
 
       # Uncomment to build for specific OSes
       # - task: build:linux
       # - task: build:windows
       # - task: build:darwin
 
+  build:prod:
+    summary: Builds the application for production
+    cmds:
+      - task: build
+        vars:
+          PRODUCTION: "true"
+
+
   ## ------> Windows <-------
 
   build:windows:
     summary: Builds the application for Windows
-    deps:
-      - task: go:mod:tidy
-      - task: generate:icons
+    cmds:
       - task: generate:syso
         vars:
           ARCH: '{{.ARCH}}'
-    cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/duckySigner.exe
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -ldflags="-w -s -H windowsgui"{{else}}-gcflags=all="-N -l"{{end}}'
@@ -74,9 +82,6 @@ tasks:
 
   build:darwin:
     summary: Creates a production build of the application
-    deps:
-      - task: go:mod:tidy
-      - task: generate:icons
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
     vars:
@@ -125,11 +130,6 @@ tasks:
 
   build:linux:
     summary: Builds the application for Linux
-    deps:
-      - task: go:mod:tidy
-      - task: generate:icons
-        vars:
-          ARCH: '{{.ARCH}}'
     cmds:
       - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/duckySigner
     vars:
@@ -213,6 +213,8 @@ tasks:
   generate:syso:
     summary: Generates Windows `.syso` file
     dir: build
+    deps:
+      - task: generate:icons
     cmds:
       - wails3 generate syso -arch {{.ARCH}} -icon icon.ico -manifest wails.exe.manifest -info info.json -out ../wails.syso
     vars:
@@ -371,8 +373,8 @@ tasks:
     generates:
       - dist/*
     deps:
-      - install:frontend:deps
-      - generate:bindings
+      - task: install:frontend:deps
+      - task: generate:bindings
     cmds:
       - yarn build
 
@@ -435,6 +437,8 @@ tasks:
   # Same as `build` but without building the frontend because `dev:frontend` includes building
   dev:build:
     summary: Builds the application for development mode
+    deps:
+      - task: generate:icons
     cmds:
       # Build for current OS
       - task: build:{{OS}}

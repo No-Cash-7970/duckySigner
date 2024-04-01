@@ -3,13 +3,13 @@
 		"file_version": "0.1.0"
 	},
 	"info": {
-		"0000": {
+		"0409": {
 			"ProductVersion": "0.1.0",
-			"CompanyName": "My Company",
-			"FileDescription": "My Product Description",
-			"LegalCopyright": "© now, My Company",
-			"ProductName": "My Product",
-			"Comments": "This is a comment"
+			"CompanyName": "No-Cash-7970",
+			"FileDescription": "Desktop wallet for Algorand",
+			"LegalCopyright": "© 2024, No-Cash-7970",
+			"ProductName": "Ducky Signer",
+			"Comments": ""
 		}
 	}
 }

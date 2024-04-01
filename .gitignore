@@ -5,3 +5,5 @@
 /*.syso
 /wails
 .vscode
+/build/icon.ico
+/build/icons.icns
