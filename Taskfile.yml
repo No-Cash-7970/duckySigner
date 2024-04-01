@@ -25,8 +25,13 @@ tasks:
 
   build:prod:
     summary: Builds the application for production
+    deps:
+      - task: build:frontend
+      - task: go:mod:tidy
+      - task: generate:icons
     cmds:
-      - task: build
+      # Build for current OS
+      - task: build:{{OS}}
         vars:
           PRODUCTION: "true"
 
