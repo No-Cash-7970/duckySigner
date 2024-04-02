@@ -1,27 +1,29 @@
-'use client'
+'use client';
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 export default function Home() {
-  const [greeting, setGreeting] = useState('')
-  const [time, setTime] = useState('')
+  const [greeting, setGreeting] = useState('');
+  const [time, setTime] = useState('');
 
   // Using Wails bindings must be done in a `useEffect` because they need the global `window` object
   useEffect(() => {
     (async () =>  {
-      // Wails bindings imports must be dynamic also because importing bindings relies on the `window` object too
+      // Wails bindings imports must be dynamic also because importing bindings relies on the
+      // `window` object too
       const Greet = (await import("@/bindings/main/GreetService")).Greet;
-      // Output values from the Wails bindings to be displayed should be placed into in some kind of state variable
-      setGreeting(await Greet('user'))
+      // Output values from the Wails bindings to be displayed should be placed into in some kind of
+      // state variable
+      setGreeting(await Greet('user'));
 
       // Even Wails events need to be in a `useEffect`
       const Events = (await import("@wailsio/runtime")).Events;
       Events.On('time', (time: { name: string, data: string }) => {
-          setTime(time.data)
+          setTime(time.data);
       });
     })();
-  }, [])
+  }, []);
 
   return (
     <main className="prose bg-base h-[100vh] max-w-none grid place-content-center">
