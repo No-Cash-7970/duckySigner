@@ -15,8 +15,6 @@
     "@wailsio/runtime": "^3.0.0-alpha.20",
     "algosdk": "^2.7.0",
     "daisyui": "^4.9.0",
-    "gulp": "^5.0.0",
-    "gulp-execa": "^6.0.0",
     "jotai": "^2.7.2",
     "jotai-form": "^0.1.6",
     "next": "14.1.4",
