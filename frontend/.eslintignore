@@ -6,10 +6,11 @@ node_modules
 .env
 .env.*
 !.env.example
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
-/.yarn
-/test-results
 
 # Wails
 /src/lib/wails-bindings
+
+# Ignore files for PNPM, NPM and YARN
+pnpm-lock.yaml
+package-lock.json
+yarn.lock

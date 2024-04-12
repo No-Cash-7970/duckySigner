@@ -1,11 +1,8 @@
-import type { Config } from "tailwindcss";
+// Some parts taken from: https://daisyui.com/blog/how-to-install-sveltekit-and-daisyui/
 
-const config: Config = {
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./src/**/*.{html,svelte,js,ts}'],
   theme: {
     extend: {},
   },
@@ -45,6 +42,5 @@ const config: Config = {
       "nord",
       "sunset",
     ],
-  }
+  },
 };
-export default config;
