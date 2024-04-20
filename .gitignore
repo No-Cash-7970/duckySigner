@@ -12,3 +12,10 @@
 .DS_Store
 *.pem
 .vscode
+
+# KMD
+**/kmd_config.json*
+**/sqlite_wallets
+
+# Testing
+**/.test*
