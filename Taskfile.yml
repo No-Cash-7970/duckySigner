@@ -17,7 +17,6 @@ tasks:
     cmds:
       # Build for current OS
       - task: build:{{OS}}
-
       # Uncomment to build for specific OSes
       # - task: build:linux
       # - task: build:windows
@@ -34,6 +33,7 @@ tasks:
       - task: build:{{OS}}
         vars:
           PRODUCTION: "true"
+          CGO_ENABLED: 1
 
 
   ## ------> Windows <-------
@@ -49,7 +49,7 @@ tasks:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -ldflags="-w -s -H windowsgui"{{else}}-gcflags=all="-N -l"{{end}}'
     env:
       GOOS: windows
-      CGO_ENABLED: 0
+      CGO_ENABLED: 1
       GOARCH: '{{.ARCH | default ARCH}}'
       PRODUCTION: '{{.PRODUCTION | default "false"}}'
 
@@ -438,3 +438,34 @@ tasks:
     summary: Reloads the application
     cmds:
       - task: run
+
+  test:
+    summary: Runs all tests once
+    deps:
+      - task: go:mod:tidy
+    cmds:
+      - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --trace
+      - task: test:frontend
+
+  test:watch:
+    summary: Run backend Go tests in watch mode
+    deps:
+      - task: go:mod:tidy
+    cmds:
+      - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --race --trace -v
+
+  test:frontend:
+    summary: Run the frontend tests once
+    dir: frontend
+    deps:
+      - task: install:frontend:deps
+    cmds:
+      - yarn test
+
+  test:ci:
+    summary: Run tests for a continuous integration (CI) environment
+    deps:
+      - task: go:mod:tidy
+    cmds:
+      - go run github.com/onsi/ginkgo/v2/ginkgo -r --procs=6 --compilers=6 --randomize-all --randomize-suites --fail-on-pending --keep-going --race --trace --poll-progress-after=120s --poll-progress-interval=30s
+      - task: test:frontend
