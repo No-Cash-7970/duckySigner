@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Greet } from "$lib/wails-bindings/main/GreetService";
+  import { Greet } from "$lib/wails-bindings/services/GreetService";
   import { Events } from "@wailsio/runtime";
   import { onDestroy } from "svelte";
 
