@@ -44,7 +44,7 @@ tasks:
       - task: generate:syso
         vars:
           ARCH: '{{.ARCH}}'
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/duckySigner.exe
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}.exe
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -ldflags="-w -s -H windowsgui"{{else}}-gcflags=all="-N -l"{{end}}'
     env:
@@ -136,7 +136,7 @@ tasks:
   build:linux:
     summary: Builds the application for Linux
     cmds:
-      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/duckySigner
+      - go build {{.BUILD_FLAGS}} -o {{.BIN_DIR}}/{{.APP_NAME}}
     vars:
       BUILD_FLAGS: '{{if eq .PRODUCTION "true"}}-tags production -ldflags="-w -s"{{else}}-gcflags=all="-N -l"{{end}}'
     env:
@@ -413,6 +413,10 @@ tasks:
   run:windows:
     cmds:
       - '{{.BIN_DIR}}\\{{.APP_NAME}}.exe'
+
+  run:darwin:
+    cmds:
+      - '{{.BIN_DIR}}/{{.APP_NAME}}'
 
   run:linux:
     cmds:
