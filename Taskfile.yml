@@ -444,22 +444,27 @@ tasks:
       - task: run
 
   test:
-    summary: Runs all tests once
+    summary: Run all tests once
     deps:
       - task: go:mod:tidy
     cmds:
       - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --trace
+
+  test:all:
+    summary: Runs all tests once
+    cmds:
+      - task: test
       - task: test:frontend
 
   test:watch:
-    summary: Run backend Go tests in watch mode
+    summary: Runs backend Go tests in watch mode
     deps:
       - task: go:mod:tidy
     cmds:
       - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --race --trace -v
 
   test:frontend:
-    summary: Run the frontend tests once
+    summary: Runs the frontend tests once
     dir: frontend
     deps:
       - task: install:frontend:deps
@@ -467,7 +472,7 @@ tasks:
       - yarn test
 
   test:ci:
-    summary: Run tests for a continuous integration (CI) environment
+    summary: Runs all tests for a continuous integration (CI) environment
     deps:
       - task: go:mod:tidy
     cmds:
