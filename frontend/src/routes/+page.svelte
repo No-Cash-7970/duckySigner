@@ -3,7 +3,7 @@
   import { Events } from "@wailsio/runtime";
   import { onDestroy } from "svelte";
 
-  const greet = Greet('user')
+  const greet = Greet('user');
 
   let currentTime: string;
   const unregTimeEvt = Events.On('time', (time: { name: string, data: string }) => {

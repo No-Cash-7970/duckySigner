@@ -1,4 +1,5 @@
-// Some parts taken from: https://daisyui.com/blog/how-to-install-sveltekit-and-daisyui/
+// Some parts taken from:
+// https://daisyui.com/blog/how-to-install-sveltekit-and-daisyui/
 
 /** @type {import('tailwindcss').Config} */
 export default {
