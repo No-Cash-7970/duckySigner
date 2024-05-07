@@ -3,6 +3,7 @@ version: '3'
 vars:
   APP_NAME: "duckySigner"
   BIN_DIR: "bin"
+  VITE_PORT: '{{.WAILS_VITE_PORT | default 9245}}'
 
 tasks:
 
@@ -428,15 +429,12 @@ tasks:
     deps:
       - task: install:frontend:deps
     cmds:
-      - yarn dev
+      - yarn dev --port {{.VITE_PORT}} --strictPort
 
   dev:
     summary: Runs the application in development mode
     cmds:
-      - wails3 tool watcher -config ./build/devmode.config.toml
-    env:
-      # This is the default Vite dev server port
-      FRONTEND_DEVSERVER_URL: 'http://localhost:5173'
+      - wails3 dev -config ./build/devmode.config.yaml -port {{.VITE_PORT}}
 
   dev:reload:
     summary: Reloads the application
