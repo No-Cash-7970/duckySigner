@@ -1,8 +1,6 @@
 module duckysigner
 
-go 1.22
-
-toolchain go1.22.1
+go 1.22.4
 
 require (
 	github.com/algorand/go-algorand v0.0.0-20240605152724-8d228c0445cd
