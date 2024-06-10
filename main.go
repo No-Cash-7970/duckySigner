@@ -7,6 +7,7 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"duckysigner/kmd/config"
 	"duckysigner/services"
 )
 
@@ -32,8 +33,21 @@ func main() {
 		Name:        "Ducky Signer",
 		Description: "Experimental desktop wallet for Algorand",
 		Services: []application.Service{
-			application.NewService(&services.GreetService{}),
-			application.NewService(&services.KMDService{}),
+			// application.NewService(&services.GreetService{}),
+			application.NewService(&services.KMDService{
+				Config: config.KMDConfig{
+					DriverConfig: config.DriverConfig{
+						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
+							ScryptParams: config.ScryptParams{
+								ScryptN: 65536,
+								ScryptR: 1,
+								ScryptP: 32,
+							},
+						},
+						LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+					},
+				},
+			}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

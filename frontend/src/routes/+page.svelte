@@ -1,32 +1,17 @@
 <script lang="ts">
-  import { GreetService } from "$lib/wails-bindings/duckysigner/services";
-  import { Events } from "@wailsio/runtime";
-  import { onDestroy } from "svelte";
+  import { KMDService } from "$lib/wails-bindings/duckysigner/services";
 
-  const greet = GreetService.Greet('user');
-
-  let currentTime: string;
-  const unregTimeEvt = Events.On('time', (time: { name: string, data: string }) => {
-    currentTime = time.data;
-    console.log(currentTime);
-  });
-
-  onDestroy(() => {
-    unregTimeEvt();
-  });
-
+  const walletsList = KMDService.ListWallets();
 </script>
 
-<div class="text-center">{currentTime ?? 'Loading time...'}</div>
-<h1 class="text-5xl m-0">
-  {#await greet then greeting }
-    {greeting}
+<div class="grid content-center h-[100vh]">
+  <a class="btn btn-sm btn-primary" href="/wallets/create">Create wallet</a>
+
+  {#await walletsList then wallets}
+    <ul class="menu menu-lg bg-base-200">
+      {#each wallets as wallet}
+        <li><a href="/wallets?id={atob(wallet.ID)}" class="no-underline">{atob(wallet.Name)}</a></li>
+      {/each}
+    </ul>
   {/await}
-</h1>
-<div class="not-prose mt-6 flex justify-center">
-  <ul class="menu menu-vertical sm:menu-horizontal bg-base-200 rounded-box">
-    <li><a href="/wallets">Wallets List</a></li>
-    <li><a href="#item2">Item 2</a></li>
-    <li><a href="#item3">Item 3</a></li>
-  </ul>
 </div>
