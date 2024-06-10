@@ -31,9 +31,9 @@ func main() {
 	app := application.New(application.Options{
 		Name:        "Ducky Signer",
 		Description: "Experimental desktop wallet for Algorand",
-		Bind: []any{
-			&services.GreetService{},
-			&services.KMDService{},
+		Services: []application.Service{
+			application.NewService(&services.GreetService{}),
+			application.NewService(&services.KMDService{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

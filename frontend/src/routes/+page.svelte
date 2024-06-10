@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Greet } from "$lib/wails-bindings/services/GreetService";
+  import { GreetService } from "$lib/wails-bindings/duckysigner/services";
   import { Events } from "@wailsio/runtime";
   import { onDestroy } from "svelte";
 
-  const greet = Greet('user');
+  const greet = GreetService.Greet('user');
 
   let currentTime: string;
   const unregTimeEvt = Events.On('time', (time: { name: string, data: string }) => {
@@ -17,7 +17,7 @@
 
 </script>
 
-<div class="text-center">{currentTime}</div>
+<div class="text-center">{currentTime ?? 'Loading time...'}</div>
 <h1 class="text-5xl m-0">
   {#await greet then greeting }
     {greeting}
