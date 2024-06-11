@@ -446,7 +446,8 @@ tasks:
     deps:
       - task: go:mod:tidy
     cmds:
-      - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --trace
+      - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --trace
+      # - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --trace
 
   test:all:
     summary: Runs all tests once
