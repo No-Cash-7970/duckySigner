@@ -216,6 +216,28 @@ func (service *KMDService) GenerateWalletAccount(walletID, password string) (str
 	return types.Address(pk).String(), nil
 }
 
+// CheckWalletPassword tests if the given password is the correct password for
+// the wallet with the given wallet ID
+func (service *KMDService) CheckWalletPassword(walletID, password string) error {
+	err := service.init()
+	if err != nil {
+		return err
+	}
+
+	// Get wallet
+	fetchedWallet, err := service.getWallet(walletID)
+	if err != nil {
+		return err
+	}
+
+	err = fetchedWallet.CheckPassword([]byte(password))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // RemoveAccountFromWallet removes the account with the given acctAddr from the
 // wallet with the given walletID
 func (service *KMDService) RemoveAccountFromWallet(acctAddr, walletID, password string) error {

@@ -24,7 +24,6 @@ var _ = Describe("KmdService", func() {
 			const walletDirName = ".test_wallet_mngmt"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(createKmdServiceCleanup(walletDirName))
-
 			By("Listing 0 wallets")
 			walletsInfo, err := kmdService.ListWallets()
 			Expect(err).NotTo(HaveOccurred())
@@ -35,6 +34,14 @@ var _ = Describe("KmdService", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(newWalletInfoA.DriverName).To(Equal("sqlite"))
 			Expect(newWalletInfoA.Name).To(BeEquivalentTo("wallet_A"), "1st wallet should have been created")
+
+			By("Not giving error if a given wallet password is correct")
+			err = kmdService.CheckWalletPassword(string(newWalletInfoA.ID), "passwordA")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Giving error if a given wallet password is wrong")
+			err = kmdService.CheckWalletPassword(string(newWalletInfoA.ID), "notpasswordA")
+			Expect(err).To(HaveOccurred())
 
 			By("Creating another new wallet")
 			newWalletInfoB, err := kmdService.CreateWallet("wallet_B", "passwordB")
@@ -185,6 +192,7 @@ func createKmdService(walletDirName string) KMDService {
 						ScryptP: 1,
 					},
 				},
+				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
 	}
