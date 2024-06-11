@@ -1,9 +1,16 @@
 <script lang="ts">
   import { page } from '$app/stores';
+  import { onMount } from 'svelte';
 
-  let walletId = $page.url.searchParams.get('id') ?? '';
-  let acctAddr = $page.url.searchParams.get('addr') ?? '';
-  let backLink = walletId ? `/wallets?id=${walletId}` : '/';
+  let walletId = '';
+  let acctAddr = '';
+  let backLink = '/';
+
+  onMount(() => {
+    walletId = $page.url.searchParams.get('id') ?? '';
+    acctAddr = $page.url.searchParams.get('addr') ?? '';
+    backLink = walletId ? `/wallets?id=${walletId}` : '/';
+  });
 </script>
 
 <a href="{backLink}" class="btn">Back</a>

@@ -3,8 +3,9 @@
   import type { Metadata } from '$lib/wails-bindings/duckysigner/kmd/wallet';
   import { KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
+  import { onMount } from 'svelte';
 
-  let walletId = $page.url.searchParams.get('id') ?? '';
+  let walletId = '';
   let walletInfo: Metadata;
   // TODO: Find a more secure way to deal with the wallet password that allows the password to be temporarily stored for a short period of time
   let walletPassword = '';
@@ -13,8 +14,11 @@
   let dialogOpen = true;
   let accounts: string[] = [];
 
-  KMDService.GetWalletInfo(walletId).then(info => walletInfo = info);
-  KMDService.ListAccountsInWallet(walletId).then(accts => accounts = accts);
+  onMount(async () => {
+    walletId = $page.url.searchParams.get('id') ?? '';
+    walletInfo = await KMDService.GetWalletInfo(walletId);
+    accounts = await KMDService.ListAccountsInWallet(walletId);
+  });
 
   async function unlockWallet() {
     try {
