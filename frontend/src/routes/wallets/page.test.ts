@@ -29,6 +29,11 @@ describe('Show Wallet', () => {
     expect(link).toHaveTextContent('Foobar');
 	});
 
+  it('has back button', () => {
+		render(ShowWalletPage);
+    expect(screen.getByText('Back')).toBeInTheDocument();
+  });
+
   // TODO: Test for buttons
 
   // TODO: Test accounts list

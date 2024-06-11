@@ -3,7 +3,6 @@
   import type { Metadata } from '$lib/wails-bindings/duckysigner/kmd/wallet';
   import { KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
-  import { onMount } from 'svelte';
 
   let walletId = $page.url.searchParams.get('id') ?? '';
   let walletInfo: Metadata;
@@ -19,8 +18,9 @@
     console.log(walletPassword);
     dialogOpen = false;
   }
-
 </script>
+
+<a href="/" class="btn">Back</a>
 
 {#if walletInfo}
   <h1 class="text-center text-4xl mb-8">{atob(walletInfo.Name)}</h1>

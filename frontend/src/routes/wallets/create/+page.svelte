@@ -16,6 +16,8 @@
   }
 </script>
 
+<a href="/" class="btn">Back</a>
+
 <h1 class="text-center text-4xl mb-8">Create New Wallet</h1>
 <form on:submit|preventDefault={submitForm} autocomplete="off">
   <div>

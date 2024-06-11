@@ -23,6 +23,11 @@ describe('Create Wallet Page', () => {
     expect(link).toHaveTextContent('Create New Wallet');
 	});
 
+  it('has back button', () => {
+		render(CreateWalletPage);
+    expect(screen.getByText('Back')).toBeInTheDocument();
+  });
+
   it('has "wallet name" input', () => {
 		render(CreateWalletPage);
     expect(screen.getByLabelText('Wallet name')).toBeInTheDocument();
