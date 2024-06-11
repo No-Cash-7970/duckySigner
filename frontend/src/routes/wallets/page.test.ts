@@ -4,7 +4,7 @@ import { writable } from 'svelte/store';
 import userEvent from '@testing-library/user-event';
 
 
-import ShowWalletPage from './+page.svelte';
+import WalletInfoPage from './+page.svelte';
 
 const walletsList = [
   'H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A',
@@ -31,21 +31,21 @@ vi.mock('$app/stores', () => ({
   page: writable({url: {searchParams: { get: () => '123' }}})
 }))
 
-describe('Show Wallet Page', () => {
+describe('Wallet Information Page', () => {
 
   it('has wallet name as heading', async () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
     const link = await screen.findByRole('heading', { level: 1 });
     expect(link).toHaveTextContent('Foobar');
 	});
 
   it('has back button', () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
     expect(screen.getByText('Back')).toBeInTheDocument();
   });
 
   it('asks for wallet password', async () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
 
     await userEvent.click(screen.getByLabelText(/Wallet password/));
     await userEvent.paste('badpassword');
@@ -55,7 +55,7 @@ describe('Show Wallet Page', () => {
   });
 
   it('shows error message when given wrong wallet password', async () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
 
     await userEvent.click(screen.getByLabelText(/Wallet password/));
     await userEvent.paste('goodpassword');
@@ -65,7 +65,7 @@ describe('Show Wallet Page', () => {
   });
 
   it('can add account', async () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
 
     // Unlock wallet
     await userEvent.click(screen.getByLabelText(/Wallet password/));
@@ -80,7 +80,7 @@ describe('Show Wallet Page', () => {
   });
 
   it('shows accounts in wallet', async () => {
-		render(ShowWalletPage);
+		render(WalletInfoPage);
 
     // Unlock wallet
     await userEvent.click(screen.getByLabelText(/Wallet password/));
