@@ -10,12 +10,13 @@ const walletsList = [
   'H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A',
   'V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU',
 ];
+const walletInfo = {
+  ID: 'MTIz', // '123'
+  Name: 'Rm9vYmFy', // 'Foobar'
+};
 
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
-  GetWalletInfo: async () => ({
-    ID: 'MTIz', // '123'
-    Name: 'Rm9vYmFy', // 'Foobar'
-  }),
+  GetWalletInfo: async () => walletInfo,
   ListAccountsInWallet: async () => walletsList,
   CheckWalletPassword: async (id: string, pw: string) => {
     if (pw !== 'badpassword') throw Error;
@@ -25,6 +26,7 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
     walletsList.push(newWallet);
     return newWallet;
   },
+  RenameWallet: async (id: string, name: string, pw: string) => walletInfo.Name = btoa(name),
 }));
 
 vi.mock('$app/stores', () => ({
@@ -35,8 +37,7 @@ describe('Wallet Information Page', () => {
 
   it('has wallet name as heading', async () => {
 		render(WalletInfoPage);
-    const link = await screen.findByRole('heading', { level: 1 });
-    expect(link).toHaveTextContent('Foobar');
+    expect(await screen.findByText(/Foobar/)).toHaveRole('heading');
 	});
 
   it('has back button', () => {
@@ -72,11 +73,28 @@ describe('Wallet Information Page', () => {
     await userEvent.paste('badpassword');
     await userEvent.click(screen.getByText('Unlock wallet'));
     // Add account
-    await userEvent.click(screen.getByText(/Add account/));
+    await userEvent.click(await screen.findByText(/Add account/));
 
     expect(await screen.findByText('H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A')).toBeInTheDocument();
     expect(await screen.findByText('V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU')).toBeInTheDocument();
     expect(await screen.findByText('RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A')).toBeInTheDocument();
+  });
+
+  it('can rename wallet', async () => {
+		render(WalletInfoPage);
+
+    // Unlock wallet
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText('Unlock wallet'));
+
+    // Rename wallet
+    await userEvent.click(await screen.findByText(/Rename/));
+    await userEvent.click(await screen.findByLabelText(/New wallet name/));
+    await userEvent.paste('Baz Qux');
+    await userEvent.click(screen.getByText('Rename wallet'));
+
+    expect(await screen.findByText(/Baz Qux/)).toHaveRole('heading');
   });
 
   it('shows accounts in wallet', async () => {
@@ -87,8 +105,8 @@ describe('Wallet Information Page', () => {
     await userEvent.paste('badpassword');
     await userEvent.click(screen.getByText('Unlock wallet'));
 
-    expect(await screen.findByText('H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A')).toBeInTheDocument();
-    expect(await screen.findByText('V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU')).toBeInTheDocument();
+    expect(await screen.findByText(/H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A/)).toBeInTheDocument();
+    expect(await screen.findByText(/V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU/)).toBeInTheDocument();
   });
 
 });

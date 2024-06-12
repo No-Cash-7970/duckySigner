@@ -11,7 +11,9 @@
   let walletPassword = '';
   let passwordWrong = false;
   let passwordCorrect = false;
-  let dialogOpen = true;
+  let walletPasswordDialogOpen = true;
+  let renameWalletDialogOpen = false;
+  let renameFail = false;
   let accounts: string[] = [];
 
   onMount(async () => {
@@ -25,10 +27,24 @@
       await KMDService.CheckWalletPassword(walletId, walletPassword);
       passwordCorrect = true;
       passwordWrong = false;
-      dialogOpen = false;
+      walletPasswordDialogOpen = false;
     } catch (error) {
       passwordWrong = true;
       passwordCorrect = false;
+    }
+  }
+
+  async function renameWallet(e: SubmitEvent) {
+    const formData = new FormData(e.target as HTMLFormElement);
+    const newName = formData.get('newName')?.toString();
+
+    try {
+      await KMDService.RenameWallet(walletId, newName ?? '', walletPassword)
+      walletInfo = await KMDService.GetWalletInfo(walletId);
+      renameWalletDialogOpen = false;
+      renameFail = false;
+    } catch (error) {
+      renameFail = true;
     }
   }
 
@@ -47,8 +63,7 @@
 
   {#if passwordCorrect}
     <div>
-      <!-- TODO: Rename wallet -->
-      <button type='submit' class="btn btn-primary" disabled>Rename</button>
+      <button type='submit' class="btn btn-primary" on:click={() => renameWalletDialogOpen = true}>Rename</button>
       <button type='submit' class="btn btn-primary" on:click={addAccount}>Add account</button>
     </div>
     {#if accounts.length > 0}
@@ -63,13 +78,12 @@
   {/if}
 {/if}
 
-<Dialog.Root bind:open={dialogOpen}>
+<Dialog.Root bind:open={walletPasswordDialogOpen}>
   <Dialog.Portal>
     <Dialog.Overlay />
     <Dialog.Content class="modal prose modal-open">
       <div class="modal-box">
         <Dialog.Title class="mt-0">Unlock Wallet</Dialog.Title>
-        <Dialog.Description></Dialog.Description>
         <form id="unlock-wallet-form" on:submit|preventDefault={unlockWallet} autocomplete="off">
           <div>
             <label class="label" for="wallet-password-input">Wallet password</label>
@@ -82,6 +96,32 @@
           </div>
           <div class="modal-action">
             <button type='submit' class="btn btn-primary">Unlock wallet</button>
+          </div>
+        </form>
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root bind:open={renameWalletDialogOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content class="modal prose modal-open">
+      <div class="modal-box">
+        <Dialog.Title class="mt-0">Rename Wallet</Dialog.Title>
+        <form id="rename-wallet-form" on:submit|preventDefault={renameWallet} autocomplete="off">
+          <div>
+            <label class="label" for="rename-wallet-input">New wallet name</label>
+            <input type="text" name="newName" class="input input-bordered w-full" id="rename-wallet-input" required />
+            {#if renameFail}
+              <div class="label bg-error px-2">
+                <span class="label-text-alt text-error-content">A wallet with this name already exists.</span>
+              </div>
+            {/if}
+          </div>
+          <div class="modal-action">
+            <button type='submit' class="btn btn-primary">Rename wallet</button>
+            <Dialog.Close class="btn">Close</Dialog.Close>
           </div>
         </form>
       </div>
