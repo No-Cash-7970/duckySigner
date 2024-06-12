@@ -43,5 +43,5 @@
 		"vitest": "^1.6.0"
 	},
 	"type": "module",
-	"packageManager": "yarn@4.1.1"
+	"packageManager": "yarn@4.3.0"
 }
