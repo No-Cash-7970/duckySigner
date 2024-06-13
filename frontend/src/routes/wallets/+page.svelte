@@ -59,8 +59,6 @@
 {#if walletInfo}
   <h1 class="text-center text-4xl mb-8">{atob(walletInfo.Name)}</h1>
 
-  <p>ID: {atob(walletInfo.ID)}</p>
-
   {#if passwordCorrect}
     <div>
       <button type='submit' class="btn btn-primary" on:click={() => renameWalletDialogOpen = true}>Rename</button>
