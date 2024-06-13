@@ -35,7 +35,7 @@
     }
 
     await KMDService.RemoveAccountFromWallet(acctAddr, walletId, walletPassword);
-    goto(backLink);
+    goto(backLink, { replaceState: true });
   }
 
   async function showMnemonic() {
