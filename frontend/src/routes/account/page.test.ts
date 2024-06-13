@@ -1,4 +1,4 @@
-import {render, screen} from '@testing-library/svelte';
+import {findAllByText, render, screen} from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import { writable } from 'svelte/store';
 import userEvent from '@testing-library/user-event';
@@ -23,6 +23,7 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   CheckWalletPassword: async (id: string, pw: string) => {
     if (pw !== 'badpassword') throw Error;
   },
+  ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
 describe('Account Information Page', () => {
@@ -43,9 +44,21 @@ describe('Account Information Page', () => {
     await userEvent.click(screen.getByText(/Remove from wallet/));
     await userEvent.click(screen.getByLabelText(/Wallet password/));
     await userEvent.paste('badpassword');
-    await userEvent.click(await screen.findByText('Remove this account'));
+    await userEvent.click(screen.getByText('Remove this account'));
 
     expect(gotoMockFunc).toHaveBeenCalled();
+  });
+
+  it('can show mnemonic', async () => {
+		render(AccountInfoPage);
+
+    await userEvent.click(screen.getByText(/See mnemonic/));
+    // Enter password
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText(/Continue/));
+
+    expect((await screen.findAllByText('abandon')).length).toBe(25)
   });
 
 });
