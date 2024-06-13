@@ -24,7 +24,7 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   CheckWalletPassword: async (id: string, pw: string) => {
     if (pw !== 'badpassword') throw Error;
   },
-  ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
+  ExportAccountInWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
 vi.mock('algosdk', async (importOriginal) => {

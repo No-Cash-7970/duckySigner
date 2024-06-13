@@ -40,7 +40,7 @@
 
   async function showMnemonic() {
     askPassForMnemonicDialogOpen = false;
-    mnemonicParts = (await KMDService.ExportWalletMnemonic(walletId, walletPassword)).split(' ');
+    mnemonicParts = (await KMDService.ExportAccountInWallet(acctAddr, walletId, walletPassword)).split(' ');
     mnemonicDialogOpen = true;
   }
 </script>
@@ -121,7 +121,7 @@
           </div>
           <div class="modal-action">
             <button type='submit' class="btn btn-primary">Continue</button>
-            <Dialog.Close class="btn">Close</Dialog.Close>
+            <Dialog.Close class="btn">Cancel</Dialog.Close>
           </div>
         </form>
       </div>
