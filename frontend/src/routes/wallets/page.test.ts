@@ -27,6 +27,7 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
     return newWallet;
   },
   RenameWallet: async (id: string, name: string, pw: string) => walletInfo.Name = btoa(name),
+  ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
 vi.mock('$app/stores', () => ({
@@ -107,6 +108,23 @@ describe('Wallet Information Page', () => {
 
     expect(await screen.findByText(/H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A/)).toBeInTheDocument();
     expect(await screen.findByText(/V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU/)).toBeInTheDocument();
+  });
+
+  it('can show mnemonic', async () => {
+		render(WalletInfoPage);
+
+    // Unlock wallet
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText('Unlock wallet'));
+
+    // Try to see mnemonic
+    await userEvent.click(await screen.findByText(/See mnemonic/));
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText(/Continue/));
+
+    expect((await screen.findAllByText('abandon')).length).toBe(25);
   });
 
 });

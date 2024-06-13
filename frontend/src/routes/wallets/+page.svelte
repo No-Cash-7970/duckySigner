@@ -13,8 +13,11 @@
   let passwordCorrect = false;
   let walletPasswordDialogOpen = true;
   let renameWalletDialogOpen = false;
+  let mnemonicDialogOpen = false;
+  let askPassForMnemonicDialogOpen = false;
   let renameFail = false;
   let accounts: string[] = [];
+  let mnemonicParts: string[] = [];
 
   onMount(async () => {
     walletId = $page.url.searchParams.get('id') ?? '';
@@ -52,6 +55,12 @@
     await KMDService.GenerateWalletAccount(walletId, walletPassword);
     accounts = await KMDService.ListAccountsInWallet(walletId);
   }
+
+  async function showMnemonic() {
+    askPassForMnemonicDialogOpen = false;
+    mnemonicParts = (await KMDService.ExportWalletMnemonic(walletId, walletPassword)).split(' ');
+    mnemonicDialogOpen = true;
+  }
 </script>
 
 <a href="/" class="btn">Back</a>
@@ -61,8 +70,9 @@
 
   {#if passwordCorrect}
     <div>
-      <button type='submit' class="btn btn-primary" on:click={() => renameWalletDialogOpen = true}>Rename</button>
-      <button type='submit' class="btn btn-primary" on:click={addAccount}>Add account</button>
+      <button class="btn" on:click={() => askPassForMnemonicDialogOpen = true}>See mnemonic</button>
+      <button class="btn btn-primary" on:click={() => renameWalletDialogOpen = true}>Rename</button>
+      <button class="btn btn-primary" on:click={addAccount}>Add account</button>
     </div>
     {#if accounts.length > 0}
       <ul class="menu menu-lg bg-base-200">
@@ -123,6 +133,57 @@
             <Dialog.Close class="btn">Close</Dialog.Close>
           </div>
         </form>
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root bind:open={askPassForMnemonicDialogOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content class="modal prose modal-open">
+      <div class="modal-box">
+        <Dialog.Title class="mt-0">Enter wallet password</Dialog.Title>
+        <Dialog.Description>Enter wallet password to see this wallet's mnemonic.</Dialog.Description>
+        <form id="unlock-wallet-form" on:submit|preventDefault={showMnemonic} autocomplete="off">
+          <div>
+            <label class="label" for="wallet-password-input">Wallet password</label>
+            <input type="password" bind:value={walletPassword} class="input input-bordered w-full" id="wallet-password-input" required />
+            {#if passwordWrong}
+              <div class="label bg-error px-2">
+                <span class="label-text-alt text-error-content">Incorrect password.</span>
+              </div>
+            {/if}
+          </div>
+          <div class="modal-action">
+            <button type='submit' class="btn btn-primary">Continue</button>
+            <Dialog.Close class="btn">Cancel</Dialog.Close>
+          </div>
+        </form>
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root bind:open={mnemonicDialogOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content class="modal prose modal-open">
+      <div class="modal-box">
+        <Dialog.Title class="mt-0">Account Mnemonic</Dialog.Title>
+        <table class="table">
+          <tbody>
+            {#each mnemonicParts as part, index}
+              <tr>
+                <td>{index + 1}</td>
+                <td>{part}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+        <div class="modal-action">
+          <Dialog.Close class="btn">Close</Dialog.Close>
+        </div>
       </div>
     </Dialog.Content>
   </Dialog.Portal>
