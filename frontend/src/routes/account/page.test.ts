@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 
 
 import AccountInfoPage from './+page.svelte';
+import { microalgosToAlgos } from 'algosdk';
 
 vi.mock('$app/stores', () => ({
   page: writable({url: { searchParams: {
@@ -26,6 +27,24 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
+vi.mock('algosdk', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('algosdk')>();
+  return {
+    microalgosToAlgos: actual.microalgosToAlgos,
+    Algodv2: class {
+      constructor () {
+        return {
+          accountInformation: () => ({do: async () => ({
+            amount: 5_000_000,
+            'min-balance': 100_000,
+            assets: [{},{},{},{},{},{},{},]
+          })}),
+        }
+      }
+    },
+  }
+});
+
 describe('Account Information Page', () => {
 
   it('has address as heading', async () => {
@@ -36,6 +55,16 @@ describe('Account Information Page', () => {
   it('has back button', () => {
 		render(AccountInfoPage);
     expect(screen.getByText('Back')).toBeInTheDocument();
+  });
+
+  it('shows account information', async () => {
+		render(AccountInfoPage);
+    // Balance
+    expect(await screen.findByText('5')).toBeInTheDocument();
+    // Min balance
+    expect(await screen.findByText('0.1')).toBeInTheDocument();
+    // Number of assets
+    expect(await screen.findByText('7')).toBeInTheDocument();
   });
 
   it('can remove account from wallet', async () => {
@@ -58,7 +87,7 @@ describe('Account Information Page', () => {
     await userEvent.paste('badpassword');
     await userEvent.click(screen.getByText(/Continue/));
 
-    expect((await screen.findAllByText('abandon')).length).toBe(25)
+    expect((await screen.findAllByText('abandon')).length).toBe(25);
   });
 
 });

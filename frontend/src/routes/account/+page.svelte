@@ -4,6 +4,7 @@
   import { KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
   import { onMount } from 'svelte';
+  import { Algodv2, microalgosToAlgos } from 'algosdk';
 
   let walletId = '';
   let acctAddr = '';
@@ -14,11 +15,14 @@
   let passwordWrong = false;
   let walletPassword = '';
   let mnemonicParts: string[] = [];
+  const algodClient = new Algodv2('', 'https://testnet-api.algonode.cloud', 443);
+  let acctInfo: any;
 
-  onMount(() => {
+  onMount(async () => {
     walletId = $page.url.searchParams.get('id') ?? '';
     acctAddr = $page.url.searchParams.get('addr') ?? '';
     backLink = walletId ? `/wallets?id=${walletId}` : '/';
+    acctInfo = await algodClient.accountInformation(acctAddr).do();
   });
 
   async function removeAcct() {
@@ -45,16 +49,30 @@
 
 <h1 class="text-center text-4xl mb-8 truncate">{acctAddr}</h1>
 
-<div class="text-2xl mb-4">
-  <!-- TODO: Add wallet amount -->
-  ??? Algos
-</div>
-<div>
-  <!-- TODO: See account mnemonic -->
+{#if acctInfo}
+  <div class="stats shadow">
+    <div class="stat">
+      <div class="stat-title">Balance</div>
+      <div class="stat-value">{microalgosToAlgos(acctInfo.amount)}</div>
+      <div class="stat-desc">Algos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Minimum balance</div>
+      <div class="stat-value">{microalgosToAlgos(acctInfo['min-balance'])}</div>
+      <div class="stat-desc">Algos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Number of assets</div>
+      <div class="stat-value">{acctInfo.assets.length}</div>
+    </div>
+  </div>
+{/if}
+
+<div class="mt-6">
   <button class="btn" on:click={() => askPassForMnemonicDialogOpen = true}>See mnemonic</button>
   <button class="btn btn-error" on:click={() => deleteAcctDialogOpen = true}>Remove from wallet</button>
   <!-- TODO: Sign txn file -->
-  <button class="btn">Sign transaction file</button>
+  <button class="btn btn-secondary">Sign transaction file</button>
 </div>
 
 <Dialog.Root bind:open={deleteAcctDialogOpen}>
