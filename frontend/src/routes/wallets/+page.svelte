@@ -96,6 +96,7 @@
           </div>
           <div class="modal-action">
             <button type='submit' class="btn btn-primary">Unlock wallet</button>
+            <a href="/" class="btn">Cancel</a>
           </div>
         </form>
       </div>
