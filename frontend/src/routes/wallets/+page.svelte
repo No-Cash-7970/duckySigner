@@ -14,8 +14,9 @@
   let walletPasswordDialogOpen = true;
   let renameWalletDialogOpen = false;
   let mnemonicDialogOpen = false;
-  let askPassForMnemonicDialogOpen = false;
+  let importAccountDialogOpen = false;
   let renameFail = false;
+  let importFail = false;
   let accounts: string[] = [];
   let mnemonicParts: string[] = [];
 
@@ -51,16 +52,31 @@
     }
   }
 
-  async function addAccount() {
+  async function generateAccount() {
     await KMDService.GenerateWalletAccount(walletId, walletPassword);
     accounts = await KMDService.ListAccountsInWallet(walletId);
   }
 
   async function showMnemonic() {
-    askPassForMnemonicDialogOpen = false;
     mnemonicParts = (await KMDService.ExportWalletMnemonic(walletId, walletPassword)).split(' ');
     mnemonicDialogOpen = true;
   }
+
+  async function importAccount(e: SubmitEvent) {
+    const formData = new FormData(e.target as HTMLFormElement);
+    const importedMnemonic = formData.get('mnemonic')?.toString();
+
+    try {
+      await KMDService.ImportAccountIntoWallet(importedMnemonic  ?? '',  walletId, walletPassword);
+      importFail = false;
+      importAccountDialogOpen = false;
+      accounts = await KMDService.ListAccountsInWallet(walletId);
+    } catch (error: any) {
+      importFail = true;
+    }
+
+  }
+
 </script>
 
 <a href="/" class="btn">Back</a>
@@ -70,9 +86,10 @@
 
   {#if passwordCorrect}
     <div>
-      <button class="btn" on:click={() => askPassForMnemonicDialogOpen = true}>See mnemonic</button>
-      <button class="btn btn-primary" on:click={() => renameWalletDialogOpen = true}>Rename</button>
-      <button class="btn btn-primary" on:click={addAccount}>Add account</button>
+      <button class="btn" on:click={showMnemonic}>See mnemonic</button>
+      <button class="btn" on:click={() => renameWalletDialogOpen = true}>Rename</button>
+      <button class="btn btn-primary" on:click={generateAccount}>Generate new account</button>
+      <button class="btn btn-primary" on:click={() => importAccountDialogOpen = true}>Import account</button>
     </div>
     {#if accounts.length > 0}
       <ul class="menu menu-lg bg-base-200">
@@ -138,33 +155,6 @@
   </Dialog.Portal>
 </Dialog.Root>
 
-<Dialog.Root bind:open={askPassForMnemonicDialogOpen}>
-  <Dialog.Portal>
-    <Dialog.Overlay />
-    <Dialog.Content class="modal prose modal-open">
-      <div class="modal-box">
-        <Dialog.Title class="mt-0">Enter wallet password</Dialog.Title>
-        <Dialog.Description>Enter wallet password to see this wallet's mnemonic.</Dialog.Description>
-        <form id="unlock-wallet-form" on:submit|preventDefault={showMnemonic} autocomplete="off">
-          <div>
-            <label class="label" for="wallet-password-input">Wallet password</label>
-            <input type="password" bind:value={walletPassword} class="input input-bordered w-full" id="wallet-password-input" required />
-            {#if passwordWrong}
-              <div class="label bg-error px-2">
-                <span class="label-text-alt text-error-content">Incorrect password.</span>
-              </div>
-            {/if}
-          </div>
-          <div class="modal-action">
-            <button type='submit' class="btn btn-primary">Continue</button>
-            <Dialog.Close class="btn">Cancel</Dialog.Close>
-          </div>
-        </form>
-      </div>
-    </Dialog.Content>
-  </Dialog.Portal>
-</Dialog.Root>
-
 <Dialog.Root bind:open={mnemonicDialogOpen}>
   <Dialog.Portal>
     <Dialog.Overlay />
@@ -184,6 +174,32 @@
         <div class="modal-action">
           <Dialog.Close class="btn">Close</Dialog.Close>
         </div>
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root bind:open={importAccountDialogOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content class="modal prose modal-open">
+      <div class="modal-box">
+        <Dialog.Title class="mt-0">Import Account</Dialog.Title>
+        <form id="rename-wallet-form" on:submit|preventDefault={importAccount} autocomplete="off">
+          <div>
+            <label class="label" for="mnemonic-input">Mnemonic</label>
+            <textarea name="mnemonic" class="textarea textarea-bordered w-full" id="mnemonic-input" required></textarea>
+          </div>
+          {#if importFail}
+            <div class="label bg-error px-2">
+              <span class="label-text-alt text-error-content">Cannot import wallet.</span>
+            </div>
+          {/if}
+          <div class="modal-action">
+            <button type='submit' class="btn btn-primary">Import</button>
+            <Dialog.Close class="btn">Cancel</Dialog.Close>
+          </div>
+        </form>
       </div>
     </Dialog.Content>
   </Dialog.Portal>

@@ -28,6 +28,11 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   },
   RenameWallet: async (id: string, name: string, pw: string) => walletInfo.Name = btoa(name),
   ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
+  ImportAccountIntoWallet: async () => {
+    const newWallet = '7JDB2I2R4ZXN4BAGZMRKYPZGKOTABRAG4KN2R7TWOAGMBCLUZXIMVLMA2M';
+    walletsList.push(newWallet);
+    return newWallet;
+  },
 }));
 
 vi.mock('$app/stores', () => ({
@@ -66,7 +71,7 @@ describe('Wallet Information Page', () => {
     expect(await screen.findByText(/Incorrect password/)).toBeInTheDocument();
   });
 
-  it('can add account', async () => {
+  it('can generate a new account', async () => {
 		render(WalletInfoPage);
 
     // Unlock wallet
@@ -74,11 +79,28 @@ describe('Wallet Information Page', () => {
     await userEvent.paste('badpassword');
     await userEvent.click(screen.getByText('Unlock wallet'));
     // Add account
-    await userEvent.click(await screen.findByText(/Add account/));
+    await userEvent.click(await screen.findByText(/Generate new account/));
 
     expect(await screen.findByText('H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A')).toBeInTheDocument();
     expect(await screen.findByText('V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU')).toBeInTheDocument();
     expect(await screen.findByText('RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A')).toBeInTheDocument();
+  });
+
+  it('can import an account', async () => {
+		render(WalletInfoPage);
+
+    // Unlock wallet
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText('Unlock wallet'));
+
+    // Import account
+    await userEvent.click(screen.getByText('Import account'));
+    await userEvent.click(screen.getByLabelText('Mnemonic'));
+    await userEvent.paste('abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon');
+    await userEvent.click(screen.getByText('Import'));
+
+    expect(await screen.findByText('7JDB2I2R4ZXN4BAGZMRKYPZGKOTABRAG4KN2R7TWOAGMBCLUZXIMVLMA2M')).toBeInTheDocument();
   });
 
   it('can rename wallet', async () => {
@@ -120,9 +142,6 @@ describe('Wallet Information Page', () => {
 
     // Try to see mnemonic
     await userEvent.click(await screen.findByText(/See mnemonic/));
-    await userEvent.click(screen.getByLabelText(/Wallet password/));
-    await userEvent.paste('badpassword');
-    await userEvent.click(screen.getByText(/Continue/));
 
     expect((await screen.findAllByText('abandon')).length).toBe(25);
   });
