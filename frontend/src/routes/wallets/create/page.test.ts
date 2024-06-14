@@ -1,8 +1,6 @@
 import {render, screen} from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 
-import CreateWalletPage from './+page.svelte';
-
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   CreateWallet: async () => ({
     ID: "NzMxN2MxNmE0MGRjMmMzZjY0MzBkMzYzZDY5NDE3MzY=",
@@ -15,12 +13,14 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   })
 }));
 
+import CreateWalletPage from './+page.svelte';
+
 describe('Create Wallet Page', () => {
 
   it('has heading', () => {
 		render(CreateWalletPage);
-    const link = screen.getByRole('heading', { level: 1 });
-    expect(link).toHaveTextContent('Create New Wallet');
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toHaveTextContent('Create New Wallet');
 	});
 
   it('has back button', () => {
