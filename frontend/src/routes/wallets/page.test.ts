@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { writable } from 'svelte/store';
 import userEvent from '@testing-library/user-event';
 
-
 import WalletInfoPage from './+page.svelte';
 
 const walletsList = [

@@ -4,7 +4,7 @@
   const walletsList = KMDService.ListWallets();
 </script>
 
-<div class="grid content-center h-[100vh]">
+<div class="grid content-center h-full">
   <a class="btn btn-secondary mb-2" href="/wallets/import">Import wallet</a>
   <a class="btn btn-primary mb-2" href="/wallets/create">Create wallet</a>
 

@@ -1,11 +1,9 @@
-import {findAllByText, render, screen} from '@testing-library/svelte';
+import {render, screen} from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import { writable } from 'svelte/store';
 import userEvent from '@testing-library/user-event';
 
-
 import AccountInfoPage from './+page.svelte';
-import { microalgosToAlgos } from 'algosdk';
 
 vi.mock('$app/stores', () => ({
   page: writable({url: { searchParams: {
