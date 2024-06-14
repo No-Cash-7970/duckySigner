@@ -5,7 +5,8 @@
 </script>
 
 <div class="grid content-center h-[100vh]">
-  <a class="btn btn-sm btn-primary" href="/wallets/create">Create wallet</a>
+  <a class="btn btn-secondary mb-2" href="/wallets/import">Import wallet</a>
+  <a class="btn btn-primary mb-2" href="/wallets/create">Create wallet</a>
 
   {#await walletsList then wallets}
     <ul class="menu menu-lg bg-base-200">

@@ -22,6 +22,12 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
 
 describe('Home', () => {
 
+  it('has "import wallet" link', () => {
+		render(HomePage);
+    const link = screen.getByText('Import wallet');
+    expect(link).toHaveRole('link');
+	});
+
   it('has "create wallet" link', () => {
 		render(HomePage);
     const link = screen.getByText('Create wallet');
@@ -33,6 +39,6 @@ describe('Home', () => {
     expect(await screen.findByText('Foo Wallet')).toHaveRole('link');
     expect(await screen.findByText('Bar Wallet')).toHaveRole('link');
     expect(await screen.findByText('Baz Wallet')).toHaveRole('link');
-  })
+  });
 
 });

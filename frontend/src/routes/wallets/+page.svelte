@@ -192,7 +192,7 @@
           </div>
           {#if importFail}
             <div class="label bg-error px-2">
-              <span class="label-text-alt text-error-content">Cannot import wallet.</span>
+              <span class="label-text-alt text-error-content">Cannot import account.</span>
             </div>
           {/if}
           <div class="modal-action">
