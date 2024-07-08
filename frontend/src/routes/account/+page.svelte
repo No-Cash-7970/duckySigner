@@ -71,6 +71,7 @@
 <div class="mt-6">
   <button class="btn" on:click={() => askPassForMnemonicDialogOpen = true}>See mnemonic</button>
   <button class="btn btn-error" on:click={() => deleteAcctDialogOpen = true}>Remove from wallet</button>
+  <a class="btn btn-primary" href="/sign-txn?id={walletId}&addr={acctAddr}">Sign a transaction</a>
 </div>
 
 <Dialog.Root bind:open={deleteAcctDialogOpen}>
