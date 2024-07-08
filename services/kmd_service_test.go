@@ -3,8 +3,10 @@ package services_test
 import (
 	"duckysigner/kmd/config"
 	. "duckysigner/services"
+	"encoding/base64"
 	"os"
 
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -24,6 +26,7 @@ var _ = Describe("KmdService", func() {
 			const walletDirName = ".test_wallet_mngmt"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(createKmdServiceCleanup(walletDirName))
+
 			By("Listing 0 wallets")
 			walletsInfo, err := kmdService.ListWallets()
 			Expect(err).NotTo(HaveOccurred())
@@ -172,6 +175,43 @@ var _ = Describe("KmdService", func() {
 			accts, err = kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accts).NotTo(ContainElement(testStandaloneAcctAddr), "The removed imported account should not be in the account list")
+		})
+
+		It("can sign a transaction", func() {
+			const knownSignedTxnB64 = "gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ=="
+
+			By("Initializing KMD")
+			const walletDirName = ".test_sqlite_sign_txn"
+			kmdService := createKmdService(walletDirName)
+			DeferCleanup(createKmdServiceCleanup(walletDirName))
+
+			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
+			By("Importing a wallet")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet", "bad password")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet"), "Wallet should have been imported")
+
+			By("Importing an account")
+			importedAcctAddr, err := kmdService.ImportAccountIntoWallet(testStandaloneAcctMnemonic, string(importedWalletInfo.ID), "bad password")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(importedAcctAddr).To(Equal(testStandaloneAcctAddr))
+
+			By("Signing a transaction with an account when address is given")
+			// Convert Base64 encoded signed transaction into a SignedTxn struct
+			knownSignedTxn := types.SignedTxn{}
+			err = knownSignedTxn.FromBase64String(knownSignedTxnB64)
+			Expect(err).NotTo(HaveOccurred())
+			// Sign transaction
+			outputSignedTxn, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", knownSignedTxn.Txn, testStandaloneAcctAddr)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(base64.StdEncoding.EncodeToString(outputSignedTxn)).To(Equal(knownSignedTxnB64))
+
+			By("Signing a transaction with an account when address is NOT given")
+			// NOTE: When an empty address is given, the transaction sender should be used as the signing address
+			outputSignedTxn2, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", knownSignedTxn.Txn, "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(base64.StdEncoding.EncodeToString(outputSignedTxn2)).To(Equal(knownSignedTxnB64))
 		})
 	})
 })

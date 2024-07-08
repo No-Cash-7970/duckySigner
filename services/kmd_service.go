@@ -1,6 +1,7 @@
 package services
 
 import (
+	"crypto/ed25519"
 	"duckysigner/kmd/config"
 	"duckysigner/kmd/wallet"
 	"duckysigner/kmd/wallet/driver"
@@ -332,6 +333,43 @@ func (service *KMDService) ExportAccountInWallet(acctAddr, walletID, password st
 	}
 
 	return mnemonic.FromPrivateKey(sk)
+}
+
+// SignTransaction signs the given transaction using the account with the given
+// public key that should be within the wallet with the given ID
+func (service *KMDService) SignTransaction(walletID, password string, tx types.Transaction, acctAddr string) (stx []byte, err error) {
+	err = service.init()
+	if err != nil {
+		return
+	}
+
+	// Get the wallet
+	fetchedWallet, err := service.getWallet(walletID)
+	if err != nil {
+		return
+	}
+
+	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
+	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	err = fetchedWallet.Init([]byte(password))
+	if err != nil {
+		return
+	}
+
+	// Convert account address (if given) to public key
+	var acctPk []byte
+	if acctAddr == "" {
+		acctPk = ed25519.PublicKey{}
+	} else {
+		decodedAcctAddr, err2 := types.DecodeAddress(acctAddr)
+		if err2 != nil {
+			return []byte{}, err2
+		}
+		acctPk = decodedAcctAddr[:]
+	}
+
+	// Sign transaction
+	return fetchedWallet.SignTransaction(tx, acctPk, []byte(password))
 }
 
 // func (service *KMDService) RemoveWallet(walletID string, password string) error {
