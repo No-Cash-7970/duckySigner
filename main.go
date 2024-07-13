@@ -2,7 +2,9 @@ package main
 
 import (
 	"embed"
+	"encoding/base64"
 	"log"
+	"os"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -89,6 +91,15 @@ func main() {
 			time.Sleep(time.Second)
 		}
 	}()
+
+	app.Events.On("saveFile", func(e *application.WailsEvent) {
+		dataBytes, _ := base64.StdEncoding.DecodeString(e.Data.(string))
+		fileLoc, _ := application.SaveFileDialog().
+			AddFilter("Algorand Transaction", "*.txn.msgpack").
+			HideExtension(true).
+			PromptForSingleSelection()
+		os.WriteFile(fileLoc, dataBytes, 0666)
+	})
 
 	// Run the application. This blocks until the application has been exited.
 	err := app.Run()

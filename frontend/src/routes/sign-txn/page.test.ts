@@ -16,6 +16,7 @@ vi.mock('$app/stores', () => ({
 }));
 
 const gotoMockFunc = vi.fn();
+const signTxnMockFunc = vi.fn(() => 'some base64 data');
 vi.mock('$app/navigation', () => ({ goto: () => gotoMockFunc() }));
 
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
@@ -24,6 +25,14 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
     if (pw !== 'badpassword') throw Error;
   },
   ExportAccountInWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
+  SignTransaction: () => signTxnMockFunc(),
+}));
+
+const eventEmitFunc = vi.fn();
+vi.mock('@wailsio/runtime', () => ({
+  Events: {
+    Emit: () => eventEmitFunc(),
+  }
 }));
 
 vi.mock('algosdk', async (importOriginal) => {
@@ -88,25 +97,33 @@ describe('Sign Transaction Page', () => {
 
 		render(SignTxnPage);
 
-    await userEvent.upload(screen.getByLabelText('Choose transaction file'), file);
+    const fileInput = screen.getByLabelText('Choose transaction file');
+    await userEvent.upload(fileInput, file);
     await userEvent.click(await screen.findByText('No'));
 
-    // TODO: Test if file input is empty
+    expect(fileInput).toHaveValue('');
     expect(screen.queryByRole('code')).not.toBeInTheDocument();
   });
 
-  it.skip('signs transaction when "Yes" button is clicked', async () => {
+  it('signs transaction when "Yes" button is clicked', async () => {
     const data = fs.readFileSync('src/testing/test_signed.txn.msgpack');
     const file = new File([data], 'signed.txn.msgpack', { type: 'application/octet-stream' });
-
 		render(SignTxnPage);
 
-    await userEvent.upload(screen.getByLabelText('Choose transaction file'), file);
+    // Upload file
+    const fileInput = screen.getByLabelText('Choose transaction file');
+    await userEvent.upload(fileInput, file);
     await userEvent.click(await screen.findByText('Yes'));
 
-    // TODO: Test if file input is empty
-    expect(screen.queryByRole('code')).not.toBeInTheDocument();
-    // TODO: Test if transaction is signed and can be saved as a file
+    // Unlock wallet & sign transaction
+    await userEvent.click(screen.getByLabelText(/Wallet password/));
+    await userEvent.paste('badpassword');
+    await userEvent.click(screen.getByText('Sign'));
+    expect(signTxnMockFunc).toHaveBeenCalledOnce();
+
+    // Save signed transaction file
+    await userEvent.click(await screen.findByText('Save signed transaction'))
+    expect(eventEmitFunc).toHaveBeenCalledOnce();
   });
 
 });

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"os"
 
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -202,16 +203,18 @@ var _ = Describe("KmdService", func() {
 			knownSignedTxn := types.SignedTxn{}
 			err = knownSignedTxn.FromBase64String(knownSignedTxnB64)
 			Expect(err).NotTo(HaveOccurred())
+			// Convert core transaction (without signature) to Base64 string
+			unsignedTxnB64 := base64.StdEncoding.EncodeToString(msgpack.Encode(knownSignedTxn.Txn))
 			// Sign transaction
-			outputSignedTxn, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", knownSignedTxn.Txn, testStandaloneAcctAddr)
+			outputSignedTxn, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", unsignedTxnB64, testStandaloneAcctAddr)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(base64.StdEncoding.EncodeToString(outputSignedTxn)).To(Equal(knownSignedTxnB64))
+			Expect(outputSignedTxn).To(Equal(knownSignedTxnB64))
 
 			By("Signing a transaction with an account when address is NOT given")
 			// NOTE: When an empty address is given, the transaction sender should be used as the signing address
-			outputSignedTxn2, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", knownSignedTxn.Txn, "")
+			outputSignedTxn2, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", unsignedTxnB64, "")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(base64.StdEncoding.EncodeToString(outputSignedTxn2)).To(Equal(knownSignedTxnB64))
+			Expect(outputSignedTxn2).To(Equal(knownSignedTxnB64))
 		})
 	})
 })

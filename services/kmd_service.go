@@ -5,7 +5,9 @@ import (
 	"duckysigner/kmd/config"
 	"duckysigner/kmd/wallet"
 	"duckysigner/kmd/wallet/driver"
+	"encoding/base64"
 
+	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-algorand/logging"
@@ -335,9 +337,24 @@ func (service *KMDService) ExportAccountInWallet(acctAddr, walletID, password st
 	return mnemonic.FromPrivateKey(sk)
 }
 
-// SignTransaction signs the given transaction using the account with the given
-// public key that should be within the wallet with the given ID
-func (service *KMDService) SignTransaction(walletID, password string, tx types.Transaction, acctAddr string) (stx []byte, err error) {
+// SignTransaction signs the given Base64-encoded transaction using the account
+// with the given public key, which should be within the wallet with the given
+// ID. Returns the signed transaction as a Base64 string.
+func (service *KMDService) SignTransaction(walletID, password string, txB64 string, acctAddr string) (stxB64 string, err error) {
+	// Decode the Base64 transaction to bytes
+	txnBytes, err := base64.StdEncoding.DecodeString(txB64)
+	if err != nil {
+		return
+	}
+
+	// Decode the transaction bytes to Transaction struct
+	tx := types.Transaction{}
+	err = msgpack.Decode(txnBytes, &tx)
+	if err != nil {
+		return
+	}
+
+	// Initialize KMD
 	err = service.init()
 	if err != nil {
 		return
@@ -363,13 +380,18 @@ func (service *KMDService) SignTransaction(walletID, password string, tx types.T
 	} else {
 		decodedAcctAddr, err2 := types.DecodeAddress(acctAddr)
 		if err2 != nil {
-			return []byte{}, err2
+			return "", err2
 		}
 		acctPk = decodedAcctAddr[:]
 	}
 
+	stxBytes, err := fetchedWallet.SignTransaction(tx, acctPk, []byte(password))
+	if err != nil {
+		return
+	}
+
 	// Sign transaction
-	return fetchedWallet.SignTransaction(tx, acctPk, []byte(password))
+	return base64.StdEncoding.EncodeToString(stxBytes), nil
 }
 
 // func (service *KMDService) RemoveWallet(walletID string, password string) error {
