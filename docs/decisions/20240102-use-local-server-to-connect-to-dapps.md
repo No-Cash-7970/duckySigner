@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-01-02
-- Tag: backend, wallet-connection
+- Tags: backend, wallet-connection
 
 ## Context and Problem Statement
 

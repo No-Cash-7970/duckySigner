@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-06-05
-- Tag: roadmap
+- Tags: roadmap
 
 ## Context and Problem Statement
 

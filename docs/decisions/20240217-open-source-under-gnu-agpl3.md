@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-02-20
-- Tag: dev-process, kmd
+- Tags: dev-process, kmd
 
 ## Context and Problem Statement
 

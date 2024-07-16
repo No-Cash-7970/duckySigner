@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-01-04
-- Tag: backend
+- Tags: backend
 
 ## Context and Problem Statement
 
