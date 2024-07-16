@@ -2,7 +2,7 @@
 
 - Status: accepted
 - Date: 2023-12-30
-- Tags: dev-tools, doc
+- Tags: dev-tools, dev-process, doc
 
 ## Context and Problem Statement
 

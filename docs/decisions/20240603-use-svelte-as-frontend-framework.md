@@ -3,6 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-06-06
+- Tag: frameworks, frontend
 
 ## Context and Problem Statement
 
