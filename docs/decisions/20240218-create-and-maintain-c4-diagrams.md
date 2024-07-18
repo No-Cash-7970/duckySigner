@@ -7,7 +7,7 @@
 
 ## Context and Problem Statement
 
-The software architecture of the [desktop wallet](20231231-build-algorand-desktop-wallet.md) may be unusual and difficult to understand. Communicating the architecture in a manner that is easier to understand is key to making it easier for anyone to understand the system and provide useful input.
+The software architecture of the [desktop wallet](20231231-build-algorand-desktop-wallet-from-scratch.md) may be unusual and difficult to understand. Communicating the architecture in a manner that is easier to understand is key to making it easier for anyone to understand the system and provide useful input.
 
 ## Decision Drivers
 
@@ -56,7 +56,7 @@ C4 is a lightweight modeling system for software architecture with 4 levels of a
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [Unified Modeling Language - Wikipedia](https://en.wikipedia.org/wiki/Unified_Modeling_Language)
 - [C4 model - Wikipedia](https://en.wikipedia.org/wiki/C4_model)
 - [The C4 model for visualising software architecture](https://c4model.com/)

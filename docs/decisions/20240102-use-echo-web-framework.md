@@ -80,6 +80,6 @@ Website: <https://pkg.go.dev/net/http>
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - Relates to [Build Using Go and TypeScript](20240101-build-using-go-and-typescript.md)
 - Relates to [Use Local Server to Connect to DApps](20240102-use-echo-web-framework.md)

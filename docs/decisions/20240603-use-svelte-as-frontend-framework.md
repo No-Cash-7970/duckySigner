@@ -38,6 +38,6 @@ Tried building a basic UI using Svelte. This is the same UI that did not work wh
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - Relates to [Use Wails UI Framework](20240101-use-wails-ui-framework.md)
 - Relates to [Build Using Go and TypeScript](20240101-build-using-go-and-typescript.md)

@@ -1,4 +1,4 @@
-# Build Algorand Desktop Wallet
+# Build Algorand Desktop Wallet From Scratch
 
 - Status: accepted
 - Deciders: No-Cash-7970

@@ -71,7 +71,7 @@ Do not bother trying to get the desktop wallet to interact with DApps. The deskt
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [KMD REST API](https://developer.algorand.org/docs/rest-apis/kmd/)
 - [WalletConnect](https://walletconnect.com/)
 - [How DApps work with MyEtherWallet](https://www.myetherwallet.com/how-it-works#dapps)

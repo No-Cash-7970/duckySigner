@@ -32,4 +32,4 @@ Chose to make user interface (UI) design and user experience (UX) low priorities
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)

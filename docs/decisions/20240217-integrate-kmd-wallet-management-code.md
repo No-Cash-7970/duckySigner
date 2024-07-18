@@ -36,7 +36,7 @@ Chose to integrate the key management parts of Key Management Daemon (KMD) witho
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [KMD code](https://github.com/algorand/go-algorand/tree/eceed7c0d3df0f412ede27c1aa2b68e0fa21ccab/daemon/kmd)
 - [KMD code for managing keys with SQLite](https://github.com/algorand/go-algorand/blob/master/daemon/kmd/wallet/driver/sqlite.go)
 - [KMD code for the mechanisms used to encrypt keys](https://github.com/algorand/go-algorand/blob/master/daemon/kmd/wallet/driver/sqlite_crypto.go)

@@ -27,7 +27,7 @@ Chose to use GNU Affero General Public License v3.0 (AGPL v3.0) license because 
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet](20231231-build-algorand-desktop-wallet.md)
+- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - Relates to [Integrate KMD Wallet Management Code](20240217-integrate-kmd-wallet-management-code.md)
 - [No License | Choose A License](https://choosealicense.com/no-permission/)
 - [GNU Affero General Public License v3.0 | Choose A License](https://choosealicense.com/licenses/agpl-3.0/)
