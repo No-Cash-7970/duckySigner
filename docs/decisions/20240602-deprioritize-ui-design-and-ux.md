@@ -29,7 +29,3 @@ Chose to make user interface (UI) design and user experience (UX) low priorities
 - The UI would probably not look good
 - The UI may be difficult for many users
 - It is possible for the UI to be so terrible that it undermines security and usefulness of features
-
-## Links
-
-- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)

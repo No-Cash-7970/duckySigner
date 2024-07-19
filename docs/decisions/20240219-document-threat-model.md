@@ -31,7 +31,6 @@ Chose to document the threat model as a collection of Markdown documents. The do
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [Threat Modeling Cheat Sheet - OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Threat_Modeling_Cheat_Sheet.html)
 - [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process)
 - [Threat Modeling in Practice - OWASP](https://owasp.org/www-project-developer-guide/draft/design/threat_modeling/practical_threat_modeling/)

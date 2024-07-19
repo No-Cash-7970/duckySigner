@@ -56,7 +56,6 @@ C4 is a lightweight modeling system for software architecture with 4 levels of a
 
 ## Links
 
-- Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [Unified Modeling Language - Wikipedia](https://en.wikipedia.org/wiki/Unified_Modeling_Language)
 - [C4 model - Wikipedia](https://en.wikipedia.org/wiki/C4_model)
 - [The C4 model for visualising software architecture](https://c4model.com/)

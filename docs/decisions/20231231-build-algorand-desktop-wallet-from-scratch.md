@@ -1,6 +1,6 @@
 # Build Algorand Desktop Wallet From Scratch
 
-- Status: accepted
+- Status: superseded by [](20240217-integrate-kmd-wallet-management-code.md)
 - Deciders: No-Cash-7970
 - Date: 2024-01-01
 - Tags: roadmap
@@ -60,5 +60,6 @@ Do nothing and let the problem remain as it is. Some might say this is the smart
 
 ## Links
 
+- Superseded by [Integrate KMD Wallet Management Code](20240217-integrate-kmd-wallet-management-code.md)
 - [List of Algorand Wallets](https://developer.algorand.org/ecosystem-projects/?tags=wallets)
 - [Incident Report about the 2023 MyAlgo data breach](https://github.com/HalbornSecurity/PublicReports/blob/master/Incident%20Reports/RandLabs_MyAlgo_Wallet_Executive_Summary_Halborn%20.pdf)
