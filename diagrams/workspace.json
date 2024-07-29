@@ -19,7 +19,7 @@
         "id" : "20",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "f8750fb7-a47a-4da0-9711-0b77b926c5d7"
+          "structurizr.dsl.identifier" : "372d17e2-dc21-4eb6-853d-53b55e222ed1"
         },
         "sourceId" : "1",
         "destinationId" : "3",
@@ -28,7 +28,7 @@
         "id" : "13",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "0e9e0d5f-dd8c-48eb-8cbb-459bf6b0d532"
+          "structurizr.dsl.identifier" : "60300e6e-29be-4d3e-8157-c0dfb8381d40"
         },
         "sourceId" : "1",
         "destinationId" : "8",
@@ -37,7 +37,7 @@
         "id" : "18",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "1e467896-3765-4502-aac7-d0b5b6704a89"
+          "structurizr.dsl.identifier" : "1646fcda-33be-486d-abfc-dcc24e64aa10"
         },
         "sourceId" : "1",
         "destinationId" : "11",
@@ -46,7 +46,7 @@
         "id" : "12",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "d804578b-9926-4bd0-be78-dd798cadedae"
+          "structurizr.dsl.identifier" : "783348fb-9629-4e24-b58e-9213e82a322d"
         },
         "sourceId" : "1",
         "destinationId" : "2",
@@ -87,7 +87,7 @@
           "id" : "27",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "41222924-6640-46fc-bf1b-9e67385a7126"
+            "structurizr.dsl.identifier" : "71201ffc-e72e-4413-bc59-2dbbc474cf37"
           },
           "sourceId" : "3",
           "destinationId" : "7",
@@ -96,7 +96,7 @@
           "id" : "28",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "fdc19b4f-1f83-4e00-b5cf-617aff604c00"
+            "structurizr.dsl.identifier" : "0843855a-d3ea-47cd-9f21-87221e889611"
           },
           "sourceId" : "3",
           "destinationId" : "6",
@@ -105,7 +105,7 @@
           "id" : "21",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "93f511b4-3e3b-450e-b0b9-3d57ca043145"
+            "structurizr.dsl.identifier" : "e6074657-f5ed-495a-b55d-9a9ec00cb0df"
           },
           "sourceId" : "3",
           "destinationId" : "1",
@@ -114,7 +114,7 @@
           "id" : "26",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "379a5be4-29eb-4f75-88f7-a85de1a3480b"
+            "structurizr.dsl.identifier" : "88098301-37fb-4834-bfef-592f40f33b34"
           },
           "sourceId" : "3",
           "destinationId" : "5",
@@ -124,7 +124,7 @@
           "id" : "24",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "beb470af-d5e9-4cac-b509-25672e2a2929"
+            "structurizr.dsl.identifier" : "885857d8-0703-45c9-84c9-053ce57f59e3"
           },
           "sourceId" : "3",
           "destinationId" : "4",
@@ -134,7 +134,7 @@
           "id" : "29",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "a2a60bd6-faac-4a3b-89de-4759f128adfc"
+            "structurizr.dsl.identifier" : "a4e03b6e-48c0-494f-8b64-802ddb9edbf1"
           },
           "sourceId" : "3",
           "destinationId" : "11",
@@ -170,7 +170,7 @@
           "id" : "25",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "b7b8e452-5d0a-4276-b67c-ed1bbb681743"
+            "structurizr.dsl.identifier" : "38933de8-4740-4587-958c-499340b95035"
           },
           "sourceId" : "4",
           "destinationId" : "3",
@@ -180,7 +180,7 @@
           "id" : "31",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "6bc27f4b-d854-406a-8590-101445719af8"
+            "structurizr.dsl.identifier" : "43458ad6-f448-4fb7-8282-ba903eac576f"
           },
           "sourceId" : "4",
           "destinationId" : "6",
@@ -210,7 +210,7 @@
         "id" : "19",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "97a4160e-f21c-40b2-a88d-0eec6a7b0b0e"
+          "structurizr.dsl.identifier" : "67387273-8b7a-4f3c-b80a-c1617b20fecb"
         },
         "sourceId" : "11",
         "destinationId" : "1",
@@ -230,7 +230,7 @@
         "id" : "23",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "21457b66-266d-4bae-b04c-849bfef8a880"
+          "structurizr.dsl.identifier" : "99c3ec94-9aeb-4cbe-a7a8-46b66bc0b19c"
         },
         "sourceId" : "8",
         "destinationId" : "4",
@@ -240,7 +240,7 @@
         "id" : "16",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "ec30db81-0363-47be-9ec6-37e87349f25b"
+          "structurizr.dsl.identifier" : "8a7fcd28-841e-4f52-9612-8fd515eb7e01"
         },
         "sourceId" : "8",
         "destinationId" : "10",
@@ -249,7 +249,7 @@
         "id" : "14",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "aeb8149d-64ee-4ef4-a93b-2f55256367b5"
+          "structurizr.dsl.identifier" : "0780ae9b-435e-4980-a36a-6e977826c1c3"
         },
         "sourceId" : "8",
         "destinationId" : "1",
@@ -258,7 +258,7 @@
         "id" : "15",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "f60253b2-4a88-41b0-b783-a19eaa80b76b"
+          "structurizr.dsl.identifier" : "c1e2f91e-5ea3-4d81-ae80-d48e0c122139"
         },
         "sourceId" : "8",
         "destinationId" : "2",
@@ -288,7 +288,7 @@
         "id" : "17",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "61eb43e7-ecef-425a-8a03-f80cdabd575e"
+          "structurizr.dsl.identifier" : "a1f5d0f5-2040-4228-9c49-2762a913edb9"
         },
         "sourceId" : "10",
         "destinationId" : "9",
@@ -555,7 +555,7 @@
         "response" : true
       }, {
         "id" : "14",
-        "description" : "Shows it is disconnected from wallet to",
+        "description" : "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to",
         "order" : "5",
         "response" : false
       } ],
@@ -671,10 +671,10 @@
       "key" : "DisconnectThroughWallet",
       "order" : 7,
       "description" : "User disconnects wallet from dApp though the wallet",
-      "paperSize" : "A5_Landscape",
+      "paperSize" : "A4_Landscape",
       "dimensions" : {
-        "width" : 1754,
-        "height" : 1558
+        "width" : 2458,
+        "height" : 2020
       },
       "automaticLayout" : {
         "implementation" : "Graphviz",
@@ -702,19 +702,32 @@
         "description" : "Shows it is disconnected from dApp to",
         "order" : "3",
         "response" : false
+      }, {
+        "id" : "23",
+        "description" : "Eventually deletes invalid authentication credentials (created from old connection approval data) after periodically checking with",
+        "order" : "4",
+        "response" : false
       } ],
       "elements" : [ {
         "id" : "1",
-        "x" : 1079,
-        "y" : 929
+        "x" : 1783,
+        "y" : 1408
       }, {
         "id" : "3",
+        "x" : 1079,
+        "y" : 808
+      }, {
+        "id" : "4",
         "x" : 329,
-        "y" : 329
+        "y" : 808
       }, {
         "id" : "6",
+        "x" : 1033,
+        "y" : 1408
+      }, {
+        "id" : "8",
         "x" : 329,
-        "y" : 929
+        "y" : 208
       } ]
     }, {
       "key" : "DAppConnect",
