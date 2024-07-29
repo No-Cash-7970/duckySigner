@@ -73,7 +73,7 @@ workspace {
             autoLayout
 
             user -> dapp "Initiates action that requires connecting to wallet within"
-            dapp -> walletServer "Send request for authentication credentials from"
+            dapp -> walletServer "Send request for authentication credentials to"
             walletServer -> walletUI "Forwards request to approve dApp connection to"
             walletUI -> user "Requests approval for dApp connection from"
             user -> walletUI "Approves dApp connection using"
@@ -113,6 +113,14 @@ workspace {
             walletUI -> grantStore "Removes dApp connection approval data from"
             walletUI -> user "Shows it is disconnected from dApp to"
             dapp -> walletServer "Eventually deletes invalid authentication credentials (created from old connection approval data) after periodically checking with"
+        }
+
+        dynamic wallet DAppRenewCredentials "DApp renews its set of authentication credentials created from dApp connection approval data" {
+            autoLayout
+
+            dapp -> walletServer "Send request to renew authentication credentials to"
+            walletServer -> grantStore "Checks if dApp connection approval is valid by looking in"
+            walletServer -> dapp "Responds with new set of authentication credentials created from approval data to"
         }
 
         theme default
