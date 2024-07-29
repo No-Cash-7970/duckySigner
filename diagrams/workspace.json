@@ -19,7 +19,7 @@
         "id" : "20",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "372d17e2-dc21-4eb6-853d-53b55e222ed1"
+          "structurizr.dsl.identifier" : "2651e4c7-a788-4dbb-993b-cf723f2377df"
         },
         "sourceId" : "1",
         "destinationId" : "3",
@@ -28,7 +28,7 @@
         "id" : "13",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "60300e6e-29be-4d3e-8157-c0dfb8381d40"
+          "structurizr.dsl.identifier" : "2973bdf3-3248-4640-aed8-c3e7f61daf13"
         },
         "sourceId" : "1",
         "destinationId" : "8",
@@ -37,7 +37,7 @@
         "id" : "18",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "1646fcda-33be-486d-abfc-dcc24e64aa10"
+          "structurizr.dsl.identifier" : "ac2d74f4-9bee-4947-8535-4af18e5e861a"
         },
         "sourceId" : "1",
         "destinationId" : "11",
@@ -46,7 +46,7 @@
         "id" : "12",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "783348fb-9629-4e24-b58e-9213e82a322d"
+          "structurizr.dsl.identifier" : "a45d1687-8c58-4ce3-997b-a05ffdc3aa49"
         },
         "sourceId" : "1",
         "destinationId" : "2",
@@ -87,7 +87,7 @@
           "id" : "27",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "71201ffc-e72e-4413-bc59-2dbbc474cf37"
+            "structurizr.dsl.identifier" : "3ee41a97-7d68-4fcb-a688-575f502ed9be"
           },
           "sourceId" : "3",
           "destinationId" : "7",
@@ -96,7 +96,7 @@
           "id" : "28",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "0843855a-d3ea-47cd-9f21-87221e889611"
+            "structurizr.dsl.identifier" : "ebad1f26-7795-4d77-99d5-feb8da8e9212"
           },
           "sourceId" : "3",
           "destinationId" : "6",
@@ -105,7 +105,7 @@
           "id" : "21",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "e6074657-f5ed-495a-b55d-9a9ec00cb0df"
+            "structurizr.dsl.identifier" : "a711bc9a-531a-4c93-a87e-35c2f3a4e479"
           },
           "sourceId" : "3",
           "destinationId" : "1",
@@ -114,7 +114,7 @@
           "id" : "26",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "88098301-37fb-4834-bfef-592f40f33b34"
+            "structurizr.dsl.identifier" : "f389506e-8cce-429f-ae08-ee515659eb1a"
           },
           "sourceId" : "3",
           "destinationId" : "5",
@@ -124,7 +124,7 @@
           "id" : "24",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "885857d8-0703-45c9-84c9-053ce57f59e3"
+            "structurizr.dsl.identifier" : "098f83d5-18d8-4fa8-aec3-74ad062e205f"
           },
           "sourceId" : "3",
           "destinationId" : "4",
@@ -134,7 +134,7 @@
           "id" : "29",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "a4e03b6e-48c0-494f-8b64-802ddb9edbf1"
+            "structurizr.dsl.identifier" : "0a1f40a7-c6db-4762-9f66-7c75b53fa725"
           },
           "sourceId" : "3",
           "destinationId" : "11",
@@ -170,7 +170,7 @@
           "id" : "25",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "38933de8-4740-4587-958c-499340b95035"
+            "structurizr.dsl.identifier" : "29d09bc6-79bf-4bea-857d-45bb814514a6"
           },
           "sourceId" : "4",
           "destinationId" : "3",
@@ -180,7 +180,7 @@
           "id" : "31",
           "tags" : "Relationship",
           "properties" : {
-            "structurizr.dsl.identifier" : "43458ad6-f448-4fb7-8282-ba903eac576f"
+            "structurizr.dsl.identifier" : "3bf323a1-8a13-4274-8e45-5ce5ea78d4d3"
           },
           "sourceId" : "4",
           "destinationId" : "6",
@@ -210,7 +210,7 @@
         "id" : "19",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "67387273-8b7a-4f3c-b80a-c1617b20fecb"
+          "structurizr.dsl.identifier" : "7859c79d-00dd-49cc-8362-24251cd5cf96"
         },
         "sourceId" : "11",
         "destinationId" : "1",
@@ -230,7 +230,7 @@
         "id" : "23",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "99c3ec94-9aeb-4cbe-a7a8-46b66bc0b19c"
+          "structurizr.dsl.identifier" : "99d001df-7e8e-40f6-9efc-4fc2c5033f0b"
         },
         "sourceId" : "8",
         "destinationId" : "4",
@@ -240,7 +240,7 @@
         "id" : "16",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "8a7fcd28-841e-4f52-9612-8fd515eb7e01"
+          "structurizr.dsl.identifier" : "23ba2a63-1f8f-4066-98aa-b28b17d0503b"
         },
         "sourceId" : "8",
         "destinationId" : "10",
@@ -249,7 +249,7 @@
         "id" : "14",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "0780ae9b-435e-4980-a36a-6e977826c1c3"
+          "structurizr.dsl.identifier" : "50f1e88e-11d4-43f6-970a-44b5a147d2b4"
         },
         "sourceId" : "8",
         "destinationId" : "1",
@@ -258,7 +258,7 @@
         "id" : "15",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "c1e2f91e-5ea3-4d81-ae80-d48e0c122139"
+          "structurizr.dsl.identifier" : "c185d1b0-bba1-4486-b7b8-87ba9a9262bf"
         },
         "sourceId" : "8",
         "destinationId" : "2",
@@ -288,7 +288,7 @@
         "id" : "17",
         "tags" : "Relationship",
         "properties" : {
-          "structurizr.dsl.identifier" : "a1f5d0f5-2040-4228-9c49-2762a913edb9"
+          "structurizr.dsl.identifier" : "29a2b63e-5ec5-4c0d-9702-d8981e6987d7"
         },
         "sourceId" : "10",
         "destinationId" : "9",
@@ -514,69 +514,6 @@
       } ]
     } ],
     "dynamicViews" : [ {
-      "key" : "DisconnectThroughDApp",
-      "order" : 6,
-      "description" : "User disconnects wallet from dApp though the dAppp (e.g. \"Disconnect\" button)",
-      "paperSize" : "A4_Portrait",
-      "dimensions" : {
-        "width" : 1754,
-        "height" : 2054
-      },
-      "automaticLayout" : {
-        "implementation" : "Graphviz",
-        "rankDirection" : "TopBottom",
-        "rankSeparation" : 300,
-        "nodeSeparation" : 300,
-        "edgeSeparation" : 0,
-        "vertices" : false,
-        "applied" : false
-      },
-      "elementId" : "2",
-      "externalBoundariesVisible" : true,
-      "relationships" : [ {
-        "id" : "13",
-        "description" : "Initiates disconnect by clicking \"Disconnect wallet\" button within",
-        "order" : "1",
-        "response" : false
-      }, {
-        "id" : "23",
-        "description" : "Sends request to remove dApp connection approval data to",
-        "order" : "2",
-        "response" : false
-      }, {
-        "id" : "31",
-        "description" : "Removes dApp connection approval data from",
-        "order" : "3",
-        "response" : false
-      }, {
-        "id" : "23",
-        "description" : "Responds with success message to",
-        "order" : "4",
-        "response" : true
-      }, {
-        "id" : "14",
-        "description" : "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to",
-        "order" : "5",
-        "response" : false
-      } ],
-      "elements" : [ {
-        "id" : "1",
-        "x" : 1079,
-        "y" : 1529
-      }, {
-        "id" : "4",
-        "x" : 329,
-        "y" : 329
-      }, {
-        "id" : "6",
-        "x" : 329,
-        "y" : 929
-      }, {
-        "id" : "8",
-        "x" : 1079,
-        "y" : 929
-      } ]
-    }, {
       "key" : "SignTransaction",
       "order" : 5,
       "description" : "DApp requests user to sign a transaction",
@@ -668,6 +605,137 @@
         "y" : 2129
       } ]
     }, {
+      "key" : "DAppConnect",
+      "order" : 4,
+      "description" : "DApp establish connection with wallet",
+      "paperSize" : "A4_Landscape",
+      "dimensions" : {
+        "width" : 2504,
+        "height" : 2054
+      },
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "elementId" : "2",
+      "externalBoundariesVisible" : true,
+      "relationships" : [ {
+        "id" : "13",
+        "description" : "Initiates action that requires connecting to wallet within",
+        "order" : "1",
+        "response" : false
+      }, {
+        "id" : "23",
+        "description" : "Send request for authentication credentials to",
+        "order" : "2",
+        "response" : false
+      }, {
+        "id" : "25",
+        "description" : "Forwards request to approve dApp connection to",
+        "order" : "3",
+        "response" : false
+      }, {
+        "id" : "21",
+        "description" : "Requests approval for dApp connection from",
+        "order" : "4",
+        "response" : false
+      }, {
+        "id" : "20",
+        "description" : "Approves dApp connection using",
+        "order" : "5",
+        "response" : false
+      }, {
+        "id" : "28",
+        "description" : "Saves dApp connection approval data into",
+        "order" : "6",
+        "response" : false
+      }, {
+        "id" : "24",
+        "description" : "Forwards dApp connection approval data to",
+        "order" : "7",
+        "response" : false
+      }, {
+        "id" : "23",
+        "description" : "Responds with the set of authentication credentials created from approval data to",
+        "order" : "8",
+        "response" : true
+      } ],
+      "elements" : [ {
+        "id" : "1",
+        "x" : 1829,
+        "y" : 929
+      }, {
+        "id" : "3",
+        "x" : 704,
+        "y" : 329
+      }, {
+        "id" : "4",
+        "x" : 329,
+        "y" : 929
+      }, {
+        "id" : "6",
+        "x" : 1079,
+        "y" : 929
+      }, {
+        "id" : "8",
+        "x" : 1079,
+        "y" : 1529
+      } ]
+    }, {
+      "key" : "DAppRenewCredentials",
+      "order" : 8,
+      "description" : "DApp renews its set of authentication credentials created from dApp connection approval data",
+      "paperSize" : "A5_Landscape",
+      "dimensions" : {
+        "width" : 1754,
+        "height" : 1558
+      },
+      "automaticLayout" : {
+        "implementation" : "Graphviz",
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "nodeSeparation" : 300,
+        "edgeSeparation" : 0,
+        "vertices" : false,
+        "applied" : false
+      },
+      "elementId" : "2",
+      "externalBoundariesVisible" : true,
+      "relationships" : [ {
+        "id" : "23",
+        "description" : "Send request to renew authentication credentials to",
+        "order" : "1",
+        "response" : false
+      }, {
+        "id" : "31",
+        "description" : "Checks if dApp connection approval is valid by looking in",
+        "order" : "2",
+        "response" : false
+      }, {
+        "id" : "23",
+        "description" : "Responds with new set of authentication credentials created from approval data to",
+        "order" : "3",
+        "response" : true
+      } ],
+      "elements" : [ {
+        "id" : "4",
+        "x" : 329,
+        "y" : 329
+      }, {
+        "id" : "6",
+        "x" : 329,
+        "y" : 929
+      }, {
+        "id" : "8",
+        "x" : 1079,
+        "y" : 929
+      } ]
+    }, {
       "key" : "DisconnectThroughWallet",
       "order" : 7,
       "description" : "User disconnects wallet from dApp though the wallet",
@@ -730,12 +798,12 @@
         "y" : 208
       } ]
     }, {
-      "key" : "DAppConnect",
-      "order" : 4,
-      "description" : "DApp establish connection with wallet",
-      "paperSize" : "A4_Landscape",
+      "key" : "DisconnectThroughDApp",
+      "order" : 6,
+      "description" : "User disconnects wallet from dApp though the dAppp (e.g. \"Disconnect\" button)",
+      "paperSize" : "A4_Portrait",
       "dimensions" : {
-        "width" : 2504,
+        "width" : 1754,
         "height" : 2054
       },
       "automaticLayout" : {
@@ -751,65 +819,46 @@
       "externalBoundariesVisible" : true,
       "relationships" : [ {
         "id" : "13",
-        "description" : "Initiates action that requires connecting to wallet within",
+        "description" : "Initiates disconnect by clicking \"Disconnect wallet\" button within",
         "order" : "1",
         "response" : false
       }, {
         "id" : "23",
-        "description" : "Send request for authentication credentials from",
+        "description" : "Sends request to remove dApp connection approval data to",
         "order" : "2",
         "response" : false
       }, {
-        "id" : "25",
-        "description" : "Forwards request to approve dApp connection to",
+        "id" : "31",
+        "description" : "Removes dApp connection approval data from",
         "order" : "3",
         "response" : false
       }, {
-        "id" : "21",
-        "description" : "Requests approval for dApp connection from",
+        "id" : "23",
+        "description" : "Responds with success message to",
         "order" : "4",
-        "response" : false
+        "response" : true
       }, {
-        "id" : "20",
-        "description" : "Approves dApp connection using",
+        "id" : "14",
+        "description" : "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to",
         "order" : "5",
         "response" : false
-      }, {
-        "id" : "28",
-        "description" : "Saves dApp connection approval data into",
-        "order" : "6",
-        "response" : false
-      }, {
-        "id" : "24",
-        "description" : "Forwards dApp connection approval data to",
-        "order" : "7",
-        "response" : false
-      }, {
-        "id" : "23",
-        "description" : "Responds with the set of authentication credentials created from approval data to",
-        "order" : "8",
-        "response" : true
       } ],
       "elements" : [ {
         "id" : "1",
-        "x" : 1829,
-        "y" : 929
-      }, {
-        "id" : "3",
-        "x" : 704,
-        "y" : 329
+        "x" : 1079,
+        "y" : 1529
       }, {
         "id" : "4",
         "x" : 329,
-        "y" : 929
+        "y" : 329
       }, {
         "id" : "6",
-        "x" : 1079,
+        "x" : 329,
         "y" : 929
       }, {
         "id" : "8",
         "x" : 1079,
-        "y" : 1529
+        "y" : 929
       } ]
     } ],
     "configuration" : {
