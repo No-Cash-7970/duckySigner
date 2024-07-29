@@ -31,6 +31,7 @@ workspace {
         # System landscape relationships
         user -> wallet "Uses"
         user -> dapp "Interacts with"
+        dapp -> user "Responds to"
         dapp -> wallet "Communicates with" "HTTP/2"
         dapp -> algoNode "Interacts with"
         algoNode -> algorand "Connected to"
@@ -48,7 +49,7 @@ workspace {
         walletUI -> settingsStore "Retrieves user preferences from" ""
         walletUI -> grantStore "Saves credentials & perms given to dApps" ""
         walletUI -> ledgerDevice "Sends signing request to"
-        # walletServer -> grantStore "" ""
+        walletServer -> grantStore "Retrieves and removes credentials & perms given to dApps" ""
 
     }
 
@@ -75,8 +76,8 @@ workspace {
             dapp -> walletServer "Send request for authentication credentials from"
             walletServer -> walletUI "Forwards request to approve dApp connection to"
             walletUI -> user "Requests approval for dApp connection from"
-            user -> walletUI "Approves DApp connection using"
-            walletUI -> grantStore "Saves DApp connection approval data into"
+            user -> walletUI "Approves dApp connection using"
+            walletUI -> grantStore "Saves dApp connection approval data into"
             walletUI -> walletServer "Forwards dApp connection approval data to"
             walletServer -> dapp "Responds with the set of authentication credentials created from approval data to"
         }
@@ -93,6 +94,25 @@ workspace {
             walletUI -> walletServer "Creates signed transaction data & forwards it to"
             walletServer -> dapp "Responds with signed transaction data to"
             dapp -> algoNode "Sends signed transaction using"
+        }
+
+        dynamic wallet DisconnectThroughDApp "User disconnects wallet from dApp though the dAppp (e.g. \"Disconnect\" button)" {
+            autoLayout
+
+            user -> dapp "Initiates disconnect by clicking \"Disconnect wallet\" button within"
+            dapp -> walletServer "Sends request to remove dApp connection approval data to"
+            walletServer -> grantStore "Removes dApp connection approval data from"
+            walletServer -> dapp "Responds with success message to"
+            dapp -> user "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to"
+        }
+
+        dynamic wallet DisconnectThroughWallet "User disconnects wallet from dApp though the wallet" {
+            autoLayout
+
+            user -> walletUI "Initiates disconnect by clicking \"Disconnect wallet\" button within"
+            walletUI -> grantStore "Removes dApp connection approval data from"
+            walletUI -> user "Shows it is disconnected from dApp to"
+            dapp -> walletServer "Eventually deletes invalid authentication credentials (created from old connection approval data) after periodically checking with"
         }
 
         theme default
