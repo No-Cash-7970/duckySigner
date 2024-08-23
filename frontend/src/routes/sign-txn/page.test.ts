@@ -1,10 +1,11 @@
-import {render, screen} from '@testing-library/svelte';
+import {render, screen, waitFor} from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 import { writable } from 'svelte/store';
 import userEvent from '@testing-library/user-event';
 import * as fs from "node:fs";
 
 import SignTxnPage from './+page.svelte';
+import { wait } from '@testing-library/user-event/dist/cjs/utils/index.js';
 
 vi.mock('$app/stores', () => ({
   page: writable({url: { searchParams: {
@@ -119,7 +120,7 @@ describe('Sign Transaction Page', () => {
     await userEvent.click(screen.getByLabelText(/Wallet password/));
     await userEvent.paste('badpassword');
     await userEvent.click(screen.getByText('Sign'));
-    expect(signTxnMockFunc).toHaveBeenCalledOnce();
+    await waitFor(() => expect(signTxnMockFunc).toHaveBeenCalledOnce());
 
     // Save signed transaction file
     await userEvent.click(await screen.findByText('Save signed transaction'))
