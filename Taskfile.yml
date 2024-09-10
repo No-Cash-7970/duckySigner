@@ -441,6 +441,9 @@ tasks:
     cmds:
       - task: run
 
+# ---------------------- test ----------------------- #
+
+
   test:
     summary: Run all tests once
     deps:
