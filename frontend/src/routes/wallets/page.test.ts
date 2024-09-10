@@ -34,6 +34,8 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   },
 }));
 
+vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));
+
 vi.mock('$app/stores', () => ({
   page: writable({url: {searchParams: { get: () => '123' }}})
 }))

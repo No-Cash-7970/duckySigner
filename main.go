@@ -50,6 +50,7 @@ func main() {
 					},
 				},
 			}),
+			application.NewService(&services.DappConnectService{}),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),

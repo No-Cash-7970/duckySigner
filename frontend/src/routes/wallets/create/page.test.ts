@@ -13,6 +13,8 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   })
 }));
 
+vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));
+
 import CreateWalletPage from './+page.svelte';
 
 describe('Create Wallet Page', () => {

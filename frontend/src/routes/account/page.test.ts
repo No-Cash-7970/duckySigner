@@ -25,6 +25,8 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   ExportAccountInWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
+vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));
+
 vi.mock('algosdk', async (importOriginal) => {
   const actual = await importOriginal<typeof import('algosdk')>();
   return {
