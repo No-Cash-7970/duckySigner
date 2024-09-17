@@ -53,12 +53,12 @@
   <div class="stats shadow">
     <div class="stat">
       <div class="stat-title">Balance</div>
-      <div class="stat-value">{microalgosToAlgos(acctInfo.amount)}</div>
+      <div class="stat-value">{microalgosToAlgos(Number(acctInfo.amount))}</div>
       <div class="stat-desc">Algos</div>
     </div>
     <div class="stat">
       <div class="stat-title">Minimum balance</div>
-      <div class="stat-value">{microalgosToAlgos(acctInfo['min-balance'])}</div>
+      <div class="stat-value">{microalgosToAlgos(Number(acctInfo.minBalance))}</div>
       <div class="stat-desc">Algos</div>
     </div>
     <div class="stat">

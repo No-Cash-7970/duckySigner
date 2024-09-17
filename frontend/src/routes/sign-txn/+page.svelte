@@ -69,7 +69,7 @@
       importedTxnFileIsSigned = true;
     }
 
-    txnData = JSON.stringify(JSON.parse(txn.toString()), null, 2);
+    txnData = algosdk.encodeJSON(txn, { space: 2 });
   };
 
   /** Converts bytes as a Uint8Array buffer to data URL.
