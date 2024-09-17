@@ -85,15 +85,12 @@ func main() {
 	go func() {
 		for {
 			now := time.Now().Format(time.RFC1123)
-			app.Events.Emit(&application.WailsEvent{
-				Name: "time",
-				Data: now,
-			})
+			app.EmitEvent("time", now)
 			time.Sleep(time.Second)
 		}
 	}()
 
-	app.Events.On("saveFile", func(e *application.WailsEvent) {
+	app.OnEvent("saveFile", func(e *application.CustomEvent) {
 		dataBytes, _ := base64.StdEncoding.DecodeString(e.Data.(string))
 		fileLoc, _ := application.SaveFileDialog().
 			AddFilter("Algorand Transaction", "*.txn.msgpack").
