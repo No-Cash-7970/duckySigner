@@ -34,11 +34,13 @@ vi.mock('algosdk', async (importOriginal) => {
     Algodv2: class {
       constructor () {
         return {
-          accountInformation: () => ({do: async () => ({
-            amount: 5_000_000,
-            'min-balance': 100_000,
-            assets: [{},{},{},{},{},{},{},]
-          })}),
+          accountInformation: () => ({
+            do: async () => ({
+              amount: 5_000_000n,
+              minBalance: 100_000n,
+              assets: [{},{},{},{},{},{},{},]
+            })
+          }),
         }
       }
     },
