@@ -36,7 +36,6 @@ tasks:
           PRODUCTION: "true"
           CGO_ENABLED: 1
 
-
   ## ------> Windows <-------
 
   build:windows:
@@ -130,7 +129,6 @@ tasks:
       - task: build:darwin
         vars:
           ARCH: amd64
-
 
   ## ------> Linux <-------
 
@@ -343,7 +341,6 @@ tasks:
 
   ## -------------------------- Misc -------------------------- ##
 
-
   generate:icons:
     summary: Generates Windows `.ico` and Mac `.icns` files from an image
     dir: build
@@ -405,7 +402,6 @@ tasks:
 
 # ----------------------- dev ----------------------- #
 
-
   run:
     summary: Runs the application
     cmds:
@@ -443,9 +439,8 @@ tasks:
 
 # ---------------------- test ----------------------- #
 
-
   test:
-    summary: Run all tests once
+    summary: Run backend all tests once
     deps:
       - task: go:mod:tidy
     cmds:
