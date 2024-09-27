@@ -3,7 +3,7 @@ module duckysigner
 go 1.22.4
 
 require (
-	github.com/algorand/go-algorand v0.0.0-20240910160712-1d0895515209
+	github.com/algorand/go-algorand v0.0.0-20240925172545-96b13f00be84
 	github.com/algorand/go-algorand-sdk/v2 v2.6.0
 	github.com/algorand/go-codec/codec v1.1.10
 	github.com/algorand/go-deadlock v0.2.3
@@ -13,9 +13,9 @@ require (
 	github.com/labstack/gommon v0.4.2
 	github.com/onsi/ginkgo/v2 v2.20.2
 	github.com/onsi/gomega v1.34.2
-	github.com/wailsapp/wails/v3 v3.0.0-alpha.6
+	github.com/wailsapp/wails/v3 v3.0.0-alpha.7
 	golang.org/x/crypto v0.27.0
-	modernc.org/sqlite v1.33.0
+	modernc.org/sqlite v1.33.1
 )
 
 require (
@@ -82,7 +82,7 @@ require (
 	github.com/stretchr/testify v1.9.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	github.com/wailsapp/go-webview2 v1.0.13 // indirect
+	github.com/wailsapp/go-webview2 v1.0.15 // indirect
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
@@ -98,6 +98,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/gc/v3 v3.0.0-20240801135723-a856999a2e4a // indirect
+	modernc.org/libc v1.55.3 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.8.0 // indirect
 	modernc.org/strutil v1.2.0 // indirect

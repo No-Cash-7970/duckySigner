@@ -25,6 +25,10 @@ var assets embed.FS
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
 // logs any error that might occur.
 func main() {
+	dcService := &services.DappConnectService{
+		HideServerBanner:    true,
+		UserResponseTimeout: 5 * time.Minute,
+	}
 
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
@@ -50,7 +54,7 @@ func main() {
 					},
 				},
 			}),
-			application.NewService(&services.DappConnectService{}),
+			application.NewService(dcService),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -59,6 +63,8 @@ func main() {
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
+
+	dcService.WailsApp = app
 
 	// Create a new window with the necessary options.
 	// 'Title' is the title of the window.
