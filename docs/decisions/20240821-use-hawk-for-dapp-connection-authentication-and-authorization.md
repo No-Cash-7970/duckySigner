@@ -1,8 +1,8 @@
 # Use Hawk for DApp Connection Authentication and Authorization
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-08-21
+- Date: 2024-09-30
 - Tags: wallet-connection, security
 
 ## Context and Problem Statement
@@ -13,7 +13,7 @@ For the [dApp connection server](20240102-use-local-server-to-connect-to-dapps.m
 
 - **Security:** The authentication/authorization solution should mitigate security threats [THREAT-001 (Impersonation of a trustworthy dApp or platform)](https://github.com/No-Cash-7970/duckySigner/blob/4570a7f8694678d67da9b1639b35b8780b63db00/docs/threat-model/01-threats.md#threat-001-impersonation-of-a-trustworthy-dapp-or-platform) and [THREAT-009 (Interception of HTTP communication between dApp and wallet connection server)](https://github.com/No-Cash-7970/duckySigner/blob/4570a7f8694678d67da9b1639b35b8780b63db00/docs/threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server).
 - **Ability to be used for localhost:** Localhost does not behave exactly like a normal web server connection. One of the most notable differences is the efficacy of using SSL/TLS.
-- **DApps user experience:** DApps come in a variety of kinds, and not all of them may be web-based in a web browser. The goal is to maintain a satisfying user experience for dApps of all kinds when using this desktop wallet.
+- **DApp developer experience:** DApps come in a variety of kinds, and not all of them may be web-based in a web browser. The goal is to maintain a satisfying developer experience for dApps of all kinds when using this desktop wallet. This means making the integration of the desktop wallet as simple and easy as possible for as many platforms as possible.
 - **Flexibility:** Allow for software other than a browser to use the wallet. Also allow for the dApp connection server to separated from local user's computer and placed into a global web server.
 
 ## Considered Options
@@ -75,4 +75,4 @@ No authentication or authorization scheme is used. The connection between the dA
 
 ## Links
 
-- [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps.md)
+- Relates to [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps.md)
