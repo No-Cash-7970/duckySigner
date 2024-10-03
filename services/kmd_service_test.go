@@ -22,6 +22,11 @@ var _ = Describe("KmdService", func() {
 		const testStandaloneAcctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
 		const testStandaloneAcctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
+		// NOTE: When creating or renaming a wallet, make sure the wallet name
+		// is not a name used for wallet in a different test. Two or more tests
+		// using the same wallet name causes errors when running tests in
+		// parallel.
+
 		It("can manage wallets", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_wallet_mngmt"
@@ -116,10 +121,10 @@ var _ = Describe("KmdService", func() {
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
-			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet", "bad password")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet 1", "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
-			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet"), "Wallet should have been imported")
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet 1"), "Wallet should have been imported")
 
 			By("Listing 0 accounts in wallet")
 			accts, err := kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
@@ -188,10 +193,10 @@ var _ = Describe("KmdService", func() {
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
-			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet", "bad password")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet 2", "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
-			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet"), "Wallet should have been imported")
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet 2"), "Wallet should have been imported")
 
 			By("Importing an account")
 			importedAcctAddr, err := kmdService.ImportAccountIntoWallet(testStandaloneAcctMnemonic, string(importedWalletInfo.ID), "bad password")
