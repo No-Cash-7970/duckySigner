@@ -10,7 +10,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/algorand/go-algorand/logging"
+	logging "github.com/sirupsen/logrus"
 )
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
@@ -419,8 +419,8 @@ func (service *KMDService) init() (err error) {
 	}
 
 	// Create new logger because initializing wallet drivers requires it
-	logger := logging.NewLogger()
-	logger.SetLevel(logging.Info)
+	logger := logging.New()
+	logger.SetLevel(logging.InfoLevel)
 
 	// Initialize and fetch the wallet drivers
 	err = driver.InitWalletDrivers(kmdConfig, logger)

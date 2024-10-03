@@ -35,8 +35,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-deadlock"
-
-	"github.com/algorand/go-algorand/logging"
+	logging "github.com/sirupsen/logrus"
 )
 
 const (
@@ -63,7 +62,7 @@ var ledgerWalletSupportedTxs = []types.TxType{types.PaymentTx, types.KeyRegistra
 type LedgerWalletDriver struct {
 	mu      deadlock.Mutex
 	wallets map[string]*LedgerWallet
-	log     logging.Logger
+	log     *logging.Logger
 	cfg     config.LedgerWalletDriverConfig
 }
 
@@ -181,7 +180,7 @@ func (lwd *LedgerWalletDriver) scanWalletsLocked() error {
 // InitWithConfig accepts a driver configuration.  Currently, the Ledger
 // driver does not have any configuration parameters.  However, we use
 // this to enumerate the USB devices.
-func (lwd *LedgerWalletDriver) InitWithConfig(cfg config.KMDConfig, log logging.Logger) error {
+func (lwd *LedgerWalletDriver) InitWithConfig(cfg config.KMDConfig, log *logging.Logger) error {
 	lwd.mu.Lock()
 	defer lwd.mu.Unlock()
 

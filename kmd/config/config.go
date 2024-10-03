@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/algorand/go-algorand/util/codecs"
+	"duckysigner/kmd/codecs"
 )
 
 const (

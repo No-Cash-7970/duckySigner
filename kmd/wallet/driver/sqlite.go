@@ -34,13 +34,12 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorand/go-codec/codec"
 	"github.com/algorand/go-deadlock"
 	"github.com/jmoiron/sqlx"
+	logging "github.com/sirupsen/logrus"
 	"modernc.org/sqlite"
 	sqlite3 "modernc.org/sqlite/lib"
-
-	"github.com/algorand/go-algorand/logging"
-	"github.com/algorand/go-codec/codec"
 )
 
 const (
@@ -139,7 +138,7 @@ func msgpackDecode(b []byte, objptr interface{}) error {
 
 // InitWithConfig accepts a driver configuration so that the SQLite driver
 // knows where to read and write its wallet databases
-func (swd *SQLiteWalletDriver) InitWithConfig(cfg config.KMDConfig, log logging.Logger) error {
+func (swd *SQLiteWalletDriver) InitWithConfig(cfg config.KMDConfig, log *logging.Logger) error {
 	swd.globalCfg = cfg
 	swd.sqliteCfg = cfg.DriverConfig.SQLiteWalletDriverConfig
 
