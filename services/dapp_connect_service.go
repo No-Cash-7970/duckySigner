@@ -23,6 +23,9 @@ type DappConnectService struct {
 	// Hide the banner that is printed in the console when the server starts.
 	// Default: no (false)
 	HideServerBanner bool
+	// Hide the listener port message that is printed in the console when the
+	// server starts. Default: no (false)
+	HideServerPort bool
 	// The current running instance of a the Wails app. Used to trigger and
 	// listen to events from the UI.
 	WailsApp *application.App
@@ -94,6 +97,7 @@ func (dc *DappConnectService) Start() bool {
 	dc.echo = echo.New()
 	dc.echo.Logger.SetLevel(dc.LogLevel)
 	dc.echo.HideBanner = dc.HideServerBanner
+	dc.echo.HidePort = dc.HideServerPort
 	dc.setupServerRoutes(dc.echo)
 
 	// Allow for the server to be gracefully stop if there was an interrupt

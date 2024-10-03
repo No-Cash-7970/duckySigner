@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -23,8 +24,9 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so
 				// the tests can be run in parallel
 				ServerAddr:       ":1324",
-				LogLevel:         log.WARN,
+				LogLevel:         log.ERROR,
 				HideServerBanner: true,
+				HideServerPort:   true,
 			}
 			DeferCleanup(func() {
 				dcService.Stop()
@@ -41,6 +43,7 @@ var _ = Describe("DappConnectService", func() {
 				ServerAddr:       ":1325",
 				LogLevel:         log.ERROR,
 				HideServerBanner: true,
+				HideServerPort:   true,
 			}
 			DeferCleanup(func() {
 				dcService.Stop()
@@ -59,8 +62,9 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
 				ServerAddr:       ":1344",
-				LogLevel:         log.WARN,
+				LogLevel:         log.ERROR,
 				HideServerBanner: true,
+				HideServerPort:   true,
 			}
 
 			By("Attempting to start server")
@@ -76,6 +80,7 @@ var _ = Describe("DappConnectService", func() {
 				ServerAddr:       ":1345",
 				LogLevel:         log.ERROR,
 				HideServerBanner: true,
+				HideServerPort:   true,
 			}
 
 			By("Attempting to start server")
@@ -93,8 +98,9 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
 				ServerAddr:       ":1364",
-				LogLevel:         log.WARN,
+				LogLevel:         log.ERROR,
 				HideServerBanner: true,
+				HideServerPort:   true,
 			}
 
 			By("Starting server")
@@ -116,10 +122,13 @@ var _ = Describe("DappConnectService", func() {
 			dcService = DappConnectService{
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
-				ServerAddr:          ":1384",
-				LogLevel:            log.DEBUG,
-				HideServerBanner:    true,
-				WailsApp:            application.New(application.Options{}),
+				ServerAddr:       ":1384",
+				LogLevel:         log.ERROR,
+				HideServerBanner: true,
+				HideServerPort:   true,
+				WailsApp: application.New(application.Options{
+					LogLevel: slog.LevelError,
+				}),
 				UserResponseTimeout: defaultUserRespTimeout,
 			}
 			By("Starting server")
