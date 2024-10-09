@@ -13,11 +13,9 @@ import (
 )
 
 var _ = Describe("KmdService", func() {
-
 	Context("using SQLite", func() {
 		// XXX: I shouldn't have to tell you this, but don't use the following
 		// mnemonics for anything other than testing purposes
-
 		const testWalletMnemonic = "increase document mandate absorb chapter valve apple amazing pipe hope impact travel away comfort two desk business robust brand sudden vintage scheme valve above inmate"
 		const testStandaloneAcctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
 		const testStandaloneAcctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
@@ -31,7 +29,10 @@ var _ = Describe("KmdService", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_wallet_mngmt"
 			kmdService := createKmdService(walletDirName)
-			DeferCleanup(createKmdServiceCleanup(walletDirName))
+			DeferCleanup(func() {
+				kmdService.CleanUp()
+				createKmdServiceCleanup(walletDirName)
+			})
 
 			By("Listing 0 wallets")
 			walletsInfo, err := kmdService.ListWallets()
@@ -94,7 +95,10 @@ var _ = Describe("KmdService", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_sqlite_import_export"
 			kmdService := createKmdService(walletDirName)
-			DeferCleanup(createKmdServiceCleanup(walletDirName))
+			DeferCleanup(func() {
+				kmdService.CleanUp()
+				createKmdServiceCleanup(walletDirName)
+			})
 
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Imported Wallet", "password for imported wallet")
@@ -117,7 +121,10 @@ var _ = Describe("KmdService", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_sqlite_wallet_accts"
 			kmdService := createKmdService(walletDirName)
-			DeferCleanup(createKmdServiceCleanup(walletDirName))
+			DeferCleanup(func() {
+				kmdService.CleanUp()
+				createKmdServiceCleanup(walletDirName)
+			})
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
@@ -189,7 +196,10 @@ var _ = Describe("KmdService", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_sqlite_sign_txn"
 			kmdService := createKmdService(walletDirName)
-			DeferCleanup(createKmdServiceCleanup(walletDirName))
+			DeferCleanup(func() {
+				kmdService.CleanUp()
+				createKmdServiceCleanup(walletDirName)
+			})
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
@@ -226,9 +236,9 @@ var _ = Describe("KmdService", func() {
 
 // createKmdService is a helper function that a new KMDService that is
 // configured to use the given walletDirName as the wallet directory
-func createKmdService(walletDirName string) KMDService {
+func createKmdService(walletDirName string) (s KMDService) {
 	// Create the service
-	return KMDService{
+	s = KMDService{
 		Config: config.KMDConfig{
 			DriverConfig: config.DriverConfig{
 				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
@@ -244,17 +254,18 @@ func createKmdService(walletDirName string) KMDService {
 			},
 		},
 	}
+	s.CatchInterrupt()
+
+	return
 }
 
 // createKmdServiceCleanup is a helper function that creates function that
 // cleans up the directory with specified by walletDirName, which was created
 // for an instance of the KMDService
-func createKmdServiceCleanup(walletDirName string) func() {
-	return func() {
-		// Remove test wallet directory
-		err := os.RemoveAll(walletDirName)
-		if !os.IsNotExist(err) { // If no "directory does not exist" error
-			Expect(err).NotTo(HaveOccurred())
-		}
+func createKmdServiceCleanup(walletDirName string) {
+	// Remove test wallet directory
+	err := os.RemoveAll(walletDirName)
+	if !os.IsNotExist(err) { // If no "directory does not exist" error
+		Expect(err).NotTo(HaveOccurred())
 	}
 }

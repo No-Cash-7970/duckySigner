@@ -6,6 +6,7 @@ require (
 	github.com/algorand/go-algorand-sdk/v2 v2.6.0
 	github.com/algorand/go-codec/codec v1.1.10
 	github.com/algorand/go-deadlock v0.2.3
+	github.com/awnumar/memguard v0.22.5
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/karalabe/usb v0.0.3-0.20230711191512-61db3e06439c
 	github.com/labstack/echo/v4 v4.12.0
@@ -23,6 +24,7 @@ require (
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
+	github.com/awnumar/memcall v0.2.0 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/cloudflare/circl v1.4.0 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.1 // indirect

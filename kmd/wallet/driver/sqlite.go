@@ -36,6 +36,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-codec/codec"
 	"github.com/algorand/go-deadlock"
+	"github.com/awnumar/memguard"
 	"github.com/jmoiron/sqlx"
 	logging "github.com/sirupsen/logrus"
 	"modernc.org/sqlite"
@@ -97,8 +98,8 @@ type SQLiteWalletDriver struct {
 // SQLiteWallet represents a particular SQLiteWallet under the
 // SQLiteWalletDriver
 type SQLiteWallet struct {
-	masterEncryptionKey  []byte
-	masterDerivationKey  []byte
+	masterEncryptionKey  *memguard.Enclave
+	masterDerivationKey  *memguard.Enclave
 	walletPasswordSalt   [saltLen]byte
 	walletPasswordHash   types.Digest
 	walletPasswordHashed bool
@@ -291,7 +292,7 @@ func (swd *SQLiteWalletDriver) findDBPathsByField(fieldName string, testValue []
 		if err != nil {
 			continue
 		}
-		// Fetch the approriate field
+		// Fetch the appropriate field
 		var fieldValue []byte
 		switch fieldName {
 		case "ID":
@@ -666,8 +667,8 @@ func (sw *SQLiteWallet) Init(pw []byte) error {
 	}
 
 	// Initialize wallet
-	sw.masterEncryptionKey = masterEncryptionKey
-	sw.masterDerivationKey = masterDerivationKey
+	sw.masterEncryptionKey = memguard.NewEnclave(masterEncryptionKey)
+	sw.masterDerivationKey = memguard.NewEnclave(masterDerivationKey)
 	err = fillRandomBytes(sw.walletPasswordSalt[:])
 	if err != nil {
 		return err
@@ -729,8 +730,15 @@ func (sw *SQLiteWallet) ExportMasterDerivationKey(pw []byte) (mdk types.MasterDe
 		return
 	}
 
+	// Decrypt the master derivation key stored in enclave into a local copy
+	mdkBuf, err := sw.masterDerivationKey.Open()
+	if err != nil {
+		return
+	}
+	defer mdkBuf.Destroy() // Destroy the copy when we return
+
 	// Copy master derivation key into the result
-	copy(mdk[:], sw.masterDerivationKey)
+	copy(mdk[:], mdkBuf.Bytes())
 	return
 }
 
@@ -744,8 +752,15 @@ func (sw *SQLiteWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest, 
 	sk := ed25519.NewKeyFromSeed(seed[:])
 	pk := sk.Public().(ed25519.PublicKey)
 
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := sw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
 	// Encrypt the encoded secret key
-	skEncrypted, err := encryptBlobWithKey(msgpackEncode(sk), PTSecretKey, sw.masterEncryptionKey)
+	skEncrypted, err := encryptBlobWithKey(msgpackEncode(sk), PTSecretKey, mekBuf.Bytes())
 	if err != nil {
 		return
 	}
@@ -801,8 +816,15 @@ func (sw *SQLiteWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateKey
 		return
 	}
 
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := sw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
 	// Decrypt the secret key
-	skEncoded, err := decryptBlobWithPassword(blob, PTSecretKey, sw.masterEncryptionKey)
+	skEncoded, err := decryptBlobWithPassword(blob, PTSecretKey, mekBuf.Bytes())
 	if err != nil {
 		return
 	}
@@ -885,8 +907,15 @@ func (sw *SQLiteWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err
 		return
 	}
 
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := sw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
 	// Decrypt the highest index
-	highestIndexBlob, err := decryptBlobWithPassword(encryptedHighestIndexBlob, PTMaxKeyIdx, sw.masterEncryptionKey)
+	highestIndexBlob, err := decryptBlobWithPassword(encryptedHighestIndexBlob, PTMaxKeyIdx, mekBuf.Bytes())
 	if err != nil {
 		return
 	}
@@ -915,8 +944,16 @@ func (sw *SQLiteWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err
 			return
 		}
 
+		// Decrypt the key stored in enclave into a local copy
+		var mdkBuf *memguard.LockedBuffer
+		mdkBuf, err = sw.masterDerivationKey.Open()
+		if err != nil {
+			return addr, err
+		}
+		defer mdkBuf.Destroy() // Destroy the copy when we return
+
 		// Compute the secret key and public key for nextIndex
-		genPK, genSK, err = extractKeyWithIndex(sw.masterDerivationKey, nextIndex)
+		genPK, genSK, err = extractKeyWithIndex(mdkBuf.Bytes(), nextIndex)
 		if err != nil {
 			return
 		}
@@ -942,7 +979,7 @@ func (sw *SQLiteWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err
 	}
 
 	// Encrypt the encoded secret key
-	skEncrypted, err := encryptBlobWithKey(msgpackEncode(genSK), PTSecretKey, sw.masterEncryptionKey)
+	skEncrypted, err := encryptBlobWithKey(msgpackEncode(genSK), PTSecretKey, mekBuf.Bytes())
 	if err != nil {
 		return
 	}
@@ -954,7 +991,7 @@ func (sw *SQLiteWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err
 	}
 
 	// Encrypt the new max key index
-	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(nextIndex), PTMaxKeyIdx, sw.masterEncryptionKey)
+	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(nextIndex), PTMaxKeyIdx, mekBuf.Bytes())
 	if err != nil {
 		return
 	}

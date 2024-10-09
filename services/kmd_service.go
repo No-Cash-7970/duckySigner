@@ -10,15 +10,21 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/awnumar/memguard"
 	logging "github.com/sirupsen/logrus"
 )
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
 // manage KMD wallets
 type KMDService struct {
+	// Configuration for KMD
+	Config config.KMDConfig
+	// Path to the configuration file for KMD. The configuration file used only
+	// if `Config` is not set
+	ConfigPath string
+
+	// If KMD configuration and drivers have been initialized
 	kmdInitialized bool
-	Config         config.KMDConfig
-	ConfigPath     string
 }
 
 // ListWallets gives the metadata of all available wallets
@@ -108,8 +114,8 @@ func (service *KMDService) ExportWalletMnemonic(walletID, password string) (stri
 		return "", err
 	}
 
-	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
-	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	// Initialize wallet in order to temporarily and securely load master
+	// derivation key (MDK) and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
 	if err != nil {
 		return "", err
@@ -203,14 +209,14 @@ func (service *KMDService) GenerateWalletAccount(walletID, password string) (str
 		return "", err
 	}
 
-	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
-	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	// Initialize wallet in order to temporarily and securely load master
+	// derivation key (MDK) and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
 	if err != nil {
 		return "", err
 	}
 
-	// Generate new public key using wallet master derivation key (MDK)
+	// Generate new public key using wallet MDK
 	pk, err := fetchedWallet.GenerateKey(false)
 	if err != nil {
 		return "", err
@@ -278,8 +284,8 @@ func (service *KMDService) ImportAccountIntoWallet(acctMnemonic, walletID, passw
 		return
 	}
 
-	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
-	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	// Initialize wallet in order to temporarily and securely load master
+	// derivation key (MDK) and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
 	if err != nil {
 		return
@@ -316,8 +322,8 @@ func (service *KMDService) ExportAccountInWallet(acctAddr, walletID, password st
 		return "", err
 	}
 
-	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
-	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	// Initialize wallet in order to temporarily and securely load master
+	// derivation key (MDK) and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
 	if err != nil {
 		return "", err
@@ -366,8 +372,8 @@ func (service *KMDService) SignTransaction(walletID, password string, txB64 stri
 		return
 	}
 
-	// TODO: Use some mechanism to prevent MDK in memory from reaching the disk (e.g. mlock, memory enclave)
-	// DANGEROUS: Initialize wallet in order to temporarily load MDK into memory before export
+	// Initialize wallet in order to temporarily and securely load master
+	// derivation key (MDK) and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
 	if err != nil {
 		return
@@ -392,6 +398,21 @@ func (service *KMDService) SignTransaction(walletID, password string, txB64 stri
 
 	// Sign transaction
 	return base64.StdEncoding.EncodeToString(stxBytes), nil
+}
+
+// Start an interrupt handler that will clean up before exiting. This should be
+// run right after creating a new service and before using it, which would often
+// be in the beginning of a main() function.
+func (service *KMDService) CatchInterrupt() {
+	// Start interrupt handler for cleaning up the memory enclaves and locked
+	// buffers
+	memguard.CatchInterrupt()
+}
+
+// End sessions and release resources used by this KMD service
+func (service *KMDService) CleanUp() {
+	// Purge the MemGuard session
+	defer memguard.Purge()
 }
 
 // func (service *KMDService) RemoveWallet(walletID string, password string) error {

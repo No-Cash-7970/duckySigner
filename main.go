@@ -25,6 +25,25 @@ var assets embed.FS
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
 // logs any error that might occur.
 func main() {
+	kmdService := &services.KMDService{
+		Config: config.KMDConfig{
+			DriverConfig: config.DriverConfig{
+				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
+					ScryptParams: config.ScryptParams{
+						ScryptN: 65536,
+						ScryptR: 1,
+						ScryptP: 32,
+					},
+				},
+				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+			},
+		},
+	}
+
+	kmdService.CatchInterrupt()
+	// Clean up when application terminates and we're returning from this main function
+	defer kmdService.CleanUp()
+
 	dcService := &services.DappConnectService{
 		HideServerBanner:    true,
 		UserResponseTimeout: 5 * time.Minute,
@@ -40,20 +59,7 @@ func main() {
 		Description: "Experimental desktop wallet for Algorand",
 		Services: []application.Service{
 			// application.NewService(&services.GreetService{}),
-			application.NewService(&services.KMDService{
-				Config: config.KMDConfig{
-					DriverConfig: config.DriverConfig{
-						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
-							ScryptParams: config.ScryptParams{
-								ScryptN: 65536,
-								ScryptR: 1,
-								ScryptP: 32,
-							},
-						},
-						LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
-					},
-				},
-			}),
+			application.NewService(kmdService),
 			application.NewService(dcService),
 		},
 		Assets: application.AssetOptions{
