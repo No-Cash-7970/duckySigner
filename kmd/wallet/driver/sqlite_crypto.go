@@ -26,7 +26,7 @@ import (
 	"io"
 
 	"duckysigner/kmd/config"
-	"duckysigner/kmd/crypto2"
+	"duckysigner/kmd/crypto"
 
 	"golang.org/x/crypto/hkdf"
 	"golang.org/x/crypto/nacl/secretbox"
@@ -263,5 +263,5 @@ func extractKeyWithIndex(derivationKey []byte, index uint64) (pk ed25519.PublicK
 
 // fastHashWithSalt returns a salted hash of a password, using a fast hash function
 func fastHashWithSalt(password []byte, salt []byte) types.Digest {
-	return crypto2.Hash(append(salt, password...))
+	return crypto.Hash(append(salt, password...))
 }

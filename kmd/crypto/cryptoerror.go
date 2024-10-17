@@ -16,7 +16,7 @@
 
 // XXX: From https://github.com/algorand/go-algorand/tree/c2d7047585f6109d866ebaf9fca0ee7490b16c6a/crypto/multisig.go
 
-package crypto2
+package crypto
 
 import "errors"
 

@@ -29,7 +29,7 @@ import (
 	"slices"
 
 	"duckysigner/kmd/config"
-	"duckysigner/kmd/crypto2"
+	kmdCrypto "duckysigner/kmd/crypto"
 	"duckysigner/kmd/wallet"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
@@ -1032,7 +1032,7 @@ func (sw *SQLiteWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
 // ImportMultisigAddr imports a multisig address, taking in version, threshold,
 // and public keys
 func (sw *SQLiteWallet) ImportMultisigAddr(version, threshold uint8, pks []ed25519.PublicKey) (addr types.Digest, err error) {
-	addr, err = crypto2.MultisigAddrGen(version, threshold, pks)
+	addr, err = kmdCrypto.MultisigAddrGen(version, threshold, pks)
 	if err != nil {
 		return
 	}
@@ -1082,7 +1082,7 @@ func (sw *SQLiteWallet) LookupMultisigPreimage(addr types.Digest) (version, thre
 	}
 
 	// Sanity check: make sure the preimage is correct
-	addr2, err := crypto2.MultisigAddrGen(uint8(versionCandidate), uint8(thresholdCandidate), pksCandidate)
+	addr2, err := kmdCrypto.MultisigAddrGen(uint8(versionCandidate), uint8(thresholdCandidate), pksCandidate)
 	if addr2 != addr {
 		err = errTampering
 		return
