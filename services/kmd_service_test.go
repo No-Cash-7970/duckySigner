@@ -5,6 +5,7 @@ import (
 	. "duckysigner/services"
 	"encoding/base64"
 	"os"
+	"time"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
@@ -91,6 +92,61 @@ var _ = Describe("KmdService", func() {
 			// Expect(err).To(HaveOccurred(), "Removed wallet should not be retrievable")
 		})
 
+		It("can manage wallet sessions", func() {
+			By("Initializing KMD")
+			const walletDirName = ".test_sqlite_wallet_session"
+			kmdService := createKmdService(walletDirName)
+			DeferCleanup(func() {
+				kmdService.CleanUp()
+				createKmdServiceCleanup(walletDirName)
+			})
+
+			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
+			By("Importing a wallet")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Session Mgmt Test Wallet", "bad password")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Wallet should have been imported")
+
+			By("Starting a new wallet session with the imported wallet")
+			err = kmdService.StartSession(string(importedWalletInfo.ID), "bad password")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Retrieving information of the wallet in the current session")
+			retrievedWalletInfo, err := kmdService.Session().GetWalletInfo()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(retrievedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(retrievedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Should have the information of the correct wallet")
+
+			By("Checking if session is still valid")
+			Expect(kmdService.Session().Check()).To(Succeed())
+
+			By("Getting the expiration date and time")
+			exp := kmdService.Session().Expiration()
+			Expect(exp).To(BeTemporally(">", time.Now()))
+
+			By("Renewing session")
+			Expect(kmdService.RenewSession()).To(Succeed())
+			Expect(kmdService.Session().Expiration()).To(BeTemporally(">", exp), "The new expiration date should be later than the old one")
+
+			By("Ending session")
+			kmdService.EndSession()
+			session := kmdService.Session() // Check session is removed
+			Expect(*session).To(Equal(WalletSession{}))
+
+			By("Starting another wallet session with a lifetime of 0 seconds")
+			kmdService.Config.SessionLifetimeSecs = 0
+			err = kmdService.StartSession(string(importedWalletInfo.ID), "bad password")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Checking if the session is invalid because it expired")
+			<-time.After(1 * time.Millisecond) // Wait a tiny bit
+			Expect(kmdService.Session().Check()).To(MatchError("wallet session is expired"))
+
+			By("Attempting to renew session after it expired")
+			// TODO
+		})
+
 		It("can import and export wallet mnemonics", func() {
 			By("Initializing KMD")
 			const walletDirName = ".test_sqlite_import_export"
@@ -101,18 +157,22 @@ var _ = Describe("KmdService", func() {
 			})
 
 			By("Importing a wallet")
-			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Imported Wallet", "password for imported wallet")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Import-Export Test Wallet", "password for imported wallet")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
-			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Imported Wallet"), "Wallet should have been imported")
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Import-Export Test Wallet"), "Wallet should have been imported")
 
 			By("Listing all wallets")
 			walletsInfo, err := kmdService.ListWallets()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(walletsInfo).To(HaveLen(1), "There should be 1 wallet in the list after importing a wallet")
 
+			By("Starting a new wallet session with the imported wallet")
+			err = kmdService.StartSession(string(importedWalletInfo.ID), "password for imported wallet")
+			Expect(err).NotTo(HaveOccurred())
+
 			By("Exporting wallet that was imported")
-			exportedMnemonic, err := kmdService.ExportWalletMnemonic(string(importedWalletInfo.ID), "password for imported wallet")
+			exportedMnemonic, err := kmdService.Session().ExportWallet("password for imported wallet")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exportedMnemonic).To(Equal(testWalletMnemonic), "Exported mnemonic should be the same as imported mnemonic")
 		})
@@ -128,64 +188,68 @@ var _ = Describe("KmdService", func() {
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
-			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet 1", "bad password")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Acct Mgmt Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
-			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet 1"), "Wallet should have been imported")
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Acct Mgmt Test Wallet"), "Wallet should have been imported")
 
-			By("Listing 0 accounts in wallet")
-			accts, err := kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
+			By("Starting a new wallet session with the imported wallet")
+			err = kmdService.StartSession(string(importedWalletInfo.ID), "bad password")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Listing 0 accounts in session wallet")
+			accts, err := kmdService.Session().ListAccounts()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accts).To(HaveLen(0), "There should be no accounts in the wallet")
 
-			By("Generating an account using wallet key (wallet account)")
-			walletAcctAddrA, err := kmdService.GenerateWalletAccount(string(importedWalletInfo.ID), "bad password")
+			By("Generating an account in the session wallet using its key")
+			walletAcctAddrA, err := kmdService.Session().GenerateAccount()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(walletAcctAddrA).To(Equal("H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"))
 
-			By("Generating another wallet account")
-			walletAcctAddrB, err := kmdService.GenerateWalletAccount(string(importedWalletInfo.ID), "bad password")
+			By("Generating another account in the session wallet")
+			walletAcctAddrB, err := kmdService.Session().GenerateAccount()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(walletAcctAddrB).To(Equal("V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU"))
 
-			By("Importing an account")
-			importedAcctAddr, err := kmdService.ImportAccountIntoWallet(testStandaloneAcctMnemonic, string(importedWalletInfo.ID), "bad password")
+			By("Importing an account into the session wallet")
+			importedAcctAddr, err := kmdService.Session().ImportAccount(testStandaloneAcctMnemonic)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedAcctAddr).To(Equal(testStandaloneAcctAddr))
 
-			By("By listing multiple accounts within wallet")
-			accts, err = kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
+			By("By listing multiple accounts within the session wallet")
+			accts, err = kmdService.Session().ListAccounts()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accts).To(HaveLen(3), "All accounts in wallet should be listed")
 
-			By("Exporting a wallet account")
-			exportedWalletMnemonic, err := kmdService.ExportAccountInWallet(walletAcctAddrA, string(importedWalletInfo.ID), "bad password")
+			By("Exporting an account in the session wallet")
+			exportedWalletMnemonic, err := kmdService.Session().ExportAccount(walletAcctAddrA, "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exportedWalletMnemonic).To(
 				Equal("zero weekend library concert youth ancient bus report style mixed mansion wrong purchase bench satisfy clock need wave math inflict aisle ignore buddy above decide"),
 				"Wallet account should have been exported",
 			)
 
-			By("Exporting an imported account stored in wallet")
-			exportedImportedMnemonic, err := kmdService.ExportAccountInWallet(testStandaloneAcctAddr, string(importedWalletInfo.ID), "bad password")
+			By("Exporting an imported account stored in the session wallet")
+			exportedImportedMnemonic, err := kmdService.Session().ExportAccount(testStandaloneAcctAddr, "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exportedImportedMnemonic).To(Equal(testStandaloneAcctMnemonic), "Imported account should have been exported")
 
-			By("Removing a wallet account")
-			err = kmdService.RemoveAccountFromWallet("H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A", string(importedWalletInfo.ID), "bad password")
+			By("Removing a generated account from the session wallet")
+			err = kmdService.Session().RemoveAccount("H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A")
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Checking removed wallet account is not in wallet")
-			accts, err = kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
+			By("Checking removed account is not in session wallet")
+			accts, err = kmdService.Session().ListAccounts()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accts).NotTo(ContainElement("H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"), "The removed wallet account should not be in the account list")
 
-			By("Removing an imported account")
-			err = kmdService.RemoveAccountFromWallet(testStandaloneAcctAddr, string(importedWalletInfo.ID), "bad password")
+			By("Removing an imported account from the session wallet")
+			err = kmdService.Session().RemoveAccount(testStandaloneAcctAddr)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking removed imported account is not in wallet")
-			accts, err = kmdService.ListAccountsInWallet(string(importedWalletInfo.ID))
+			accts, err = kmdService.Session().ListAccounts()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(accts).NotTo(ContainElement(testStandaloneAcctAddr), "The removed imported account should not be in the account list")
 		})
@@ -203,13 +267,17 @@ var _ = Describe("KmdService", func() {
 
 			// Import a wallet with a known master derivation key (MDK) to make the generated accounts predictable
 			By("Importing a wallet")
-			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Test Wallet 2", "bad password")
+			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Sign Txn Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
-			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Test Wallet 2"), "Wallet should have been imported")
+			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Sign Txn Test Wallet"), "Wallet should have been imported")
+
+			By("Starting a new wallet session with the imported wallet")
+			err = kmdService.StartSession(string(importedWalletInfo.ID), "bad password")
+			Expect(err).NotTo(HaveOccurred())
 
 			By("Importing an account")
-			importedAcctAddr, err := kmdService.ImportAccountIntoWallet(testStandaloneAcctMnemonic, string(importedWalletInfo.ID), "bad password")
+			importedAcctAddr, err := kmdService.Session().ImportAccount(testStandaloneAcctMnemonic)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(importedAcctAddr).To(Equal(testStandaloneAcctAddr))
 
@@ -221,13 +289,13 @@ var _ = Describe("KmdService", func() {
 			// Convert core transaction (without signature) to Base64 string
 			unsignedTxnB64 := base64.StdEncoding.EncodeToString(msgpack.Encode(knownSignedTxn.Txn))
 			// Sign transaction
-			outputSignedTxn, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", unsignedTxnB64, testStandaloneAcctAddr)
+			outputSignedTxn, err := kmdService.Session().SignTransaction(unsignedTxnB64, testStandaloneAcctAddr)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(outputSignedTxn).To(Equal(knownSignedTxnB64))
 
 			By("Signing a transaction with an account when address is NOT given")
 			// NOTE: When an empty address is given, the transaction sender should be used as the signing address
-			outputSignedTxn2, err := kmdService.SignTransaction(string(importedWalletInfo.ID), "bad password", unsignedTxnB64, "")
+			outputSignedTxn2, err := kmdService.Session().SignTransaction(unsignedTxnB64, "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(outputSignedTxn2).To(Equal(knownSignedTxnB64))
 		})
@@ -240,6 +308,7 @@ func createKmdService(walletDirName string) (s KMDService) {
 	// Create the service
 	s = KMDService{
 		Config: config.KMDConfig{
+			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
 				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
 					WalletsDir:   walletDirName,
