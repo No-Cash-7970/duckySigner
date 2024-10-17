@@ -1,8 +1,8 @@
 # Use MemGuard to Prevent Secret Data in Memory Being Swapped to Disk Unencrypted
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2024-10-01
+- Date: 2024-10-17
 - Tags: backend, kmd, security
 
 ## Context and Problem Statement
@@ -25,6 +25,8 @@ Some of the [go-algorand](https://github.com/algorand/go-algorand) maintainers h
 Chose MemGuard. It should be cross-platform because it is written in pure Go. Using `mlockall` as an option is killed by the fact that it is a Linux-only command.
 
 **Confidence:** Medium. This is a common problem with the kind of software that is often written Go. MemGuard is the best pure Go solution found so far.
+
+UPDATE (2024-10-17): No problems using Memguard so far with KMD. After looking into the code, it appears Memguard does what it says it does.
 
 ## Pros and Cons of the Options
 
