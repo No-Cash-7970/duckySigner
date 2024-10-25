@@ -23,12 +23,12 @@
   onMount(async () => {
     walletId = $page.url.searchParams.get('id') ?? '';
     walletInfo = await KMDService.GetWalletInfo(walletId);
-    accounts = await KMDService.ListAccountsInWallet(walletId);
+    accounts = await KMDService.SessionListAccounts()
   });
 
   async function unlockWallet() {
     try {
-      await KMDService.CheckWalletPassword(walletId, walletPassword);
+      await KMDService.StartSession(walletId, walletPassword);
       passwordCorrect = true;
       passwordWrong = false;
       walletPasswordDialogOpen = false;
@@ -53,12 +53,12 @@
   }
 
   async function generateAccount() {
-    await KMDService.GenerateWalletAccount(walletId, walletPassword);
-    accounts = await KMDService.ListAccountsInWallet(walletId);
+    await KMDService.SessionGenerateAccount();
+    accounts = await KMDService.SessionListAccounts();
   }
 
   async function showMnemonic() {
-    mnemonicParts = (await KMDService.ExportWalletMnemonic(walletId, walletPassword)).split(' ');
+    mnemonicParts = (await KMDService.SessionExportWallet(walletPassword)).split(' ');
     mnemonicDialogOpen = true;
   }
 
@@ -67,10 +67,10 @@
     const importedMnemonic = formData.get('mnemonic')?.toString();
 
     try {
-      await KMDService.ImportAccountIntoWallet(importedMnemonic  ?? '',  walletId, walletPassword);
+      await KMDService.SessionImportAccount(importedMnemonic  ?? '');
       importFail = false;
       importAccountDialogOpen = false;
-      accounts = await KMDService.ListAccountsInWallet(walletId);
+      accounts = await KMDService.SessionListAccounts();
     } catch (error: any) {
       importFail = true;
     }

@@ -17,12 +17,14 @@ vi.mock('$app/stores', () => ({
 const gotoMockFunc = vi.fn();
 vi.mock('$app/navigation', () => ({ goto: () => gotoMockFunc() }));
 
+vi.mock('@wailsio/runtime', () => ({}));
+
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
-  RemoveAccountFromWallet: async () => { return },
-  CheckWalletPassword: async (id: string, pw: string) => {
+  SessionRemoveAccount: async () => { return },
+  StartSession: async (id: string, pw: string) => {
     if (pw !== 'badpassword') throw Error;
   },
-  ExportAccountInWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
+  SessionExportAccount: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
 }));
 
 vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));

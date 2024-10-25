@@ -28,6 +28,8 @@ vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({
   Stop: () => stopServerFnMock(),
 }));
 
+vi.mock('@wailsio/runtime', () => ({}));
+
 describe('Home', () => {
 
   it('has "import wallet" link', () => {

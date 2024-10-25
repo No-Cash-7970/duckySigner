@@ -106,7 +106,7 @@
   async function signTxn() {
     try {
       const unsignedTxnB64 = await bytesToBase64(txn.toByte());
-      signedTxnB64 = await KMDService.SignTransaction(walletId, walletPassword, unsignedTxnB64, acctAddr);
+      signedTxnB64 = await KMDService.SessionSignTransaction(unsignedTxnB64, acctAddr);
       // Reset wallet password dialog
       passwordWrong = false;
       walletPasswordDialogOpen = false;

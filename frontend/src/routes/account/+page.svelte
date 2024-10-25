@@ -27,20 +27,20 @@
 
   async function removeAcct() {
     try {
-      await KMDService.CheckWalletPassword(walletId, walletPassword);
+      await KMDService.StartSession(walletId, walletPassword);
       passwordWrong = false;
       deleteAcctDialogOpen = false;
     } catch (error) {
       passwordWrong = true;
     }
 
-    await KMDService.RemoveAccountFromWallet(acctAddr, walletId, walletPassword);
+    await KMDService.SessionRemoveAccount(acctAddr);
     goto(backLink, { replaceState: true });
   }
 
   async function showMnemonic() {
     askPassForMnemonicDialogOpen = false;
-    mnemonicParts = (await KMDService.ExportAccountInWallet(acctAddr, walletId, walletPassword)).split(' ');
+    mnemonicParts = (await KMDService.SessionExportAccount(acctAddr, walletPassword)).split(' ');
     mnemonicDialogOpen = true;
   }
 </script>

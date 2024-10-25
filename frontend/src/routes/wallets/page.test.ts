@@ -16,18 +16,18 @@ const walletInfo = {
 
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
   GetWalletInfo: async () => walletInfo,
-  ListAccountsInWallet: async () => walletsList,
-  CheckWalletPassword: async (id: string, pw: string) => {
+  SessionListAccounts: async () => walletsList,
+  StartSession: async (id: string, pw: string) => {
     if (pw !== 'badpassword') throw Error;
   },
-  GenerateWalletAccount: async () => {
+  SessionGenerateAccount: async () => {
     const newWallet = 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A';
     walletsList.push(newWallet);
     return newWallet;
   },
   RenameWallet: async (id: string, name: string, pw: string) => walletInfo.Name = btoa(name),
-  ExportWalletMnemonic: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
-  ImportAccountIntoWallet: async () => {
+  SessionExportWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
+  SessionImportAccount: async () => {
     const newWallet = '7JDB2I2R4ZXN4BAGZMRKYPZGKOTABRAG4KN2R7TWOAGMBCLUZXIMVLMA2M';
     walletsList.push(newWallet);
     return newWallet;
@@ -39,6 +39,8 @@ vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}
 vi.mock('$app/stores', () => ({
   page: writable({url: {searchParams: { get: () => '123' }}})
 }))
+
+vi.mock('@wailsio/runtime', () => ({}));
 
 describe('Wallet Information Page', () => {
 

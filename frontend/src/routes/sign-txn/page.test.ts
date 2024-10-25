@@ -21,12 +21,7 @@ const signTxnMockFunc = vi.fn(() => 'some base64 data');
 vi.mock('$app/navigation', () => ({ goto: () => gotoMockFunc() }));
 
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
-  RemoveAccountFromWallet: async () => { return },
-  CheckWalletPassword: async (id: string, pw: string) => {
-    if (pw !== 'badpassword') throw Error;
-  },
-  ExportAccountInWallet: async () => 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon',
-  SignTransaction: () => signTxnMockFunc(),
+  SessionSignTransaction: () => signTxnMockFunc(),
 }));
 
 const eventEmitFunc = vi.fn();
