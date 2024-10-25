@@ -62,6 +62,8 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 }
 
 // Session is a getter that gets the current wallet session
+//
+// FOR THE BACKEND ONLY
 func (service *KMDService) Session() (ws *WalletSession) {
 	service.sessionMutex.RLock()
 	ws = service.session
@@ -101,7 +103,8 @@ func (service *KMDService) ListWallets() ([]wallet.Metadata, error) {
 	return driver.ListWalletMetadatas()
 }
 
-// CreateWallet creates a new SQLite wallet with the given walletName and password
+// CreateWallet creates a new SQLite wallet with the given walletName and
+// password
 func (service *KMDService) CreateWallet(walletName, password string) (newWalletData wallet.Metadata, err error) {
 	err = service.init()
 	if err != nil {
@@ -239,19 +242,25 @@ func (service *KMDService) CheckWalletPassword(walletID, password string) error 
 // CatchInterrupt starts an interrupt handler that will clean up before exiting.
 // This should be run right after creating a new service and before using it,
 // which would often be in the beginning of a main() function.
+//
+// FOR THE BACKEND ONLY
 func (service *KMDService) CatchInterrupt() {
 	// Start interrupt handler for cleaning up the memory enclaves and locked
 	// buffers
 	memguard.CatchInterrupt()
 }
 
-// CleanUp end memory enclave sessions and release resources used by this KMD service
+// CleanUp end memory enclave sessions and release resources used by this KMD
+// service
+//
+// FOR THE BACKEND ONLY
 func (service *KMDService) CleanUp() {
 	// Purge the MemGuard session
 	defer memguard.Purge()
 }
 
-// init initializes KMD configuration and drivers for use if it has not been initialized
+// init initializes KMD configuration and drivers for use if it has not been
+// initialized
 func (service *KMDService) init() (err error) {
 	if service.kmdInitialized {
 		return
@@ -290,4 +299,63 @@ func (service *KMDService) getWallet(walletID string) (wallet.Wallet, error) {
 	}
 
 	return sqliteDriver.FetchWallet([]byte(walletID))
+}
+
+/*
+ * The following are shortcuts to make session functions accessible to the frontend
+ */
+
+// SessionListAccounts lists the addresses of all accounts within the session
+// wallet
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionListAccounts() ([]string, error) {
+	return service.session.ListAccounts()
+}
+
+// SessionGenerateAccount generates an account for the session wallet using its
+// master derivation key (MDK)
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionGenerateAccount() (string, error) {
+	return service.session.GenerateAccount()
+}
+
+// SessionExportWallet exports the session wallet by returning its 25-word
+// mnemonic. The password is always required for security reasons.
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionExportWallet(password string) (string, error) {
+	return service.session.ExportWallet(password)
+}
+
+// SessionImportAccount exports the account with the given acctAddr into the
+// session wallet returning the account's 25-word mnemonic.
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionImportAccount(acctMnemonic string) (string, error) {
+	return service.session.ImportAccount(acctMnemonic)
+}
+
+// SessionExportAccount imports the account with the given acctMnemonic into the
+// session wallet
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionExportAccount(acctAddr, password string) (string, error) {
+	return service.session.ExportAccount(acctAddr, password)
+}
+
+// SessionRemoveAccount removes the account with the given acctAddr from the
+// session wallet
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionRemoveAccount(acctAddr string) (err error) {
+	return service.session.RemoveAccount(acctAddr)
+}
+
+// SessionSignTransaction signs the given Base64-encoded transaction
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionSignTransaction(txB64, acctAddr string) (string, error) {
+	return service.session.SignTransaction(txB64, acctAddr)
 }
