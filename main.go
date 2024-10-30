@@ -27,6 +27,7 @@ var assets embed.FS
 func main() {
 	kmdService := &services.KMDService{
 		Config: config.KMDConfig{
+			SessionLifetimeSecs: uint64((1 * time.Hour).Seconds()),
 			DriverConfig: config.DriverConfig{
 				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
 					ScryptParams: config.ScryptParams{
