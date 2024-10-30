@@ -118,6 +118,16 @@ var _ = Describe("KmdService", func() {
 			Expect(retrievedWalletInfo.DriverName).To(Equal("sqlite"))
 			Expect(retrievedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Should have the information of the correct wallet")
 
+			By("Checking if session is for wallet with given (incorrect) ID")
+			sessionIsForWallet, err := kmdService.SessionIsForWallet("7ae575eca54410806f0c1e99861417fd")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sessionIsForWallet).To(BeFalse())
+
+			By("Checking if session is for wallet with given (correct) ID")
+			sessionIsForWallet2, err := kmdService.SessionIsForWallet(string(importedWalletInfo.ID))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sessionIsForWallet2).To(BeTrue())
+
 			By("Checking if session is still valid")
 			Expect(kmdService.Session().Check()).To(Succeed())
 
@@ -132,7 +142,7 @@ var _ = Describe("KmdService", func() {
 			By("Ending session")
 			kmdService.EndSession()
 			session := kmdService.Session() // Check session is removed
-			Expect(*session).To(Equal(WalletSession{}))
+			Expect(session).To(BeNil())
 
 			By("Starting another wallet session with a lifetime of 0 seconds")
 			kmdService.Config.SessionLifetimeSecs = 0

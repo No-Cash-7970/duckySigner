@@ -75,8 +75,23 @@ func (service *KMDService) Session() (ws *WalletSession) {
 // EndSession ends and removes the current wallet session
 func (service *KMDService) EndSession() {
 	service.sessionMutex.Lock()
-	service.session = &WalletSession{}
+	service.session = nil
 	service.sessionMutex.Unlock()
+}
+
+// SessionIsForWallet gives whether the current session is for the wallet
+// with the given ID
+func (service *KMDService) SessionIsForWallet(walletID string) (bool, error) {
+	if service.session == nil { // There is no session
+		return false, nil
+	}
+
+	sessionWalletInfo, err := service.session.GetWalletInfo()
+	if err != nil {
+		return false, err
+	}
+
+	return string(sessionWalletInfo.ID) == walletID, nil
 }
 
 // RenewSession extends the current valid session by setting the expiration
