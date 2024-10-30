@@ -101,7 +101,7 @@ func (service *KMDService) SessionIsForWallet(walletID string) (bool, error) {
 func (service *KMDService) RenewSession() error {
 	err := service.session.Check()
 	if err != nil {
-		return nil
+		return err
 	}
 
 	service.session.expiration = time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second)

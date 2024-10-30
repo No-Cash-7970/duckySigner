@@ -153,8 +153,8 @@ var _ = Describe("KmdService", func() {
 			<-time.After(1 * time.Millisecond) // Wait a tiny bit
 			Expect(kmdService.Session().Check()).To(MatchError("wallet session is expired"))
 
-			By("Attempting to renew session after it expired")
-			// TODO
+			By("Failing to renew session after it expired")
+			Expect(kmdService.RenewSession()).To(MatchError("wallet session is expired"))
 		})
 
 		It("can import and export wallet mnemonics", func() {
