@@ -305,6 +305,13 @@ func (service *KMDService) getWallet(walletID string) (wallet.Wallet, error) {
  * The following are shortcuts to make session functions accessible to the frontend
  */
 
+// SessionCheck returns an error if the session is no longer valid
+//
+// FOR THE FRONTEND ONLY
+func (service *KMDService) SessionCheck() error {
+	return service.session.Check()
+}
+
 // SessionListAccounts lists the addresses of all accounts within the session
 // wallet
 //
