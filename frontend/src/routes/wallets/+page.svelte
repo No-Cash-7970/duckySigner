@@ -7,48 +7,88 @@
 
   let walletId = '';
   let walletInfo: Metadata;
-  // TODO: Find a more secure way to deal with the wallet password that allows the password to be temporarily stored for a short period of time
-  let walletPassword = '';
   let passwordWrong = false;
   let passwordCorrect = false;
-  let walletPasswordDialogOpen = true;
+  let unlockWalletDialogOpen = false;
   let renameWalletDialogOpen = false;
+  let passwordForMnemonicDialogOpen = false;
   let mnemonicDialogOpen = false;
   let importAccountDialogOpen = false;
   let renameFail = false;
   let importFail = false;
   let accounts: string[] = [];
   let mnemonicParts: string[] = [];
+  let sessionStarted = false;
 
   onMount(async () => {
     walletId = $page.url.searchParams.get('id') ?? '';
     walletInfo = await KMDService.GetWalletInfo(walletId);
-    accounts = await KMDService.SessionListAccounts()
+    sessionStarted = await KMDService.SessionIsForWallet(walletId);
+
+    if (!sessionStarted) {
+      // There is no session. Ask for wallet password
+      unlockWalletDialogOpen = true;
+      return
+    }
+
+    try {
+      await KMDService.SessionCheck();
+    } catch (error) {
+      // Session has expired. Ask for wallet password
+      unlockWalletDialogOpen = true;
+      return
+    }
+
+    // Getting to this point means we have a valid wallet session, so load the wallet's accounts
+    accounts = await KMDService.SessionListAccounts();
   });
 
-  async function unlockWallet() {
+  async function unlockWallet(e: SubmitEvent) {
+    const formData = new FormData(e.target as HTMLFormElement);
     try {
-      await KMDService.StartSession(walletId, walletPassword);
+      await KMDService.StartSession(walletId, formData.get('walletPassword')?.toString() ?? '');
+      sessionStarted = true;
+      accounts = await KMDService.SessionListAccounts();
       passwordCorrect = true;
       passwordWrong = false;
-      walletPasswordDialogOpen = false;
+      unlockWalletDialogOpen = false;
     } catch (error) {
       passwordWrong = true;
       passwordCorrect = false;
+      sessionStarted = false;
     }
   }
 
   async function renameWallet(e: SubmitEvent) {
     const formData = new FormData(e.target as HTMLFormElement);
-    const newName = formData.get('newName')?.toString();
+    const newName = formData.get('newName')?.toString() ?? '';
+    const walletPassword = formData.get('walletPassword')?.toString() ?? '';
 
     try {
-      await KMDService.RenameWallet(walletId, newName ?? '', walletPassword)
+      await KMDService.RenameWallet(walletId, newName, walletPassword)
       walletInfo = await KMDService.GetWalletInfo(walletId);
       renameWalletDialogOpen = false;
       renameFail = false;
-    } catch (error) {
+      passwordWrong = false;
+    } catch (e: unknown) {
+      // Wrong password
+      if (typeof e === 'string' && e.indexOf('wrong password') !== -1) {
+        renameFail = false;
+        passwordWrong = true;
+        return
+      }
+      // Session expired
+      if (typeof e === 'string' && e.indexOf('session') !== -1) {
+        // Create new session
+        renameFail = false;
+        passwordWrong = false;
+        unlockWalletDialogOpen = true;
+        renameWalletDialogOpen = false;
+        return
+      }
+      // Renaming failed
       renameFail = true;
+      passwordWrong = false;
     }
   }
 
@@ -57,7 +97,32 @@
     accounts = await KMDService.SessionListAccounts();
   }
 
-  async function showMnemonic() {
+  async function showMnemonic(e: SubmitEvent) {
+    const formData = new FormData(e.target as HTMLFormElement);
+    const walletPassword = formData.get('walletPassword')?.toString() ?? '';
+    let mnemonic = '';
+
+    try {
+      mnemonic = await KMDService.SessionExportWallet(walletPassword)
+    } catch (e: unknown) {
+      // Wrong password
+      if (typeof e === 'string' && e.indexOf('wrong password') !== -1) {
+        passwordWrong = true;
+        return
+      }
+      // Session expired
+      if (typeof e === 'string' && e.indexOf('session') !== -1) {
+        // Create new session
+        passwordWrong = false;
+        unlockWalletDialogOpen = true;
+        passwordForMnemonicDialogOpen = false;
+        return
+      }
+    }
+
+    // No errors, so show mnemonic
+    passwordWrong = false;
+    passwordForMnemonicDialogOpen = false;
     mnemonicParts = (await KMDService.SessionExportWallet(walletPassword)).split(' ');
     mnemonicDialogOpen = true;
   }
@@ -74,36 +139,39 @@
     } catch (error: any) {
       importFail = true;
     }
-
   }
-
 </script>
 
 <a href="/" class="btn">Back</a>
 
 {#if walletInfo}
   <h1 class="text-center text-4xl mb-8">{atob(walletInfo.Name)}</h1>
-
-  {#if passwordCorrect}
-    <div>
-      <button class="btn" on:click={showMnemonic}>See mnemonic</button>
-      <button class="btn" on:click={() => renameWalletDialogOpen = true}>Rename</button>
-      <button class="btn btn-primary" on:click={generateAccount}>Generate new account</button>
-      <button class="btn btn-primary" on:click={() => importAccountDialogOpen = true}>Import account</button>
-    </div>
-    {#if accounts.length > 0}
-      <ul class="menu menu-lg bg-base-200">
-        {#each accounts as address}
-          <li><a href="/account?id={walletId}&addr={address}" class="no-underline">{address}</a></li>
-        {/each}
-      </ul>
-    {:else}
-      <p class="text-center italic">No accounts</p>
-    {/if}
+  <div>
+    <button class="btn" on:click={() => passwordForMnemonicDialogOpen = true}>
+      See mnemonic
+    </button>
+    <button class="btn" on:click={() => renameWalletDialogOpen = true}>
+      Rename
+    </button>
+    <button class="btn btn-primary" on:click={generateAccount}>
+      Generate new account
+    </button>
+    <button class="btn btn-primary" on:click={() => importAccountDialogOpen = true}>
+      Import account
+    </button>
+  </div>
+  {#if accounts.length > 0}
+    <ul class="menu menu-lg bg-base-200">
+      {#each accounts as address}
+        <li><a href="/account?id={walletId}&addr={address}" class="no-underline">{address}</a></li>
+      {/each}
+    </ul>
+  {:else}
+    <p class="text-center italic">No accounts</p>
   {/if}
 {/if}
 
-<Dialog.Root bind:open={walletPasswordDialogOpen}>
+<Dialog.Root bind:open={unlockWalletDialogOpen}>
   <Dialog.Portal>
     <Dialog.Overlay />
     <Dialog.Content class="modal prose modal-open">
@@ -112,7 +180,7 @@
         <form id="unlock-wallet-form" on:submit|preventDefault={unlockWallet} autocomplete="off">
           <div>
             <label class="label" for="wallet-password-input">Wallet password</label>
-            <input type="password" bind:value={walletPassword} class="input input-bordered w-full" id="wallet-password-input" required />
+            <input type="password" name="walletPassword" class="input input-bordered w-full" id="wallet-password-input" required />
             {#if passwordWrong}
               <div class="label bg-error px-2">
                 <span class="label-text-alt text-error-content">Incorrect password.</span>
@@ -144,10 +212,43 @@
                 <span class="label-text-alt text-error-content">A wallet with this name already exists.</span>
               </div>
             {/if}
+            <label class="label" for="wallet-password-input">Wallet password</label>
+            <input type="password" name="walletPassword" class="input input-bordered w-full" id="wallet-password-input" required />
+            {#if passwordWrong}
+              <div class="label bg-error px-2">
+                <span class="label-text-alt text-error-content">Incorrect password.</span>
+              </div>
+            {/if}
           </div>
           <div class="modal-action">
             <button type='submit' class="btn btn-primary">Rename wallet</button>
             <Dialog.Close class="btn">Close</Dialog.Close>
+          </div>
+        </form>
+      </div>
+    </Dialog.Content>
+  </Dialog.Portal>
+</Dialog.Root>
+
+<Dialog.Root bind:open={passwordForMnemonicDialogOpen}>
+  <Dialog.Portal>
+    <Dialog.Overlay />
+    <Dialog.Content class="modal prose modal-open">
+      <div class="modal-box">
+        <Dialog.Title class="mt-0">Enter password</Dialog.Title>
+        <form id="unlock-wallet-form" on:submit|preventDefault={showMnemonic} autocomplete="off">
+          <div>
+            <label class="label" for="wallet-password-input">Password</label>
+            <input type="password" name="walletPassword" class="input input-bordered w-full" id="wallet-password-input" required />
+            {#if passwordWrong}
+              <div class="label bg-error px-2">
+                <span class="label-text-alt text-error-content">Incorrect password.</span>
+              </div>
+            {/if}
+          </div>
+          <div class="modal-action">
+            <button type='submit' class="btn btn-primary">Submit</button>
+            <a href="/" class="btn">Cancel</a>
           </div>
         </form>
       </div>
