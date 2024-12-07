@@ -86,10 +86,9 @@ func main() {
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
 		// BackgroundColour: application.NewRGB(27, 38, 54),
-		URL:      "/",
-		Width:    1024,
-		Height:   768,
-		Centered: true,
+		URL:    "/",
+		Width:  1024,
+		Height: 768,
 		// StartState: application.WindowStateMaximised,
 	})
 

@@ -5,8 +5,13 @@
 /bin
 /*.syso
 /wails
+/build/nfpm
+/build/nsis
 /build/icon.ico
 /build/icons.icns
+/build/info.json
+/build/Info.plist
+/build/Info.dev.plist
 
 # misc
 .DS_Store

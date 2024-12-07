@@ -8,13 +8,13 @@
         <key>CFBundleExecutable</key>
         <string>duckySigner</string>
         <key>CFBundleIdentifier</key>
-        <string>com.wails.duckysigner</string>
+        <string>com.nocash7970.duckysigner</string>
         <key>CFBundleVersion</key>
-        <string>0.1.0</string>
+        <string>v0.0.1</string>
         <key>CFBundleGetInfoString</key>
-        <string>Algorand Ducky wallet</string>
+        <string></string>
         <key>CFBundleShortVersionString</key>
-        <string>0.1.0</string>
+        <string>v0.0.1</string>
         <key>CFBundleIconFile</key>
         <string>icons</string>
         <key>LSMinimumSystemVersion</key>
@@ -22,7 +22,7 @@
         <key>NSHighResolutionCapable</key>
         <string>true</string>
         <key>NSHumanReadableCopyright</key>
-        <string>© 2024, No-Cash-7970</string>
+        <string>(c) 2024, No-Cash-7970</string>
         <key>NSAppTransportSecurity</key>
         <dict>
             <key>NSAllowsLocalNetworking</key>
