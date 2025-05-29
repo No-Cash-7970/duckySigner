@@ -15,6 +15,9 @@
 .DS_Store
 *.pem
 .vscode
+.obsidian
+**/.obsidian
+
 
 # KMD
 **/kmd_config.json*
