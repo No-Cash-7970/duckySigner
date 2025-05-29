@@ -7,33 +7,6 @@ Prototype for a simple desktop Algorand wallet that signs things…maybe.
 
 ## Installation for development
 
-This project uses [Wails v3-alpha](https://v3alpha.wails.io/). The Wails v3 source code is expected to be in the same parent directory as the project directory with the name `wails`.
-
-```text
-parent_dir/
-├─ duckySigner/
-├─ wails/
-…
-```
-
-First, install Wails:
-
-```bash
-git clone https://github.com/wailsapp/wails.git
-cd wails
-git checkout v3-alpha
-cd v3/cmd/wails3
-go install
-```
-
-Then move back into the parent directory:
-
-```bash
-cd ..
-```
-
-Lastly, install the project:
-
 ```bash
 git clone https://github.com/No-Cash-7970/duckySigner.git
 cd duckySigner
@@ -61,17 +34,6 @@ go get -u
 go mod tidy
 ```
 
-### Keeping Wails up to date
-
-Because this project is currently using the alpha version of Wails v3, Wails needs to be updated constantly. Run the following to update Wails:
-
-```bash
-cd wails
-git checkout v3-alpha
-cd v3/cmd/wails3
-go install
-```
-
 ## Upgrading frontend dependencies
 
 The frontend is somewhat separate from the backend. It is a TypeScript/Javascript sub-project that uses Node.js and Yarn. Upgrade the frontend dependencies by navigating to the `frontend` directory and using yarn to upgrade:
@@ -95,7 +57,7 @@ The output is placed in the `bin` directory.
 
 ## Dev mode
 
-Wails v3 provides a "dev mode" the watches for changes and automatically rebuilds the project when there is a change. Activate dev mode by running:
+Wails v3 provides a "dev mode" that watches for changes and automatically rebuilds the project when there is a change. Activate dev mode by running:
 
 ```bash
 wails3 dev
