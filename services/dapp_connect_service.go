@@ -119,6 +119,7 @@ func (dc *DappConnectService) Start() bool {
 			// NOTE: echo.Start() function does not end until the process running it is killed
 			if err := dc.echo.Start(dc.ServerAddr); err != nil && err != http.ErrServerClosed {
 				dc.serverRunning = false
+				dc.echo.Logger.Error(err)
 				dc.echo.Logger.Fatal("Unexpected error occurred in starting the server")
 			}
 
