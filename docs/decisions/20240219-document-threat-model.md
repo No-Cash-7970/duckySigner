@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-02-21
-- Tags: dev-process, docs
+- Tags: dev-process, docs, security
 
 ## Context and Problem Statement
 
