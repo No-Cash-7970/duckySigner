@@ -7,7 +7,7 @@
 
 ## Context and Problem Statement
 
-Which Go web framework should be used to create the local wallet connection server? The server should not get a large number of requests and would need to be able to handle a connection that lasts for several minutes (while waiting for user to respond).
+Which Go web framework should be used to create the local wallet connection server? The server should not receive a large number of requests and would need to be able to handle a connection that lasts for several minutes (while waiting for user to respond).
 
 ## Decision Drivers
 
@@ -40,7 +40,7 @@ Website: <https://echo.labstack.com/>
 
 - Pro: Flexible
 - Pro: Well-written documentation with plenty of examples
-- Pro: HTTP/2 support
+- Pro: HTTP/2 support, which would allow for a the server to wait minutes for a response
 - Pro: Easy to get started
 - Pro: WebSocket support
 
@@ -82,4 +82,4 @@ Website: <https://pkg.go.dev/net/http>
 
 - Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - Relates to [Build Using Go and TypeScript](20240101-build-using-go-and-typescript.md)
-- Relates to [Use Local Server to Connect to DApps](20240102-use-echo-web-framework.md)
+- Relates to [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps)
