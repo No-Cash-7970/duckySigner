@@ -10,7 +10,7 @@ Please use this link to browse them.
 
 The C4 diagrams are specified using [Structurizr](https://structurizr.com/) DSL (domain specific language) in the [`workspace.dsl` file](workspace.dsl).
 
-To edit the diagrams, edit the `workspace.dsl` file. Although the `workspace.dsl` file can be edited with any text editor, it is recommended that you use one of the variations of Structurizr, such as  the [Structurizr DSL web editor](https://structurizr.com/dsl) or [Structurizr Lite](https://github.com/structurizr/lite), to edit the `workspace.dsl` file and preview the diagrams.
+To edit the diagrams, edit the `workspace.dsl` file. Although the `workspace.dsl` file can be edited with any text editor, it is recommended that you use one of the variations of Structurizr, such as the [Structurizr DSL web editor](https://structurizr.com/dsl) or [Structurizr Lite](https://github.com/structurizr/lite), to edit the `workspace.dsl` file and preview the diagrams.
 
 ### Publishing diagrams
 
