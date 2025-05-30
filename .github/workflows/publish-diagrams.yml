@@ -13,25 +13,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Set up Structurizr Mini
         run: |
           mkdir .structurizr
-          wget https://github.com/bensmithett/structurizr-mini/releases/download/v1.1.2/structurizr_mini_v1.1.2.tar.gz
-          tar -xvzf structurizr_mini_v1.1.2.tar.gz -C .structurizr
+          wget https://github.com/bensmithett/structurizr-mini/releases/download/v1.2.0/structurizr_mini_v1.2.0.tar.gz
+          tar -xvzf structurizr_mini_v1.2.0.tar.gz -C .structurizr
           cp -f docs/diagrams/nav.json .structurizr/nav.json
       - name: Set up Graphviz
         uses: ts-graphviz/setup-graphviz@v2
       - name: Export Structurizr workspace to JSON
-        uses: docker://structurizr/cli:2024.01.02
+        uses: docker://structurizr/cli:2025.05.28
         with:
           args: 'export -workspace docs/diagrams/workspace.dsl -format json'
       - name: Add auto-layout to Structurizr workspace JSON using Graphviz
-        uses: docker://structurizr/cli:2024.01.02
+        uses: docker://structurizr/cli:2025.05.28
         with:
           # Generate a new JSON from the DSL file that wraps the original workspace DSL file
           args: 'export -workspace docs/diagrams/graphviz.dsl -format json'
