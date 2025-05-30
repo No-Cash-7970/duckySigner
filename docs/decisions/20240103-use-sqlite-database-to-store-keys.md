@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-01-04
-- Tags: backend
+- Tags: backend, kmd
 
 ## Context and Problem Statement
 
@@ -17,7 +17,7 @@ Which database should be used to store the user's wallet keys?
 
 ## Decision Outcome
 
-Chose SQLite because is a portable option that is easy to use and can be secure, as demonstrated by Algorand's Key Management Daemon (KMD). Much of KMD's code for managing keys should be able to be ported because it is written in Go. Using KMD's code would make it easier to provide a high enough level of security to keep the user's keys safe.
+Chose SQLite because it is a portable option that is easy to use and can be secure, as demonstrated by Algorand's Key Management Daemon (KMD). Much of KMD's code for managing keys should be able to be ported because it is written in Go. Using KMD's code would make it easier to provide a high enough level of security to keep the user's keys safe.
 
 **Confidence**: High. SQLite is a well-established file-based database with a wide range of support.
 
