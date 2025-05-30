@@ -29,7 +29,7 @@ What framework(s) should be used to build the desktop wallet app's graphical use
 
 ## Decision Outcome
 
-Chose Wails because it can utilize Go's performance and cross-platform ability with the flexibility and massive number of TypeScript and JavaScript libraries and tools. Despite the less-than-stellar documentation, the community in the Wails Discord server should be able to assist with issues that may arise. In addition to Wails, Next.js will be used as the TypeScript/JavaScript because the developer is familiar with the framework.
+Chose Wails because it utilizes Go's performance and cross-platform ability while also utilizing the flexibility of TypeScript/JavaScript and its availability of a massive number of libraries and tools. Despite the less-than-stellar documentation, the community in the Wails Discord server should be able to assist with issues that may arise. In addition to Wails, Next.js will be used as the TypeScript/JavaScript because the developer is familiar with the framework.
 
 **Confidence**: Medium. It is not clear if using Wails will help produce the desired results within a reasonable amount of time.
 
@@ -37,7 +37,7 @@ Chose Wails because it can utilize Go's performance and cross-platform ability w
 
 ### Wails
 
-Wails is a desktop app framework for building with Go and web technologies (HTML, Javascript/TypeScript, CSS). According to its documentation it is a "lightweight and fast Electron alternative for Go."
+Wails is a desktop app framework for building with Go and web technologies (HTML, TypeScript/Javascript, CSS). According to its documentation it is a "lightweight and fast Electron alternative for Go."
 
 Website: <https://wails.io/>
 
@@ -97,7 +97,7 @@ Website: <https://tauri.app/>
 - Pro: Has great cross-platform support
 - Pro: Many features and UI elements
 - Pro: Free and open source under MIT license
-- Pro: Emphasis on security, which is important for a desktop wallet
+- Pro: Emphasizes security, which is important for a desktop wallet
 - Pro: Plenty of documentation that is clear and well-organized
 - Con: Uses Rust as the backend. Rust has a steep learning curve that may require months to overcome.
 
