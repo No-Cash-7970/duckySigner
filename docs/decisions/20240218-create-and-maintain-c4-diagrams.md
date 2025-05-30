@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-02-20
-- Tags: dev-tools, dev-process, doc
+- Tags: dev-tools, dev-process, docs
 
 ## Context and Problem Statement
 
@@ -11,7 +11,7 @@ The software architecture of the [desktop wallet](20231231-build-algorand-deskto
 
 ## Decision Drivers
 
-- **Understandability:** The top level (system view) diagram should be able to be understood by people who have little or no software engineering knowledge. The lower-level diagrams showing more details about the software system should be descriptive enough to communicate what is happening while being able to be understood by those with software engineering knowledge but little or no knowledge about this project specifically.
+- **Understandability:** The top level (system view) diagram should be able to be understood by people who have little or no software engineering knowledge. The lower-level diagrams showing more details about the software system should be descriptive enough to communicate what is happening while being able to be understood by those with software engineering knowledge but with little or no knowledge about this project specifically.
 - **Ease of modifying and updating diagrams:** The diagrams should be able to be easily updated as the system changes
 - **Ability to sufficiently represent the system at multiple levels:** The diagrams should be able to represent multiple parts of the system at varying levels of abstraction (from system level to class component level)
 
