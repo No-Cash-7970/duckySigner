@@ -7,11 +7,11 @@
 
 ## Context and Problem Statement
 
-Need to choose a license to permit the copying, distributing and modifying the code.
+Need to choose a license to permit the copying, distribution and modification of the code.
 
 ## Decision Drivers
 
-- Permits copying, distributing and modifying the code.
+- The license needs to permit copying, distributing and modifying the code
 - [Integrating KMD code](20240217-integrate-kmd-wallet-management-code.md) requires the project code to be licensed under AGPL v3.0 without a commercial license from Algorand Technologies
 
 ## Considered Options
