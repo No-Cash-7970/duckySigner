@@ -11,7 +11,7 @@ A JavaScript/TypeScript framework is typically used to make building a user inte
 
 ## Decision Drivers
 
-- **Compatibility with Wails 3.0**: The TypeScript framework to be used for the frontend should work well with Wails.
+- **Compatibility with Wails 3.0**: The TypeScript framework to be used for the frontend should work well with Wails
 - **Amount of time needed to learn**: Prefer a framework that does not need a large amount of time (more than 1 week) to be proficient enough to build the frontend functionality
 - **Support for TypeScript**: The framework should be able to be used with TypeScript
 
@@ -30,11 +30,11 @@ Chose Svelte after trying Next.js and Svelte. Despite the developer's familiarit
 
 ### Next.js
 
-Tried building a basic UI using Next.js with Wails because of the developer's familiarity with it. Next.js did not function well with Wails. The compilation of the code broke most of the time because of Next.js build errors. In the instances where the build does not break, the UI breaks from the awkward and inefficient handling of state and "hydration" issues caused by the Wails JavaScript/TypeScript bindings. **Next.js is no longer an option because of these issues.**
+The developer initially attempted to build a basic UI for the desktop wallet app using Next.js because of her familiarity with it. Unfortunately, it did not function well with Wails. The compilation of the code broke most of the time because of Next.js build errors. In the instances where the build did not break, the UI broke from the awkward and inefficient handling of state and the "hydration" issues caused by the Wails JavaScript/TypeScript bindings. In short, **Next.js is no longer an option because of these issues.**
 
 ### Svelte
 
-Tried building a basic UI using Svelte. This is the same UI that did not work when built with [Next.js](#nextjs). Svelte worked well with Wails without any problems.
+After the failed attempt with Next.js, the developer tried building a basic UI for the desktop wallet app using Svelte. This was the same UI that did not work when built with [Next.js](#nextjs). Fortunately, Svelte worked well with Wails without any problems.
 
 ## Links
 
