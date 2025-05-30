@@ -7,7 +7,7 @@
 
 ## Context and Problem Statement
 
-Properly managing keys is difficult, tricky, and requires a significant amount cryptography knowledge. It is very easy to mishandle cryptographic keys and has severe consequences. It would be ideal if reliable and trustworthy code could be used to handle this part of the desktop wallet.
+Properly managing keys is difficult, tricky, and requires a significant amount cryptography knowledge. It is very easy to mishandle cryptographic keys, which has severe consequences. It would be ideal if reliable and trustworthy code could be used to handle this part of the desktop wallet.
 
 ## Decision Drivers
 
