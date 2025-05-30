@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-02-21
-- Tags: dev-process, doc
+- Tags: dev-process, docs
 
 ## Context and Problem Statement
 
@@ -11,7 +11,7 @@ A more formal process for addressing and mitigating security concerns is crucial
 
 ## Decision Drivers
 
-- **Security:** Should be a process that enables an easy and maintainable way of addressing, communicating and mitigating security concerns
+- **Security:** There should be a process that enables an easy and maintainable way of addressing, communicating and mitigating security concerns
 - **Transparency:** Addressed and mitigated security concerns should be documented and available to the public with information about the mitigations
 
 ## Decision Outcome
@@ -27,7 +27,7 @@ Chose to document the threat model as a collection of Markdown documents. The do
 ### Negative Consequences
 
 - Requires more time and effort, which is less time and effort for building and maintaining the software
-- It is possible to compromise security by putting too much information into the threat model documents. Information about an unmitigated threat should never be published for the public to see.
+- It is possible to compromise security by putting too much information into the threat model documents. Information about an unmitigated threat should NEVER be published for the public to see.
 
 ## Links
 
