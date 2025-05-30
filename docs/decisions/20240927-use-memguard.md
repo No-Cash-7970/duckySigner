@@ -1,4 +1,4 @@
-# Use MemGuard to Prevent Secret Data in Memory Being Swapped to Disk Unencrypted
+# Use MemGuard
 
 - Status: accepted
 - Deciders: No-Cash-7970
@@ -7,12 +7,14 @@
 
 ## Context and Problem Statement
 
-Some of the [go-algorand](https://github.com/algorand/go-algorand) maintainers have said multiple times that the Key Management Daemon (KMD) is not "production-ready" and is only meant to be used for developing with Algorand. Although the reason for why KMD is not production-ready has not been fully explained, the code comments and the documentation of KMD point to possible reasons why. One possible reason is mentioned in [KMD's documentation](https://github.com/algorand/go-algorand/tree/8b6c443d6884b4c0d3e3b3faf35b886fb81598a3/daemon/kmd#preventing-memory-from-swapping-to-disk). There is a security issue involving how the wallet password and the secret keys are temporarily stored in memory for convenience. The problem with storing secret data like keys in memory is that they can end up on disk unencrypted due to memory swapping/paging.
+Some of the [go-algorand](https://github.com/algorand/go-algorand) maintainers have said multiple times that the Key Management Daemon (KMD) is not "production-ready" and is only meant to be used for developing with Algorand. Although the reason for why KMD is not production-ready has not been fully explained, the code comments and the documentation of KMD point to possible reasons why.
+
+One possible reason for why KMD is not "production ready" is mentioned in [KMD's documentation](https://github.com/algorand/go-algorand/tree/8b6c443d6884b4c0d3e3b3faf35b886fb81598a3/daemon/kmd#preventing-memory-from-swapping-to-disk). There is a security issue involving how the wallet password and the secret keys are temporarily stored in memory for convenience. The problem with storing secret data like keys in memory is that they can end up on disk unencrypted due to memory swapping/paging.
 
 ## Decision Drivers
 
-- **Security:** The solution must reduce or eliminate possibility unencrypted wallet passwords or secret keys getting exposed to the disk while stored in memory.
-- **Ease of use:** Prefer a solution that takes care of the minute details of securing data in memory.
+- **Security:** The solution must reduce or eliminate possibility unencrypted wallet passwords or secret keys getting exposed to the disk while stored in memory
+- **Ease of use:** Prefer a solution that takes care of the minute details of securing data in memory
 - **Cross-platform:** The solution needs to be able to be compiled on Linux, Mac and Windows. Stay away from a solution that uses CGo because it requires GCC, which is difficult to install on Windows.
 
 ## Considered Options
