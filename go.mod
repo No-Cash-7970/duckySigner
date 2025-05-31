@@ -10,7 +10,7 @@ require (
 	github.com/algorand/go-deadlock v0.2.4
 	github.com/awnumar/memguard v0.22.5
 	github.com/jmoiron/sqlx v1.4.0
-	github.com/karalabe/usb v0.0.3-0.20230711191512-61db3e06439c
+	github.com/karalabe/hid v1.0.0
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
 	github.com/onsi/ginkgo/v2 v2.23.4
