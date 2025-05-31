@@ -3,7 +3,7 @@
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-06-05
-- Tags: roadmap
+- Tags: roadmap, frontend
 
 ## Context and Problem Statement
 
@@ -29,3 +29,7 @@ Chose to make user interface (UI) design and user experience (UX) low priorities
 - The UI would probably not look good
 - The UI may be difficult for many users
 - It is possible for the UI to be so terrible that it undermines security and usefulness of features
+
+## Links
+
+- Relates to: [No Major Upgrades for Frontend Dependencies](20250531-no-major-upgrades-for-frontend-dependencies.md)
