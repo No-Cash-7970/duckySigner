@@ -13,7 +13,7 @@ Not an exhaustive list of threats.
 - [THREAT-005: Exploitation of vulnerabilities exposed in public documentation](#threat-005-exploitation-of-vulnerabilities-exposed-in-public-documentation)
 - [THREAT-006: Exploitation of vulnerabilities exposed in publicly published source code](#threat-006-exploitation-of-vulnerabilities-exposed-in-publicly-published-source-code)
 - [THREAT-007: Guessing the wallet password](#threat-007-guessing-the-wallet-password)
-- [THREAT-008: Modification of transaction data sent hardware wallet](#threat-008-modification-of-transaction-data-sent-hardware-wallet)
+- [THREAT-008: Modification of data sent to hardware wallet](#threat-008-modification-of-data-sent-to-hardware-wallet)
 - [THREAT-009: Interception of HTTP communication between dApp and wallet connection server](#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)
 - [THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large](#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)
 - [THREAT-011: Cracking encryption on wallet files offline](#threat-011-cracking-encryption-on-wallet-files-offline)
@@ -29,8 +29,8 @@ Not an exhaustive list of threats.
 - **Actor:** Scammer/Spammer, Cybercriminal
 - **Purpose:** To manipulate the user into handing over their private keys, signing a malicious transaction, or signing a malicious program (logic signature) to steal funds and assets from their account
 - **Target:** Funds and assets in the user's account that can be sold for fiat money (e.g. USD, Euro)
-- **Action:** Actor creates a fake website that looks like the website of the trustworthy dApp, perhaps one the user has used before, with a URL that looks official. Then they post about the website on social media, possibly with a compromised account of a trustworthy person, to promote this fake website in a way that is enticing to users (e.g. "sign up for airdrop").
-- **Result of the action:** The private key of the account used to interact with website is compromised, and then funds and assets within account are stolen
+- **Action:** Actor creates a fake website that looks like the website of the trustworthy dApp, perhaps one the user has used before, with a URL that looks official. Then they post about the website on social media, possibly with a compromised account of a typically trustworthy person or entity, to promote this fake website in a way that is enticing to users (e.g. "sign up for airdrop").
+- **Result of the action:** The private key of the account the user used to interact with website is compromised, and then funds and assets within account are stolen
 - **Occurrence likelihood**: High
 - **Impact:** Low to high, depending on what funds and assets are in the user's account, for what purposes the user uses their account, how quickly users are warned, and how quickly the fake website is taken down
 - **Threat type:** Spoofing
@@ -46,14 +46,14 @@ Not an exhaustive list of threats.
 - **Actor:** Scammer/Spammer, Cybercriminal
 - **Purpose:** To manipulate the user into handing over their private keys, signing a malicious transaction, or signing a malicious program (logic signature) to steal funds and assets from their account
 - **Target:** Funds and assets in the user's account that can be sold for fiat money (e.g. USD, Euro)
-- **Action:** Actor creates a fake website that looks like the website of the desktop app with a URL that looks official. Then they post about the website on social media, possibly with a compromised account of a trustworthy person (e.g. a maintainer of the desktop wallet project), to promote this fake website in a way that is enticing to users (e.g. "sign up for airdrop").
+- **Action:** Actor creates a fake website that looks like the website of the desktop app with a URL that looks official. Then they post about the website on social media, possibly with a compromised account of a typically trustworthy person (e.g. a maintainer of the desktop wallet project), to promote this fake website in a way that is enticing to users (e.g. "sign up for airdrop").
 - **Result of the action:** The private keys put into the fake desktop wallet are compromised, and then funds and assets within accounts are stolen
 - **Occurrence likelihood**: High
 - **Impact:** Low to high, depending on what funds and assets were in the accounts, for what purposes the user uses their accounts, how quickly users are warned, and how quickly the fake website is taken down
 - **Threat type:** Spoofing
 - **Potential mitigations:**
   1. Explicitly state on official websites and social media accounts that no one associated with project will ask for private key, send an unsolicited DM, create an airdrop, etc.
-  2. Sign each released binary, similar to the [go-algorand releases](https://github.com/algorand/go-algorand/releases). Also encourage the user to verify the signature of a downloaded binary by providing directions for how user can verify the signature
+  2. Sign each released binary, similar to how [go-algorand releases](https://github.com/algorand/go-algorand/releases) are done. Also encourage the user to verify the signature of a downloaded binary by providing directions for how user can verify the signature.
 
 [Back to top ↑](#table-of-contents)
 
@@ -68,8 +68,8 @@ Not an exhaustive list of threats.
 - **Impact:** Very high
 - **Threat type:** Tampering
 - **Potential mitigations:**
-  1. Policy of all maintainers protecting their accounts with 2-factor authentication
-  2. Policy of reviewing all pull requests before merging changes and rejecting any changes that cannot be understood or justified
+  1. Require all maintainers protect their accounts with 2-factor authentication
+  2. Establish a strict policy of reviewing every pull requests before merging changes and rejecting any change that cannot be understood or justified
 
 [Back to top ↑](#table-of-contents)
 
@@ -84,7 +84,7 @@ Not an exhaustive list of threats.
 - **Impact:** High
 - **Threat type:** Information Disclosure
 - **Potential mitigations:**
-  1. Mask the input of each word in the mnemonic like password when the user is entering the mnemonic
+  1. Mask the input of each word in the mnemonic when the user is entering the mnemonic, similar to how user entry of passwords are typically handled in most software
   2. Whenever the user wants to view the mnemonic, display a dialog box that asks the user if they are in an environment safe from prying eyes
 
 [Back to top ↑](#table-of-contents)
@@ -95,7 +95,7 @@ Not an exhaustive list of threats.
 - **Purpose:** To find ways to attack and compromise the desktop wallet
 - **Target:** Codebase
 - **Action:** Actor examines the documentation, such as the architecture diagrams and the threat model documentation, to look for design flaws in the desktop wallet that can be used to create exploits
-- **Result of the action:** The desktop wallet is compromised and users' private keys are potentially exposed, which can lead to users' accounts getting drained
+- **Result of the action:** The desktop wallet is compromised and users' private keys are potentially exposed, which can lead to users' accounts getting drained of all assets and funds
 - **Occurrence likelihood**: Medium
 - **Impact:** Medium
 - **Threat type:** Information Disclosure
@@ -110,13 +110,14 @@ Not an exhaustive list of threats.
 - **Purpose:** To find ways to attack and compromise the desktop wallet
 - **Target:** Codebase
 - **Action:** Actor examines the codebase to look for bugs and design flaws in the desktop wallet that can be used to create exploits
-- **Result of the action:** The desktop wallet is compromised and users' private keys are potentially exposed, which can lead to users' accounts getting drained
+- **Result of the action:** The desktop wallet is compromised and users' private keys are potentially exposed, which can lead to users' accounts getting drained of all assets and funds
 - **Occurrence likelihood**: Medium
 - **Impact:** Medium
 - **Threat type:** Information Disclosure
 - **Potential mitigations:**
   1. Do not publish source code publicly (closed source)
   2. Do not publish the most recent version of the code
+  3. Periodically invite others (white hats) to review code for potential vulnerabilities
 
 [Back to top ↑](#table-of-contents)
 
@@ -136,13 +137,13 @@ Not an exhaustive list of threats.
 
 [Back to top ↑](#table-of-contents)
 
-## THREAT-008: Modification of transaction data sent hardware wallet
+## THREAT-008: Modification of data sent to hardware wallet
 
 - **Actor:** Cybercriminal, malware, a bug
-- **Purpose:** To make user sign transaction they did not intend to sign. There may be no purpose when the modification of the transaction data is the result of a bug
+- **Purpose:** To make user sign transactions or bytes they did not intend to sign. There may be no purpose when the modification of the transaction data is the result of a bug
 - **Target:** Hardware wallet
-- **Action:** Actor somehow modifies the transaction data sent from the desktop wallet to the hardware wallet for user to approve signing the transaction
-- **Result of the action:** The user uses their hardware wallet to sign a transaction they never intended to sign, such as a transaction that drains their account or approving Algorand application (smart contract) that hands over control of the account to the actor (e.g. rekeying).
+- **Action:** Actor somehow modifies the transaction or byte data sent from the desktop wallet to the hardware wallet for user to approve the signing
+- **Result of the action:** The user uses their hardware wallet to sign a transaction they never intended to sign, such as a transaction that drains their account or approving Algorand application (smart contract) that hands over control of the account to the actor (e.g. rekeying). In the case of a dApp or system that uses signing bytes as part of an authentication scheme (i.e. logging in with a wallet account), the user unintentionally signs bytes that gives the actor restricted access.
 - **Occurrence likelihood**: Very low
 - **Impact:** High
 - **Threat type:** Tampering
@@ -157,8 +158,8 @@ Not an exhaustive list of threats.
 - **Actor:** Malware
 - **Purpose:** To disable communication between dApp and wallet connection server, to extract sensitive or secret data (e.g. authentication keys), to modify the communication to change behavior of dApp or desktop wallet
 - **Target:** Data within the HTTP communications
-- **Action:** Actor listens to HTTP communications and either (1) intercepts and halts these communications or (2) extracts useful data for the communications
-- **Result of the action:** Actor can then use secret data (e.g. authentication key) to impersonate trusted dApp and get user to sign a dangerous transaction
+- **Action:** Actor listens to HTTP communications and either (1) intercepts and halts these communications or (2) extracts useful data from the communications
+- **Result of the action:** Actor can then use the extracted data (e.g. authentication key) to impersonate trusted dApp and get user to sign a dangerous transaction
 - **Occurrence likelihood**: Medium
 - **Impact:** High
 - **Threat type:** Information disclosure, tampering, denial of service
@@ -171,7 +172,7 @@ Not an exhaustive list of threats.
 ## THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large
 
 - **Actor:** Malware, malicious or malfunctioning dApp
-- **Purpose:** To overwhelm the wallet connection server to cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk
+- **Purpose:** To overwhelm the wallet connection server and cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk
 - **Target:** Functionality of the desktop wallet, secret data (e.g. private keys, authentication keys)
 - **Action:** Create and send a large number of HTTP requests or a few large request (e.g. 1 GB of data) to the wallet connection server
 - **Result of the action:** The desktop wallet is unable to communicate with legitimate dApps, and exposed secret data may be used to impersonate a trusted dApp or drain the user's accounts
@@ -191,7 +192,7 @@ Not an exhaustive list of threats.
 - **Actor:** Cybercriminal, malware
 - **Purpose:** To access the private keys
 - **Target:** Encrypted files where private keys are stored
-- **Action:** The actor copies the wallet files and then brute force guess the password(s) used to encrypt those files in some other location using brute force or some other means with a large amount of computing power
+- **Action:** The actor copies the wallet files and then brute force guesses the password(s) used to encrypt those files in some other location, possibly with a large amount of computing power
 - **Result of the action:** The actor gains access to the private keys stored in files
 - **Occurrence likelihood**: Medium
 - **Impact:** High
@@ -221,7 +222,7 @@ Not an exhaustive list of threats.
 ## THREAT-013: Wallet password is written down and stored in insecure location
 
 - **Actor:** User
-- **Purpose:** Convenience, and as protective measure against forgetting wallet password
+- **Purpose:** Convenience, as protective measure against forgetting wallet password
 - **Target:** Wallet password
 - **Action:** The user writes down password and stores in an insecure location (e.g. underneath keyboard, in a drawer nearby)
 - **Result of the action:** Access to the wallet does not solely rely on the user remembering the password and it is easily accessible to the user...and anyone else curious enough to look around
@@ -229,8 +230,8 @@ Not an exhaustive list of threats.
 - **Impact:** High
 - **Threat type:** Information Disclosure
 - **Potential mitigations:**
-  1. Support a secure mechanism for backing up keys and recovering them so user does not need to worry about losing access to keys because of losing the password.
-  2. Suggest to user to use a password manager
+  1. Support a secure mechanism for backing up keys and recovering them so user does not need to worry about losing access to keys due to losing the password.
+  2. Suggest user to use a password manager
   3. Warn user about storing password in an insecure location
 
 [Back to top ↑](#table-of-contents)
@@ -241,7 +242,7 @@ Not an exhaustive list of threats.
 - **Purpose:** To deceive user into signing a malicious transaction or handing over private keys, to install malware onto the user's computer
 - **Target:** Whatever funds and assets are in the user's account that can be sold for fiat money (e.g. USD, Euro)
 - **Action:** Send a transaction to the user with a scam link in the note field accompanied with a message that is intended to entice the user into clicking the link and interacting with the scam website
-- **Result of the action:** If user ignores transaction, then nothing happens. If the user clicks on link and interacts with the scam website, the user loses funds or assets.
+- **Result of the action:** If user ignores the transaction, then nothing happens. If the user clicks on link and interacts with the scam website, the user potentially loses funds or assets.
 - **Occurrence likelihood**: High
 - **Impact:** Low to High, depends on how much the user interacts with the scam
 - **Threat type:** Spoofing, denial of service
@@ -299,7 +300,7 @@ Not an exhaustive list of threats.
 - **Potential mitigations:**
   1. Allow user to block being shown or notified of transactions from certain addresses (blacklist)
   2. Allow user to whitelist which addresses can trigger a notification
-  3. Allow user to choose the minimum amount of Algos or a certain Algorand Standard Asset (ASA) sent in a transaction that triggers a notification or gets the transaction shown to the user
+  3. Allow user to choose the minimum amount of Algos or certain Algorand Standard Asset (ASA) sent in a transaction that triggers a notification or gets the transaction shown to the user
 
 [Back to top ↑](#table-of-contents)
 

@@ -59,7 +59,7 @@ The user's machine is most likely to be a laptop or desktop computer, but it cou
 
 ### EXTERN-03: Algorand node
 
-An Algorand node is a special type of server that is required to connect to and communicate with the [Algorand Network](#extern-01-algorand-network). Oftentimes, a node runs 24/7 like many servers on the internet. However, a node can be a small machine, such as a Raspberry Pi, in a local network. Alternatively, a cloud server can be used to create and host a node remotely. Node services, such as [Nodely (AlgoNode)](https://nodely.io/), are commonly used in many projects in the Algorand ecosystem. It is also possible for a user to setup a node on a machine not dedicated for running a node, such as a home or work computer. The node in this instance would not be running 24/7 and would have stale data after being turned off.
+An Algorand node is a special type of server that is required to connect to and communicate with the [Algorand Network](#extern-01-algorand-network). Oftentimes, a node runs 24/7 like many servers on the internet. However, a node can be a small machine, such as a Raspberry Pi, in a local network. Alternatively, a cloud server can be used to create and host a node remotely. Node services, such as [Nodely (AlgoNode)](https://nodely.io/), are commonly used in many projects in the Algorand ecosystem. It is also possible for a user to setup a node on a machine not dedicated to running a node, such as a home or work computer. The node in this instance would not be running 24/7 and would have stale data after being turned off.
 
 ### EXTERN-04: Hardware wallet device
 
@@ -83,7 +83,7 @@ An authenticated wallet user is a user, typically a human, who **has** somehow a
 
 ### TRUST-03: DApp
 
-For this document, a dApp ("decentralized" application) is simply software that uses the Algorand blockchain in some manner. The degree of centralization of the dApp software and its functionality is irrelevant. Consequently, a "dApp" in the context of this document does not need to be decentralized, contrary to other commonly accepted definitions of "dApp." DApps are typically web applications run using a web browser. However, with a desktop wallet that does not depend on a web browser, it is possible for a dApp to be software that is installed on the user's machine that also does not depend on a web browser. This makes it more likely that more than one dApp will try to connect to and communicate with the desktop wallet at the same time.
+For this document, a dApp ("decentralized" application) is simply software that uses the Algorand blockchain in some manner. The degree of centralization of the dApp software's structure and its functionality is irrelevant. Consequently, a "dApp" in the context of this document does not need to be decentralized, contrary to other commonly accepted definitions of "dApp." DApps are typically web applications run by a web browser. However, with a desktop wallet that does not depend on a web browser, it is possible for a dApp to be software that is installed on the user's machine that also does not depend on a web browser. This makes it more likely that more than one dApp will try to connect to and communicate with the desktop wallet at the same time.
 
 ### TRUST-04: Ledger device owner
 
@@ -112,7 +112,7 @@ This is the primary method in which the user is supposed to interact with the wa
 
 ### ENTRY-02: Ledger device connection
 
-A computer or mobile device can connect and communicate with Ledger device over a USB or Bluetooth connection to sign transactions. Data (e.g. signed transaction) is sent from a Ledger device to the user's computer or mobile device.
+A computer or mobile device can connect and communicate with a Ledger device over a USB or Bluetooth connection to sign transactions. Data (e.g. a signed transaction) is sent from a Ledger device to the user's computer or mobile device.
 
 **Trust Levels**:
 
@@ -258,7 +258,7 @@ The trust levels for each asset are listed from the highest level of trust to th
 
 ### ASSET-01: Account private keys
 
-An account's private key is the most valuable asset any wallet software can contain. The private key is needed to transfer funds from the account and interact with the network through smart contracts (also known as "applications"). The private key is usually encoded into the form of a 25-word mnemonic to make it easier for the user to record it into some secure, typically non-digital, medium. The purpose of wallet software is to safely store private keys in a way that makes it easier or possible for users to use them to authorize their account's interactions with the network.
+An account's private key is the most valuable asset any wallet software can contain. The private key is needed to transfer funds from the account and interact with the network through smart contracts (also known as "applications"). The private key is usually encoded into the form of a 25-word mnemonic to make it easier for the user to record it into some secure, typically non-digital, medium. The purpose of wallet software is to safely store private keys in a way that makes it easier or possible for users to use them to authorize their accounts' interactions with the network.
 
 **Trust Levels**:
 
@@ -278,7 +278,7 @@ The user's preferences for the desktop wallet may prove useful for an attacker, 
 
 ### ASSET-03: Algorand account information
 
-Although the information about an Algorand account is publicly available for free for anyone willing to look for it, the user may not want to reveal details about their account by having it displayed on a screen that anyone can read from a distance. This is because revealing such information can lead to harm to the user in the real world, such as a ["$5 wrench attack"](https://xkcd.com/538/).
+Although the information about an Algorand account is publicly available for free for anyone willing to look for it, the user may not want to reveal details about their account by having it displayed on a screen that anyone can read from a distance. This is because revealing such information could lead to harm to the user in the real world, such as a ["$5 wrench attack"](https://xkcd.com/538/).
 
 **Trust Levels**:
 

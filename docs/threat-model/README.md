@@ -1,6 +1,6 @@
 # Threat Model
 
-Documentation of the identification and quantification of addressed security risks associated with this project. Most of the [hybrid Threat Modeling Method (hTMM)](https://insights.sei.cmu.edu/library/a-hybrid-threat-modeling-method/) is used for threat modeling.
+This is documentation of the identification and quantification of addressed security risks associated with this project. Most of the [hybrid Threat Modeling Method (hTMM)](https://insights.sei.cmu.edu/library/a-hybrid-threat-modeling-method/) is used for threat modeling.
 
 ## Documents
 
