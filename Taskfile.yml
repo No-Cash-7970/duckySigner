@@ -66,7 +66,7 @@ tasks:
   test:
     summary: Run backend all tests once
     deps:
-      - task: go:mod:tidy
+      - task: common:go:mod:tidy
     cmds:
       - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --trace
       # - go run github.com/onsi/ginkgo/v2/ginkgo -r -p --race --trace
@@ -80,7 +80,7 @@ tasks:
   test:watch:
     summary: Runs backend Go tests in watch mode
     deps:
-      - task: go:mod:tidy
+      - task: common:go:mod:tidy
     cmds:
       - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --trace -v
       # - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --race --trace -v
@@ -89,14 +89,14 @@ tasks:
     summary: Runs the frontend tests once
     dir: frontend
     deps:
-      - task: install:frontend:deps
+      - task: common:install:frontend:deps
     cmds:
       - yarn test
 
   test:ci:
     summary: Runs all tests for a continuous integration (CI) environment
     deps:
-      - task: go:mod:tidy
+      - task: common:go:mod:tidy
     cmds:
       - go run github.com/onsi/ginkgo/v2/ginkgo -r --procs=6 --compilers=6 --randomize-all --randomize-suites --fail-on-pending --keep-going --race --trace --poll-progress-after=120s --poll-progress-interval=30s
       - task: test:frontend
