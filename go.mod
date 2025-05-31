@@ -5,7 +5,7 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	github.com/algorand/go-algorand-sdk/v2 v2.9.0
+	github.com/algorand/go-algorand-sdk/v2 v2.9.1
 	github.com/algorand/go-codec/codec v1.1.10
 	github.com/algorand/go-deadlock v0.2.4
 	github.com/awnumar/memguard v0.22.5
