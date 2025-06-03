@@ -23,6 +23,8 @@ Not an exhaustive list of threats.
 - [THREAT-015: Algorand node malfunctioning](#threat-015-algorand-node-malfunctioning)
 - [THREAT-016: Algorand chain halts](#threat-016-algorand-chain-halts)
 - [THREAT-017: Transaction spam harassment](#threat-017-transaction-spam-harassment)
+- [THREAT-018: Compromised software dependency](#threat-018-compromised-software-dependency)
+- [THREAT-019: Impersonation of software dependency](#threat-019-impersonation-of-software-dependency)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -228,7 +230,7 @@ Not an exhaustive list of threats.
 - **Result of the action:** Access to the wallet does not solely rely on the user remembering the password and it is easily accessible to the user...and anyone else curious enough to look around
 - **Occurrence likelihood**: Medium, however, likelihood of password being found depends on the user's environment
 - **Impact:** High
-- **Threat type:** Information Disclosure
+- **Threat type:** Information disclosure
 - **Potential mitigations:**
   1. Support a secure mechanism for backing up keys and recovering them so user does not need to worry about losing access to keys due to losing the password.
   2. Suggest user to use a password manager
@@ -301,6 +303,40 @@ Not an exhaustive list of threats.
   1. Allow user to block being shown or notified of transactions from certain addresses (blacklist)
   2. Allow user to whitelist which addresses can trigger a notification
   3. Allow user to choose the minimum amount of Algos or certain Algorand Standard Asset (ASA) sent in a transaction that triggers a notification or gets the transaction shown to the user
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-018: Compromised software dependency
+
+- **Actor:** Compromised software dependency developer/maintainer, malicious software dependency contributor, cybercriminal (usually remote)
+- **Purpose:** To compromise software that use the dependency
+- **Target:** Software that use the dependency, user's sensitive or secret data managed by software that use the dependency
+- **Action:** The actor compromises the software dependency by changing its code and then releases an update with the malicious code. Other codebases using the dependency install the update. This causes the malicious code to be included in whatever software is released to users. The malicious code sends sensitive or secret data to the actor.
+- **Result of the action:** Modification of the behavior of software that use the dependency, user's sensitive or secret data is leaked to the actor
+- **Occurrence likelihood**: Medium
+- **Impact:** High
+- **Threat type:** Tampering, information disclosure
+- **Potential mitigations:**
+  1. Review the changes of every dependency when upgrading
+  2. Refrain from using software dependencies as much as reasonably possible
+  3. Use a vulnerability scanner that scans for compromised software dependencies
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-019: Impersonation of software dependency
+
+- **Actor:** Cybercriminal (usually remote)
+- **Purpose:** To compromise software that use the dependency
+- **Target:** Software that use the dependency, user's sensitive or secret data managed by software that use the dependency
+- **Action:** The actor forks or duplicates the code of a software dependency (often a popular one), modifies it, and then releases or deploys it. Developers of other software install or integrate the malicious fake dependency in their codebases, thinking it is the real dependency they were looking to use. This causes the malicious code to be included in the software released to users. The malicious code sends sensitive or secret data to the actor.
+- **Result of the action:** Modification of the behavior of software that use the dependency, user's sensitive or secret data is leaked to the actor
+- **Occurrence likelihood**: Medium
+- **Impact:** High
+- **Threat type:** Spoofing, information disclosure
+- **Potential mitigations:**
+  1. Review any new dependencies introduced into the codebase, especially dependencies introduced within contributed code
+  2. Refrain from using software dependencies as much as reasonably possible
+  3. Use a vulnerability scanner that scans for malicious software dependencies
 
 [Back to top ↑](#table-of-contents)
 

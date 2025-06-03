@@ -17,11 +17,15 @@
   - [EXTERN-02: User's machine](#extern-02-users-machine)
   - [EXTERN-03: Algorand node](#extern-03-algorand-node)
   - [EXTERN-04: Hardware wallet device](#extern-04-hardware-wallet-device)
+  - [EXTERN-05: Software dependency](#extern-05-software-dependency)
 - [Trust Levels](#trust-levels)
   - [TRUST-01: Anonymous wallet user](#trust-01-anonymous-wallet-user)
   - [TRUST-02: Authenticated wallet user](#trust-02-authenticated-wallet-user)
   - [TRUST-03: DApp](#trust-03-dapp)
   - [TRUST-04: Ledger device owner](#trust-04-ledger-device-owner)
+  - [TRUST-05: Software developer/maintainer](#trust-05-software-developermaintainer)
+  - [TRUST-06: Software contributor](#trust-06-software-contributor)
+  - [TRUST-07: Software dependency](#trust-07-software-dependency)
 - [Entry Points](#entry-points)
   - [ENTRY-01: Wallet GUI](#entry-01-wallet-gui)
   - [ENTRY-02: Ledger device connection](#entry-02-ledger-device-connection)
@@ -30,6 +34,8 @@
   - [ENTRY-05: Memory](#entry-05-memory)
   - [ENTRY-06: Wallet connection server API](#entry-06-wallet-connection-server-api)
   - [ENTRY-07: Algorand node API](#entry-07-algorand-node-api)
+  - [ENTRY-08: Software dependency](#entry-08-software-dependency)
+  - [ENTRY-09: Codebase contribution](#entry-09-codebase-contribution)
 - [Exit Points](#exit-points)
   - [EXIT-01: Wallet GUI](#exit-01-wallet-gui)
   - [EXIT-02: Ledger device connection](#exit-02-ledger-device-connection)
@@ -38,10 +44,12 @@
   - [EXIT-05: Memory](#exit-05-memory)
   - [EXIT-06: Wallet connection server API](#exit-06-wallet-connection-server-api)
   - [EXIT-07: Algorand node API](#exit-07-algorand-node-api)
+  - [EXIT-08: External server connection](#exit-08-external-server-connection)
 - [Assets](#assets)
   - [ASSET-01: Account private keys](#asset-01-account-private-keys)
   - [ASSET-02: User preferences](#asset-02-user-preferences)
   - [ASSET-03: Algorand account information](#asset-03-algorand-account-information)
+  - [ASSET-04: Codebase](#asset-04-codebase)
 
 ## External Dependencies
 
@@ -65,13 +73,18 @@ An Algorand node is a special type of server that is required to connect to and 
 
 A hardware wallet device allows a user to use their wallet account keys to sign transactions without exposing the keys to any system outside the device. Currently, the only hardware wallet that Algorand supports is Ledger. All Ledger devices can connect to a computer or mobile device using USB, but some models can connect using Bluetooth. It is possible for multiple hardware wallets to be connected to the desktop wallet at the same time.
 
+### EXTERN-05: Software dependency
+
+A software dependency is software used within the codebase from some external source. Software dependencies are essential to software development, as they often save a lot of development time and effort. However, most software dependencies are tools created and maintained by developers of varying skill levels with varying development workflows and security policies.
+
 ## Trust Levels
 
 > Trust levels represent the access rights that the application will grant to external entities. The trust levels are cross-referenced with the entry points and assets. This allows us to define the access rights or privileges required at each entry point, and those required to interact with each asset.
 >
 > — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#trust-levels)
 
-The trust levels listed in this section are not in any particular order.
+> [!NOTE]
+> The trust levels listed in this section are not in any particular order.
 
 ### TRUST-01: Anonymous wallet user
 
@@ -89,6 +102,18 @@ For this document, a dApp ("decentralized" application) is simply software that 
 
 The ledger device owner is the human who owns and controls a Ledger device that is connected to the desktop wallet. The ledger device owner may not be the same person as the [Anonymous wallet user](#trust-01-anonymous-wallet-user) or the [Authenticated wallet user](#trust-02-authenticated-wallet-user). Additionally, it is possible for there to be multiple Ledger device owners if there are multiple Ledger devices connected to the desktop wallet.
 
+### TRUST-05: Software developer/maintainer
+
+In an open source project, the developer is the primary creator of the software and makes most of the development decisions. A maintainer is often someone who regularly works with the developer to maintain the software and they usually contribute code and may help make development decisions. The developers and maintainers of an open source project are typically considered to be the development team. The developers and maintainers have the highest access to the codebase because they are the only ones who have the permission to modify the codebase and accept changes to the codebase from [contributors](#trust-06-software-contributor). Oftentimes, the words "developer" and "maintainer" are used interchangeably and refer to the same position.
+
+### TRUST-06: Software contributor
+
+In an open source project, a contributor is a third party who contributes to the project in some way, typically by contributing code. Anyone can become a contributor to an open source project, so contributors have the lowest access to the codebase. It is up to the developers/maintainers of an open source project to review every contribution to prevent malicious or low quality code from entering the project's codebase. Depending on the policies of the project, a contributor may be promoted to maintainer if they have contributed enough to the project.
+
+### TRUST-07: Software dependency
+
+A software dependency is external software that is integrated into the codebase. A software dependency could be core to the functionality of the software using the dependency, so a malicious or malfunctioning dependency could compromise the software entirely.
+
 ## Entry Points
 
 > Entry points define the interfaces through which potential attackers can interact with the application or supply it with data. In order for a potential attacker to attack an application, entry points must exist.
@@ -99,7 +124,8 @@ The ledger device owner is the human who owns and controls a Ledger device that 
 >
 > — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#entry-points)
 
-The trust levels for each entry point are listed from the highest level of trust to the lowest level of trust.
+> [!NOTE]
+> The trust levels for each entry point are listed from the highest level of trust to the lowest level of trust.
 
 ### ENTRY-01: Wallet GUI
 
@@ -169,6 +195,24 @@ Any interaction with the Algorand blockchain must be done through an Algorand no
 1. Authenticated wallet user
 2. Anonymous wallet user
 
+### ENTRY-08: Software dependency
+
+The use of a software dependency is one way foreign code not created by a developer/maintainer of the software can make its way into the software. The dependency's code is usually not within the software's codebase and is integrated into the software when the software is compiled. When new code is introduced into the software through a dependency, it is usually when the dependency is initially included or when an already included dependency is updated.
+
+**Trust Levels**:
+
+1. Software developer/maintainer
+2. Software contributor
+
+### ENTRY-09: Codebase contribution
+
+An open source project usually allows for anyone to contribute to the project. A contribution to the codebase, often from a stranger, is another way foreign code can be introduced into the software. Most of the time, a contribution is a modification of the codebase and is managed through a pull request.
+
+**Trust Levels**:
+
+1. Software developer/maintainer
+2. Software contributor
+
 ## Exit Points
 
 > Exit points might prove useful when attacking the client: for example, cross-site-scripting vulnerabilities and information disclosure vulnerabilities both require an exit point for the attack to complete.
@@ -179,7 +223,8 @@ Any interaction with the Algorand blockchain must be done through an Algorand no
 >
 > — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#exit-points)
 
-The trust levels for each exit point are listed from the highest level of trust to the lowest level of trust.
+> [!NOTE]
+> The trust levels for each exit point are listed from the highest level of trust to the lowest level of trust.
 
 ### EXIT-01: Wallet GUI
 
@@ -248,13 +293,24 @@ Changing the state of something (e.g. account, smart contract) on the Algorand b
 
 1. Anonymous wallet user
 
+### EXIT-08: External server connection
+
+If the software is compromised, the software may send sensitive or secret data to some external server accessible to a remote malicious actor. The connection to this external server would be established by malicious code within the compromised software. It would not be detected unless someone finds the malicious code within the codebase or notices suspicious network communications coming from the compromised software installed on the user's computer.
+
+**Trust Levels**:
+
+1. Software developer/maintainer
+2. Software dependency
+3. Software contributor
+
 ## Assets
 
 > Assets are essentially targets for attackers, i.e. they are the reason threats will exist. Assets can be both physical assets and abstract assets. For example, an asset of an application might be a list of clients and their personal information; this is a physical asset. An abstract asset might be the reputation of an organization.
 >
 > — [Threat Modeling Process - OWASP](https://owasp.org/www-community/Threat_Modeling_Process#assets)
 
-The trust levels for each asset are listed from the highest level of trust to the lowest level of trust.
+> [!NOTE]
+> The trust levels for each asset are listed from the highest level of trust to the lowest level of trust.
 
 ### ASSET-01: Account private keys
 
@@ -285,3 +341,13 @@ Although the information about an Algorand account is publicly available for fre
 1. Authenticated wallet user
 2. DApp
 3. Anonymous wallet user
+
+### ASSET-04: Codebase
+
+A codebase is a collection of programming code used to create software. Changes to a codebase can affect how the resulting software functions. On the other hand, changes to the software usually only occur through changes to the codebase. A codebase is typically contained within a single Version Control System (VCS) repository (e.g. Git repository), but it can consist of multiple repositories. The [software developers/maintainers](#trust-05-software-developermaintainer) have the final say in what changes to the codebase are allowed and applied.
+
+**Trust Levels**:
+
+1. Software developer/maintainer
+2. Software dependency
+3. Software contributor
