@@ -93,6 +93,20 @@ workspace {
             dapp -> algoNode "Sends signed transaction using"
         }
 
+        dynamic wallet SignTransactionWithLedger "DApp requests user (with a Ledger device) to sign a transaction" {
+            autoLayout
+            user -> dapp "Initiates action that requires signing a transaction within"
+            dapp -> walletServer "Sends request to sign transaction to"
+            walletServer -> walletUI "Forwards request to sign transaction to"
+            walletUI -> ledgerDevice "Sends unsigned transaction data to"
+            walletUI -> user "Asks for signing of transaction using Ledger device from"
+            user -> ledgerDevice "Signs transaction using"
+            ledgerDevice -> walletUI "Sends signed transaction data to"
+            walletUI -> walletServer "Forwards signed transaction data to"
+            walletServer -> dapp "Responds with signed transaction data to"
+            dapp -> algoNode "Sends signed transaction using"
+        }
+
         dynamic wallet DisconnectThroughDApp "User disconnects wallet from dApp though the dApp (e.g. \"Disconnect\" button)" {
             autoLayout
             user -> dapp "Initiates disconnect by clicking \"Disconnect wallet\" button within"
