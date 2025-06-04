@@ -47,9 +47,8 @@ workspace {
         walletServer -> walletUI "Notifies of dApp request" "Event"
         walletUI -> keyStore "Temporarily retrieves key from" "With password from user"
         walletUI -> settingsStore "Retrieves user preferences from" ""
-        walletUI -> grantStore "Saves credentials & perms given to dApps" ""
         walletUI -> ledgerDevice "Sends signing request to"
-        walletServer -> grantStore "Retrieves and removes credentials & perms given to dApps" ""
+        walletServer -> grantStore "Manages credentials & permissions given to dApps" ""
 
     }
 
@@ -71,20 +70,18 @@ workspace {
 
         dynamic wallet DAppConnect "DApp establish connection with wallet" {
             autoLayout
-
             user -> dapp "Initiates action that requires connecting to wallet within"
-            dapp -> walletServer "Send request for authentication credentials to"
+            dapp -> walletServer "Requests authentication credentials from"
             walletServer -> walletUI "Forwards request to approve dApp connection to"
-            walletUI -> user "Requests approval for dApp connection from"
+            walletUI -> user "Asks for approval of dApp connection from"
             user -> walletUI "Approves dApp connection using"
-            walletUI -> grantStore "Saves dApp connection approval data into"
             walletUI -> walletServer "Forwards dApp connection approval data to"
+            walletServer -> grantStore "Saves dApp connection approval data into"
             walletServer -> dapp "Responds with the set of authentication credentials created from approval data to"
         }
 
         dynamic wallet SignTransaction "DApp requests user to sign a transaction" {
             autoLayout
-
             user -> dapp "Initiates action that requires signing a transaction within"
             dapp -> walletServer "Sends request to sign transaction to"
             walletServer -> walletUI "Forwards request to sign transaction to"
@@ -96,28 +93,26 @@ workspace {
             dapp -> algoNode "Sends signed transaction using"
         }
 
-        dynamic wallet DisconnectThroughDApp "User disconnects wallet from dApp though the dAppp (e.g. \"Disconnect\" button)" {
+        dynamic wallet DisconnectThroughDApp "User disconnects wallet from dApp though the dApp (e.g. \"Disconnect\" button)" {
             autoLayout
-
             user -> dapp "Initiates disconnect by clicking \"Disconnect wallet\" button within"
             dapp -> walletServer "Sends request to remove dApp connection approval data to"
             walletServer -> grantStore "Removes dApp connection approval data from"
             walletServer -> dapp "Responds with success message to"
-            dapp -> user "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to"
+            dapp -> user "Shows it is disconnected from wallet after removing its now old and invalid authentication credentials to"
         }
 
         dynamic wallet DisconnectThroughWallet "User disconnects wallet from dApp though the wallet" {
             autoLayout
-
             user -> walletUI "Initiates disconnect by clicking \"Disconnect wallet\" button within"
-            walletUI -> grantStore "Removes dApp connection approval data from"
+            walletUI -> walletServer "Sends request to disconnect from dApp to"
+            walletServer -> grantStore "Removes dApp connection approval data from"
+            walletServer -> walletUI "Responds with success message to"
             walletUI -> user "Shows it is disconnected from dApp to"
-            dapp -> walletServer "Eventually deletes invalid authentication credentials (created from old connection approval data) after periodically checking with"
         }
 
         dynamic wallet DAppRenewCredentials "DApp renews its set of authentication credentials created from dApp connection approval data" {
             autoLayout
-
             dapp -> walletServer "Send request to renew authentication credentials to"
             walletServer -> grantStore "Checks if dApp connection approval is valid by looking in"
             walletServer -> dapp "Responds with new set of authentication credentials created from approval data to"
