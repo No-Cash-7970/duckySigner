@@ -74,15 +74,9 @@
           "sourceId" : "3",
           "tags" : "Relationship"
         }, {
-          "description" : "Saves credentials & perms given to dApps",
-          "destinationId" : "6",
-          "id" : "28",
-          "sourceId" : "3",
-          "tags" : "Relationship"
-        }, {
           "description" : "Sends signing request to",
           "destinationId" : "11",
-          "id" : "29",
+          "id" : "28",
           "sourceId" : "3",
           "tags" : "Relationship"
         } ],
@@ -102,9 +96,9 @@
           "tags" : "Relationship",
           "technology" : "Event"
         }, {
-          "description" : "Retrieves and removes credentials & perms given to dApps",
+          "description" : "Manages credentials & permissions given to dApps",
           "destinationId" : "6",
-          "id" : "31",
+          "id" : "30",
           "sourceId" : "4",
           "tags" : "Relationship"
         } ],
@@ -154,8 +148,8 @@
       }, {
         "description" : "Sends signing request to",
         "destinationId" : "11",
-        "id" : "30",
-        "linkedRelationshipId" : "29",
+        "id" : "29",
+        "linkedRelationshipId" : "28",
         "sourceId" : "2"
       } ],
       "tags" : "Element,Software System"
@@ -282,15 +276,15 @@
       },
       "dimensions" : {
         "height" : 2620,
-        "width" : 4083
+        "width" : 3775
       },
       "elements" : [ {
         "id" : "1",
-        "x" : 1879,
+        "x" : 1617,
         "y" : 208
       }, {
         "id" : "3",
-        "x" : 1879,
+        "x" : 1617,
         "y" : 808
       }, {
         "id" : "4",
@@ -302,11 +296,11 @@
         "y" : 1408
       }, {
         "id" : "6",
-        "x" : 1504,
+        "x" : 867,
         "y" : 2008
       }, {
         "id" : "7",
-        "x" : 2675,
+        "x" : 2367,
         "y" : 1408
       }, {
         "id" : "8",
@@ -314,7 +308,7 @@
         "y" : 808
       }, {
         "id" : "11",
-        "x" : 3425,
+        "x" : 3117,
         "y" : 1408
       } ],
       "externalSoftwareSystemBoundariesVisible" : false,
@@ -336,13 +330,13 @@
       }, {
         "id" : "18",
         "vertices" : [ {
-          "x" : 3154,
+          "x" : 2846,
           "y" : 704
         } ]
       }, {
         "id" : "19",
         "vertices" : [ {
-          "x" : 3454,
+          "x" : 3146,
           "y" : 704
         } ]
       }, {
@@ -362,20 +356,11 @@
       }, {
         "id" : "28",
         "vertices" : [ {
-          "x" : 2217,
-          "y" : 1408
-        }, {
-          "x" : 2217,
-          "y" : 1708
-        } ]
-      }, {
-        "id" : "29",
-        "vertices" : [ {
-          "x" : 3304,
+          "x" : 2996,
           "y" : 1408
         } ]
       }, {
-        "id" : "31"
+        "id" : "30"
       } ],
       "softwareSystemId" : "2"
     } ],
@@ -391,17 +376,17 @@
       },
       "description" : "DApp establish connection with wallet",
       "dimensions" : {
-        "height" : 2054,
-        "width" : 2504
+        "height" : 2158,
+        "width" : 1754
       },
       "elementId" : "2",
       "elements" : [ {
         "id" : "1",
-        "x" : 1829,
+        "x" : 1079,
         "y" : 929
       }, {
         "id" : "3",
-        "x" : 704,
+        "x" : 329,
         "y" : 329
       }, {
         "id" : "4",
@@ -409,8 +394,8 @@
         "y" : 929
       }, {
         "id" : "6",
-        "x" : 1079,
-        "y" : 929
+        "x" : 329,
+        "y" : 1529
       }, {
         "id" : "8",
         "x" : 1079,
@@ -419,14 +404,14 @@
       "externalBoundariesVisible" : false,
       "key" : "DAppConnect",
       "order" : 4,
-      "paperSize" : "A4_Landscape",
+      "paperSize" : "A4_Portrait",
       "relationships" : [ {
         "description" : "Initiates action that requires connecting to wallet within",
         "id" : "13",
         "order" : "1",
         "response" : false
       }, {
-        "description" : "Send request for authentication credentials to",
+        "description" : "Requests authentication credentials from",
         "id" : "23",
         "order" : "2",
         "response" : false
@@ -436,7 +421,7 @@
         "order" : "3",
         "response" : false
       }, {
-        "description" : "Requests approval for dApp connection from",
+        "description" : "Asks for approval of dApp connection from",
         "id" : "21",
         "order" : "4",
         "response" : false
@@ -446,13 +431,13 @@
         "order" : "5",
         "response" : false
       }, {
-        "description" : "Saves dApp connection approval data into",
-        "id" : "28",
+        "description" : "Forwards dApp connection approval data to",
+        "id" : "24",
         "order" : "6",
         "response" : false
       }, {
-        "description" : "Forwards dApp connection approval data to",
-        "id" : "24",
+        "description" : "Saves dApp connection approval data into",
+        "id" : "30",
         "order" : "7",
         "response" : false
       }, {
@@ -562,7 +547,121 @@
         "rankSeparation" : 300,
         "vertices" : false
       },
-      "description" : "User disconnects wallet from dApp though the dAppp (e.g. \"Disconnect\" button)",
+      "description" : "DApp requests user (with a Ledger device) to sign a transaction",
+      "dimensions" : {
+        "height" : 2054,
+        "width" : 2504
+      },
+      "elementId" : "2",
+      "elements" : [ {
+        "id" : "1",
+        "x" : 1079,
+        "y" : 329
+      }, {
+        "id" : "3",
+        "x" : 329,
+        "y" : 329
+      }, {
+        "id" : "4",
+        "x" : 329,
+        "y" : 929
+      }, {
+        "id" : "8",
+        "x" : 1829,
+        "y" : 929
+      }, {
+        "id" : "10",
+        "x" : 1829,
+        "y" : 1529
+      }, {
+        "id" : "11",
+        "x" : 1079,
+        "y" : 929
+      } ],
+      "externalBoundariesVisible" : false,
+      "key" : "SignTransactionWithLedger",
+      "order" : 6,
+      "paperSize" : "A4_Landscape",
+      "relationships" : [ {
+        "description" : "Initiates action that requires signing a transaction within",
+        "id" : "13",
+        "order" : "1",
+        "response" : false
+      }, {
+        "description" : "Sends request to sign transaction to",
+        "id" : "23",
+        "order" : "2",
+        "response" : false,
+        "vertices" : [ {
+          "x" : 1079,
+          "y" : 779
+        }, {
+          "x" : 1529,
+          "y" : 779
+        } ]
+      }, {
+        "description" : "Forwards request to sign transaction to",
+        "id" : "25",
+        "order" : "3",
+        "response" : false
+      }, {
+        "description" : "Sends unsigned transaction data to",
+        "id" : "28",
+        "order" : "4",
+        "response" : false
+      }, {
+        "description" : "Asks for signing of transaction using Ledger device from",
+        "id" : "21",
+        "order" : "5",
+        "response" : false,
+        "vertices" : [ {
+          "x" : 804,
+          "y" : 479
+        } ]
+      }, {
+        "description" : "Signs transaction using",
+        "id" : "18",
+        "order" : "6",
+        "response" : false
+      }, {
+        "description" : "Sends signed transaction data to",
+        "id" : "28",
+        "order" : "7",
+        "response" : true
+      }, {
+        "description" : "Forwards signed transaction data to",
+        "id" : "24",
+        "order" : "8",
+        "response" : false
+      }, {
+        "description" : "Responds with signed transaction data to",
+        "id" : "23",
+        "order" : "9",
+        "response" : true,
+        "vertices" : [ {
+          "x" : 1079,
+          "y" : 779
+        }, {
+          "x" : 1529,
+          "y" : 779
+        } ]
+      }, {
+        "description" : "Sends signed transaction using",
+        "id" : "16",
+        "order" : "10",
+        "response" : false
+      } ]
+    }, {
+      "automaticLayout" : {
+        "applied" : false,
+        "edgeSeparation" : 0,
+        "implementation" : "Graphviz",
+        "nodeSeparation" : 300,
+        "rankDirection" : "TopBottom",
+        "rankSeparation" : 300,
+        "vertices" : false
+      },
+      "description" : "User disconnects wallet from dApp though the dApp (e.g. \"Disconnect\" button)",
       "dimensions" : {
         "height" : 2054,
         "width" : 1754
@@ -587,7 +686,7 @@
       } ],
       "externalBoundariesVisible" : false,
       "key" : "DisconnectThroughDApp",
-      "order" : 6,
+      "order" : 7,
       "paperSize" : "A4_Portrait",
       "relationships" : [ {
         "description" : "Initiates disconnect by clicking \"Disconnect wallet\" button within",
@@ -601,7 +700,7 @@
         "response" : false
       }, {
         "description" : "Removes dApp connection approval data from",
-        "id" : "31",
+        "id" : "30",
         "order" : "3",
         "response" : false
       }, {
@@ -610,7 +709,7 @@
         "order" : "4",
         "response" : true
       }, {
-        "description" : "Shows it is disconnected from wallet after removing its now invalid authentication credentials (created from old connection approval data) to",
+        "description" : "Shows it is disconnected from wallet after removing its now old and invalid authentication credentials to",
         "id" : "14",
         "order" : "5",
         "response" : false
@@ -627,54 +726,55 @@
       },
       "description" : "User disconnects wallet from dApp though the wallet",
       "dimensions" : {
-        "height" : 2020,
-        "width" : 2458
+        "height" : 2158,
+        "width" : 1754
       },
       "elementId" : "2",
       "elements" : [ {
         "id" : "1",
-        "x" : 1783,
-        "y" : 1408
+        "x" : 1079,
+        "y" : 929
       }, {
         "id" : "3",
-        "x" : 1079,
-        "y" : 808
+        "x" : 329,
+        "y" : 329
       }, {
         "id" : "4",
         "x" : 329,
-        "y" : 808
+        "y" : 929
       }, {
         "id" : "6",
-        "x" : 1033,
-        "y" : 1408
-      }, {
-        "id" : "8",
         "x" : 329,
-        "y" : 208
+        "y" : 1529
       } ],
       "externalBoundariesVisible" : false,
       "key" : "DisconnectThroughWallet",
-      "order" : 7,
-      "paperSize" : "A4_Landscape",
+      "order" : 8,
+      "paperSize" : "A4_Portrait",
       "relationships" : [ {
         "description" : "Initiates disconnect by clicking \"Disconnect wallet\" button within",
         "id" : "20",
         "order" : "1",
         "response" : false
       }, {
-        "description" : "Removes dApp connection approval data from",
-        "id" : "28",
+        "description" : "Sends request to disconnect from dApp to",
+        "id" : "24",
         "order" : "2",
+        "response" : false
+      }, {
+        "description" : "Removes dApp connection approval data from",
+        "id" : "30",
+        "order" : "3",
+        "response" : false
+      }, {
+        "description" : "Responds with success message to",
+        "id" : "25",
+        "order" : "4",
         "response" : false
       }, {
         "description" : "Shows it is disconnected from dApp to",
         "id" : "21",
-        "order" : "3",
-        "response" : false
-      }, {
-        "description" : "Eventually deletes invalid authentication credentials (created from old connection approval data) after periodically checking with",
-        "id" : "23",
-        "order" : "4",
+        "order" : "5",
         "response" : false
       } ]
     }, {
@@ -708,7 +808,7 @@
       } ],
       "externalBoundariesVisible" : false,
       "key" : "DAppRenewCredentials",
-      "order" : 8,
+      "order" : 9,
       "paperSize" : "A5_Landscape",
       "relationships" : [ {
         "description" : "Send request to renew authentication credentials to",
@@ -717,7 +817,7 @@
         "response" : false
       }, {
         "description" : "Checks if dApp connection approval is valid by looking in",
-        "id" : "31",
+        "id" : "30",
         "order" : "2",
         "response" : false
       }, {
@@ -777,7 +877,7 @@
       }, {
         "id" : "22"
       }, {
-        "id" : "30"
+        "id" : "29"
       } ],
       "softwareSystemId" : "2"
     } ],
@@ -844,7 +944,7 @@
       }, {
         "id" : "22"
       }, {
-        "id" : "30"
+        "id" : "29"
       } ]
     } ]
   }
