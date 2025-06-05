@@ -25,6 +25,7 @@ Not an exhaustive list of threats.
 - [THREAT-017: Transaction spam harassment](#threat-017-transaction-spam-harassment)
 - [THREAT-018: Compromised software dependency](#threat-018-compromised-software-dependency)
 - [THREAT-019: Impersonation of software dependency](#threat-019-impersonation-of-software-dependency)
+- [THREAT-020: User overwhelmed by too many request prompts](#threat-020-user-overwhelmed-by-too-many-request-prompts)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -174,9 +175,9 @@ Not an exhaustive list of threats.
 ## THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large
 
 - **Actor:** Malware, malicious or malfunctioning dApp
-- **Purpose:** To overwhelm the wallet connection server and cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk
+- **Purpose:** To overwhelm the wallet connection server and cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk, malfunction (no purpose)
 - **Target:** Functionality of the desktop wallet, secret data (e.g. private keys, authentication keys)
-- **Action:** Create and send a large number of HTTP requests or a few large request (e.g. 1 GB of data) to the wallet connection server
+- **Action:** The actor creates and sends a large number of HTTP requests or a few large request (e.g. 1 GB of data) to the wallet connection server
 - **Result of the action:** The desktop wallet is unable to communicate with legitimate dApps, and exposed secret data may be used to impersonate a trusted dApp or drain the user's accounts
 - **Occurrence likelihood**: Medium
 - **Impact:** High
@@ -337,6 +338,25 @@ Not an exhaustive list of threats.
   1. Review any new dependencies introduced into the codebase, especially dependencies introduced within contributed code
   2. Refrain from using software dependencies as much as reasonably possible
   3. Use a vulnerability scanner that scans for malicious software dependencies
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-020: User overwhelmed by too many request prompts
+
+Similar to *[THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large](#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)*, but with focus on the user instead of the wallet connection server.
+
+- **Actor:** Malware, malicious or malfunctioning dApp
+- **Purpose:** To harass the user, to make the wallet unusable for the user, malfunction (no purpose), dApp intentionally wants user to sign a large number of transactions
+- **Target:** User, functionality of the desktop wallet
+- **Action:** The actor creates and sends a large number of HTTP requests to the wallet connection server that are all supposed to trigger a prompt to the user (e.g. wallet session initialization prompt, sign transaction prompt). The wallet connection server forwards all of these requests to the UI. The UI displays a prompt for each of the received requests, which is more than what a human user can reasonably handle.
+- **Result of the action:** The user is unable to use most of the desktop wallet functions because there are too many prompts in the way. This would typically result in the user being annoyed by the overwhelming number of prompts.
+- **Occurrence likelihood**: Medium
+- **Impact:** Medium
+- **Threat type:** Denial of service
+- **Potential mitigations:**
+  1. Set and enforce a maximum number of outstanding prompts for the user
+  2. Allow the user to turn off the wallet connection server and not accept requests from dApps, even when there are outstanding prompts
+  3. Design the UI in a way that makes handling many prompts at the same time easier for the user
 
 [Back to top ↑](#table-of-contents)
 
