@@ -26,6 +26,7 @@ Not an exhaustive list of threats.
 - [THREAT-018: Compromised software dependency](#threat-018-compromised-software-dependency)
 - [THREAT-019: Impersonation of software dependency](#threat-019-impersonation-of-software-dependency)
 - [THREAT-020: User overwhelmed by too many request prompts](#threat-020-user-overwhelmed-by-too-many-request-prompts)
+- [THREAT-021: Change to less secure settings](#threat-021-change-to-less-secure-settings)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -41,6 +42,8 @@ Not an exhaustive list of threats.
   1. Only allow certain "trusted" dApps to connect to desktop wallet (i.e. whitelist dApps)
   2. Allow user to have a list of "favorites" with links to web dApps
   3. Do not have the feature of dApps being able to connect to wallet
+  4. Disallow signing of certain dangerous and advanced transactions (e.g. transaction with rekey) by default
+  5. Disallow signing of logic signatures by default
 
 [Back to top ↑](#table-of-contents)
 
@@ -255,6 +258,8 @@ Not an exhaustive list of threats.
   3. Allow user to block being shown or notified of transactions from certain addresses (blacklist)
   4. Allow user to whitelist which addresses can trigger a notification
   5. Allow user to choose the minimum amount of Algos or a certain Algorand Standard Asset (ASA) sent in a transaction that triggers a notification or gets the transaction shown to the user
+  6. Disallow signing of certain dangerous and advanced transactions (e.g. transaction with rekey) by default
+  7. Disallow signing of logic signatures by default
 
 [Back to top ↑](#table-of-contents)
 
@@ -357,6 +362,25 @@ Similar to *[THREAT-010: Wallet connection server overwhelmed by too many reques
   1. Set and enforce a maximum number of outstanding prompts for the user
   2. Allow the user to turn off the wallet connection server and not accept requests from dApps, even when there are outstanding prompts
   3. Design the UI in a way that makes handling many prompts at the same time easier for the user
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-021: Change to less secure settings
+
+- **Actor:** User
+- **Purpose:** To be able to do something that could not be done with more secure settings, to make the desktop wallet easier and more convenient to use
+- **Target:** Desktop wallet settings (stored in a configuration file), desktop wallet functionality
+- **Action:** Assuming the default settings are secure, the user changes the settings in a way that makes the desktop wallet less secure
+- **Result of the action:** The user is exposed to more threats, the desktop wallet is possibly easier and more convenient for the user, an advanced or more dangerous feature is enabled (not a problem for a more knowledgeable user)
+- **Occurrence likelihood**: High
+- **Impact:** Medium
+- **Threat type:** Tampering, elevation of privilege
+- **Potential mitigations:**
+  1. Allow the user to change certain settings where the change lasts for a limited time. After the time for the change lapses, the settings reverts back to the more secure default value. This is for the instance where the user may only need an advanced feature once or twice within a given period of time.
+  2. Warn user when they change a setting to a less secure or dangerous value
+  3. Warn user when a setting is currently set to a value that is less secure or dangerous
+  4. Educate the user on what each setting does and how it can affect the functionality of the wallet
+  5. Design the UI in a way that makes secure settings as easy and convenient as possible
 
 [Back to top ↑](#table-of-contents)
 
