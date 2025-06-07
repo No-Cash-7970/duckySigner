@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"time"
 
+	"duckysigner/internal/testing/mocks"
+
 	"github.com/labstack/gommon/log"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/wailsapp/wails/v3/pkg/application"
-
 	. "duckysigner/services"
+
+	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 var _ = Describe("DappConnectService", func() {
@@ -117,6 +119,12 @@ var _ = Describe("DappConnectService", func() {
 	Describe("Server routes", Ordered, func() {
 		var dcService DappConnectService
 		const defaultUserRespTimeout = 2 * time.Second
+		// Pre-generated keys for wallet connection session
+		const dAppId = "c+2pz3JaUkIEMnbi1vuv7RWdGpfyiv6O3xaYbYbieAg="
+		const dAppKey = "5zYnEKdGIcQSakSTwd21ZEygbX3mQ4vqV8WMZavvBb8="
+		const sessionId = "dNoKnxinOqUNKQIbSTn5nk/pTjOtVznlXV5+MaWSH3k="
+		const sessionKey = "OA7vIBYGze5Vapw/qO3iPr+F9nRnaxsWSVnViTEZ1Ag="
+		const sessionShared = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
 
 		BeforeAll(func() {
 			dcService = DappConnectService{
@@ -130,6 +138,7 @@ var _ = Describe("DappConnectService", func() {
 					LogLevel: slog.LevelError,
 				}),
 				UserResponseTimeout: defaultUserRespTimeout,
+				ECDHCurve:           &mocks.EcdhCurveMock{GeneratedPrivateKey: sessionKey},
 			}
 			By("Starting server")
 			dcService.Start()
@@ -156,18 +165,21 @@ var _ = Describe("DappConnectService", func() {
 
 		Describe("POST /session/init", func() {
 			It("creates a new wallet connection session", func() {
-				// Signals that the request has yielded a response
+				// Signal for when the request has yielded a response
 				var respSignal = make(chan string)
+
 				go func() {
+					defer GinkgoRecover()
+
 					By("Making a request with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name": "foo"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response")
+					By("Processing response from UI")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -176,10 +188,12 @@ var _ = Describe("DappConnectService", func() {
 				}()
 
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
-					By("Prompting user to approve session connection")
+					defer GinkgoRecover()
+
+					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
 
 					By("Wallet user: Approving session connection")
 					dcService.WailsApp.EmitEvent("session_init_response", []string{"account 1", "account 2"})
@@ -188,11 +202,18 @@ var _ = Describe("DappConnectService", func() {
 					dcService.WailsApp.OffEvent("session_init_prompt")
 				})
 
-				// Wait for request to complete before trying to check the response
+				// Wait for request to complete before trying to parse & check the response
 				respBody := <-respSignal
 
-				By("Checking response contains new set of Hawk credentials")
-				Expect(respBody).To(Equal("\"Hawk credentials\"\n"))
+				By("Checking response from UI contains new set of Hawk credentials")
+				expectedResp, _ := json.Marshal(HawkCredentials{
+					Algorithm: "sha256",
+					ID:        dAppId,
+					Key:       sessionId,
+				})
+				Expect(respBody).To(Equal(string(expectedResp) + "\n"))
+
+				// TODO: Somehow check that server and client have same shared key (?)
 			})
 
 			It("fails when user does not respond", func() {
@@ -204,16 +225,19 @@ var _ = Describe("DappConnectService", func() {
 
 				// Signals that the request has yielded a response
 				var respSignal = make(chan string)
+
 				go func() {
+					defer GinkgoRecover()
+
 					By("Making a request with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name": "foo"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response")
+					By("Processing response from UI")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -222,10 +246,12 @@ var _ = Describe("DappConnectService", func() {
 				}()
 
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
-					By("Prompting user to approve session connection")
+					defer GinkgoRecover()
+
+					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
 
 					By("Wallet user: Not responding...")
 				})
@@ -236,7 +262,7 @@ var _ = Describe("DappConnectService", func() {
 				// Wait for request to complete before trying to check the response
 				respBody := <-respSignal
 
-				By("Checking response contains error message")
+				By("Checking response from UI contains error message")
 				expected, _ := json.Marshal(ApiError{"session_no_response", "User did not respond"})
 				Expect(respBody).To(Equal(string(expected) + "\n"))
 			})
@@ -244,16 +270,19 @@ var _ = Describe("DappConnectService", func() {
 			It("fails when user rejects the session", func() {
 				// Signals that the request has yielded a response
 				var respSignal = make(chan string)
+
 				go func() {
+					defer GinkgoRecover()
+
 					By("Making a request with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name": "foo"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response")
+					By("Processing response from UI")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -262,10 +291,12 @@ var _ = Describe("DappConnectService", func() {
 				}()
 
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
-					By("Prompting user to approve session connection")
+					defer GinkgoRecover()
+
+					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
 
 					By("Wallet user: Rejecting session connection")
 					dcService.WailsApp.EmitEvent("session_init_response", []string{})
@@ -277,7 +308,7 @@ var _ = Describe("DappConnectService", func() {
 				// Wait for request to complete before trying to check the response
 				respBody := <-respSignal
 
-				By("Checking response contains new set of Hawk credentials")
+				By("Checking response from UI contains new set of Hawk credentials")
 				expected, _ := json.Marshal(ApiError{"session_rejected", "Session was rejected"})
 				Expect(respBody).To(Equal(string(expected) + "\n"))
 			})

@@ -2,6 +2,10 @@ package services
 
 import (
 	"context"
+	"crypto/ecdh"
+	"crypto/rand"
+	"encoding/base64"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,16 +19,19 @@ import (
 
 type DappConnectService struct {
 	// The address the server should serve at. When only the port is given
-	// (e.g. ":1323"), the server will be served at localhost. Default: ":1323"
+	// (e.g. ":1323"), the server will be served at localhost.
+	// Default: ":1323"
 	ServerAddr string
 	// The level of log messages to include in the log, which is output to the
-	// console in dev mode. Default: 2 (INFO)
+	// console in dev mode.
+	// Default: 2 (INFO)
 	LogLevel log.Lvl
 	// Hide the banner that is printed in the console when the server starts.
 	// Default: no (false)
 	HideServerBanner bool
 	// Hide the listener port message that is printed in the console when the
-	// server starts. Default: no (false)
+	// server starts.
+	// Default: no (false)
 	HideServerPort bool
 	// The current running instance of a the Wails app. Used to trigger and
 	// listen to events from the UI.
@@ -32,6 +39,11 @@ type DappConnectService struct {
 	// Length of time to wait for a user response for certain actions (e.g.
 	// approving a session)
 	UserResponseTimeout time.Duration
+	// Instance of the an ECDH curve to be used for generating the wallet
+	// connection session key pair. Typically used to set a mock curve when
+	// testing.
+	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
+	ECDHCurve ECDHCurve
 
 	// Current Echo instance used to control the server
 	echo *echo.Echo
@@ -39,10 +51,18 @@ type DappConnectService struct {
 	serverRunning bool
 }
 
+// ECDH curve interface based on the `ecdh.Curve` interface in the `crypto/ecdh`
+// package
+type ECDHCurve interface {
+	GenerateKey(rand io.Reader) (*ecdh.PrivateKey, error)
+	NewPrivateKey(key []byte) (*ecdh.PrivateKey, error)
+	NewPublicKey(key []byte) (*ecdh.PublicKey, error)
+}
+
 // A set of credentials for authenticating using Hawk
 type HawkCredentials struct {
 	// Authentication ID
-	Id string `json:"id"`
+	ID string `json:"id"`
 	// Authentication key
 	Key string `json:"key"`
 	// The hash algorithm used to create the message authentication code (MAC).
@@ -67,6 +87,16 @@ type DAppInfo struct {
 	Description string `json:"description,omitempty"`
 	// Icon for the app connecting to wallet as a Base64 encoded JPEG, PNG or SVG data URI
 	Icon string `json:"icon,omitempty"`
+	// TODO: Document this and change the name
+	DAppID string `json:"dapp_session_pk"`
+}
+
+// TODO: Document this
+type ConnectionSession struct {
+	DAppID           *ecdh.PublicKey
+	SessionID        *ecdh.PublicKey
+	ServerKey        *ecdh.PrivateKey
+	SharedSessionKey []byte
 }
 
 const DefaultServerAddr string = ":1323"
@@ -98,6 +128,10 @@ func (dc *DappConnectService) Start() bool {
 	dc.echo.Logger.SetLevel(dc.LogLevel)
 	dc.echo.HideBanner = dc.HideServerBanner
 	dc.echo.HidePort = dc.HideServerPort
+	// Set ECDH curve if it is not set
+	if dc.ECDHCurve == nil {
+		dc.ECDHCurve = ecdh.X25519()
+	}
 	dc.setupServerRoutes(dc.echo)
 
 	// Allow for the server to be gracefully stop if there was an interrupt
@@ -173,18 +207,17 @@ func (dc *DappConnectService) setupServerRoutes(e *echo.Echo) {
 		// Read request data
 		dappInfo := new(DAppInfo)
 		if err := c.Bind(dappInfo); err != nil {
-			c.JSON(http.StatusBadRequest, ApiError{
+			return c.JSON(http.StatusBadRequest, ApiError{
 				Name:    "bad_request",
 				Message: err.Error(),
 			})
 		}
 
-		// XXX: Remove
-		dc.echo.Logger.Info("Incoming request: ", dappInfo)
+		dc.echo.Logger.Debug("Incoming request: ", dappInfo)
 
 		// Check if Wails app is properly initialized
 		if dc.WailsApp == nil {
-			c.JSON(http.StatusInternalServerError, ApiError{
+			return c.JSON(http.StatusInternalServerError, ApiError{
 				Name:    "connect_service_improper_init",
 				Message: "The dApp connections service was improperly initialized",
 			})
@@ -223,10 +256,74 @@ func (dc *DappConnectService) setupServerRoutes(e *echo.Echo) {
 				)
 			}
 
-			// TODO: Create new Hawk credentials and store them
+			// TODO: Create session key pair
+			// sessionId, sessionSk, err := CreateSessionKeyPair(dc.ECDHCurve)
+			sessionId, _, err := CreateSessionKeyPair(dc.ECDHCurve)
+			if err != nil {
+				dc.echo.Logger.Fatal(err)
+				return c.JSON(http.StatusInternalServerError, ApiError{
+					Name:    "session_create_fail",
+					Message: "Failed to create server session",
+				})
+			}
+
+			// TODO: Store connection session data
+
+			// dappIdBytes, err := base64.StdEncoding.DecodeString(dappInfo.DAppID)
+			// if err != nil {
+			// 	dc.echo.Logger.Fatal(err)
+			// 	return c.JSON(http.StatusBadRequest, ApiError{
+			// 		Name:    "invalid_dapp_id_b64",
+			// 		Message: "DApp ID is not a valid Base64 string",
+			// 	})
+			// }
+
+			// dappId, err := curve.NewPublicKey(dappIdBytes)
+			// if err != nil {
+			// 	dc.echo.Logger.Fatal(err)
+			// 	return c.JSON(http.StatusBadRequest, ApiError{
+			// 		Name:    "invalid_dapp_id_pk",
+			// 		Message: "DApp ID is invalid",
+			// 	})
+			// }
+
+			// Derive shared key using private key and dApp session key
+			// sharedSessionKey, err := sessionSk.ECDH(dappId)
+			// if err != nil {
+			// 	dc.echo.Logger.Fatal(err)
+			// 	return c.JSON(http.StatusBadRequest, ApiError{
+			// 		Name:    "invalid_dapp_id",
+			// 		Message: "DApp ID is invalid",
+			// 	})
+			// }
+
+			// connectionSession := ConnectionSession{
+			//     DAppID: dappId,
+			//     SessionID: sessionId,
+			//     ServerKey: sessionSk,
+			//     SharedSessionKey: sharedSessionKey,
+			// }
 
 			dc.echo.Logger.Info("Session init success")
-			return c.JSON(http.StatusOK, "Hawk credentials")
+			return c.JSON(http.StatusOK, HawkCredentials{
+				Algorithm: "sha256",
+				// TODO: Create token (e.g. JWT) to use as ID (Maybe?)
+				ID: dappInfo.DAppID,
+				// The dApp will have to derive the real shared key using its private key and this session ID
+				Key: base64.StdEncoding.EncodeToString(sessionId.Bytes()),
+			})
 		}
 	})
+}
+
+// TODO: document this
+func CreateSessionKeyPair(curve ECDHCurve) (id *ecdh.PublicKey, sk *ecdh.PrivateKey, err error) {
+	sk, err = curve.GenerateKey(rand.Reader)
+	if err != nil {
+		return
+	}
+
+	id = sk.PublicKey()
+
+	return
 }
