@@ -8,12 +8,12 @@ import (
 	"net/http"
 	"time"
 
-	"duckysigner/internal/testing/mocks"
-
 	"github.com/labstack/gommon/log"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	. "duckysigner/internal/dapp_connect"
+	"duckysigner/internal/testing/mocks"
 	. "duckysigner/services"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -124,7 +124,7 @@ var _ = Describe("DappConnectService", func() {
 		const dAppKey = "5zYnEKdGIcQSakSTwd21ZEygbX3mQ4vqV8WMZavvBb8="
 		const sessionId = "dNoKnxinOqUNKQIbSTn5nk/pTjOtVznlXV5+MaWSH3k="
 		const sessionKey = "OA7vIBYGze5Vapw/qO3iPr+F9nRnaxsWSVnViTEZ1Ag="
-		const sessionShared = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
+		const wcKey = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
 
 		BeforeAll(func() {
 			dcService = DappConnectService{
@@ -159,7 +159,7 @@ var _ = Describe("DappConnectService", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Checking response")
-				Expect(string(body)).To(Equal("\"OK\"\n"))
+				Expect(string(body)).To(Equal(`"OK"` + "\n"))
 			})
 		})
 
@@ -263,7 +263,10 @@ var _ = Describe("DappConnectService", func() {
 				respBody := <-respSignal
 
 				By("Checking response from UI contains error message")
-				expected, _ := json.Marshal(ApiError{"session_no_response", "User did not respond"})
+				expected, _ := json.Marshal(ApiError{
+					Name:    "session_no_response",
+					Message: "User did not respond",
+				})
 				Expect(respBody).To(Equal(string(expected) + "\n"))
 			})
 
@@ -309,7 +312,10 @@ var _ = Describe("DappConnectService", func() {
 				respBody := <-respSignal
 
 				By("Checking response from UI contains new set of Hawk credentials")
-				expected, _ := json.Marshal(ApiError{"session_rejected", "Session was rejected"})
+				expected, _ := json.Marshal(ApiError{
+					Name:    "session_rejected",
+					Message: "Session was rejected",
+				})
 				Expect(respBody).To(Equal(string(expected) + "\n"))
 			})
 		})

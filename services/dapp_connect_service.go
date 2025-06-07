@@ -3,9 +3,6 @@ package services
 import (
 	"context"
 	"crypto/ecdh"
-	"crypto/rand"
-	"encoding/base64"
-	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +12,9 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 	"github.com/wailsapp/wails/v3/pkg/application"
+
+	. "duckysigner/internal/dapp_connect"
+	. "duckysigner/internal/dapp_connect/handlers"
 )
 
 type DappConnectService struct {
@@ -50,56 +50,6 @@ type DappConnectService struct {
 	// If the server is currently running
 	serverRunning bool
 }
-
-// ECDH curve interface based on the `ecdh.Curve` interface in the `crypto/ecdh`
-// package
-type ECDHCurve interface {
-	GenerateKey(rand io.Reader) (*ecdh.PrivateKey, error)
-	NewPrivateKey(key []byte) (*ecdh.PrivateKey, error)
-	NewPublicKey(key []byte) (*ecdh.PublicKey, error)
-}
-
-// A set of credentials for authenticating using Hawk
-type HawkCredentials struct {
-	// Authentication ID
-	ID string `json:"id"`
-	// Authentication key
-	Key string `json:"key"`
-	// The hash algorithm used to create the message authentication code (MAC).
-	Algorithm string `json:"algorithm"`
-}
-
-// An error message
-type ApiError struct {
-	// Error name
-	Name string `json:"name,omitempty"`
-	// Error message
-	Message string `json:"message,omitempty"`
-}
-
-// DApp information
-type DAppInfo struct {
-	// Name of the application connecting to wallet
-	Name string `json:"name"`
-	// URL for the app connecting to the wallet
-	Url string `json:"url,omitempty"`
-	// Description of the app
-	Description string `json:"description,omitempty"`
-	// Icon for the app connecting to wallet as a Base64 encoded JPEG, PNG or SVG data URI
-	Icon string `json:"icon,omitempty"`
-	// TODO: Document this and change the name
-	DAppID string `json:"dapp_session_pk"`
-}
-
-// TODO: Document this
-type ConnectionSession struct {
-	DAppID           *ecdh.PublicKey
-	SessionID        *ecdh.PublicKey
-	ServerKey        *ecdh.PrivateKey
-	SharedSessionKey []byte
-}
-
-const DefaultServerAddr string = ":1323"
 
 // Start sets up the server and starts it with the given address it if it has
 // not been started. It does nothing if the server is running. Returns whether
@@ -198,132 +148,12 @@ func (dc *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	// Set up CORS
 	e.Use(middleware.CORS())
 
-	e.GET("/", func(c echo.Context) error {
-		dc.WailsApp.EmitEvent("session_init_response", []string{"account 1", "account 2"})
-		return c.JSON(http.StatusOK, "OK")
-	})
+	e.GET("/", RootGetHandler(dc.WailsApp))
 
-	e.POST("/session/init", func(c echo.Context) error {
-		// Read request data
-		dappInfo := new(DAppInfo)
-		if err := c.Bind(dappInfo); err != nil {
-			return c.JSON(http.StatusBadRequest, ApiError{
-				Name:    "bad_request",
-				Message: err.Error(),
-			})
-		}
-
-		dc.echo.Logger.Debug("Incoming request: ", dappInfo)
-
-		// Check if Wails app is properly initialized
-		if dc.WailsApp == nil {
-			return c.JSON(http.StatusInternalServerError, ApiError{
-				Name:    "connect_service_improper_init",
-				Message: "The dApp connections service was improperly initialized",
-			})
-		}
-
-		// Contains the user's response to session initialization prompt
-		userResp := make(chan []string)
-
-		// Listen for event that contains user's response
-		dc.WailsApp.OnEvent("session_init_response", func(e *application.CustomEvent) {
-			dc.echo.Logger.Info("Got user response: ", e.Data)
-			// NOTE: For some reason, the actual event data is always within a slice
-			userResp <- e.Data.([]interface{})[0].([]string)
-			close(userResp)
-		})
-		defer dc.WailsApp.OffEvent("session_init_response")
-
-		// Prompt user to approve of connection after setting up listener for
-		// user response event because a user (like an automated user in a unit
-		// test) may respond before being prompted, which is not ideal.
-		dc.WailsApp.EmitEvent("session_init_prompt", dappInfo)
-
-		select {
-		case <-time.After(dc.UserResponseTimeout): // Time ran out
-			dc.echo.Logger.Info("Ran out of time waiting for user response")
-			return c.JSON(
-				http.StatusRequestTimeout,
-				ApiError{"session_no_response", "User did not respond"},
-			)
-		case accounts := <-userResp: // Got user's response
-			// If no accounts were approved, that means the user rejected
-			if len(accounts) == 0 {
-				return c.JSON(
-					http.StatusForbidden,
-					ApiError{"session_rejected", "Session was rejected"},
-				)
-			}
-
-			// TODO: Create session key pair
-			// sessionId, sessionSk, err := CreateSessionKeyPair(dc.ECDHCurve)
-			sessionId, _, err := CreateSessionKeyPair(dc.ECDHCurve)
-			if err != nil {
-				dc.echo.Logger.Fatal(err)
-				return c.JSON(http.StatusInternalServerError, ApiError{
-					Name:    "session_create_fail",
-					Message: "Failed to create server session",
-				})
-			}
-
-			// TODO: Store connection session data
-
-			// dappIdBytes, err := base64.StdEncoding.DecodeString(dappInfo.DAppID)
-			// if err != nil {
-			// 	dc.echo.Logger.Fatal(err)
-			// 	return c.JSON(http.StatusBadRequest, ApiError{
-			// 		Name:    "invalid_dapp_id_b64",
-			// 		Message: "DApp ID is not a valid Base64 string",
-			// 	})
-			// }
-
-			// dappId, err := curve.NewPublicKey(dappIdBytes)
-			// if err != nil {
-			// 	dc.echo.Logger.Fatal(err)
-			// 	return c.JSON(http.StatusBadRequest, ApiError{
-			// 		Name:    "invalid_dapp_id_pk",
-			// 		Message: "DApp ID is invalid",
-			// 	})
-			// }
-
-			// Derive shared key using private key and dApp session key
-			// sharedSessionKey, err := sessionSk.ECDH(dappId)
-			// if err != nil {
-			// 	dc.echo.Logger.Fatal(err)
-			// 	return c.JSON(http.StatusBadRequest, ApiError{
-			// 		Name:    "invalid_dapp_id",
-			// 		Message: "DApp ID is invalid",
-			// 	})
-			// }
-
-			// connectionSession := ConnectionSession{
-			//     DAppID: dappId,
-			//     SessionID: sessionId,
-			//     ServerKey: sessionSk,
-			//     SharedSessionKey: sharedSessionKey,
-			// }
-
-			dc.echo.Logger.Info("Session init success")
-			return c.JSON(http.StatusOK, HawkCredentials{
-				Algorithm: "sha256",
-				// TODO: Create token (e.g. JWT) to use as ID (Maybe?)
-				ID: dappInfo.DAppID,
-				// The dApp will have to derive the real shared key using its private key and this session ID
-				Key: base64.StdEncoding.EncodeToString(sessionId.Bytes()),
-			})
-		}
-	})
-}
-
-// TODO: document this
-func CreateSessionKeyPair(curve ECDHCurve) (id *ecdh.PublicKey, sk *ecdh.PrivateKey, err error) {
-	sk, err = curve.GenerateKey(rand.Reader)
-	if err != nil {
-		return
-	}
-
-	id = sk.PublicKey()
-
-	return
+	e.POST("/session/init", SessionInitPostHandler(
+		dc.echo,
+		dc.WailsApp,
+		dc.UserResponseTimeout,
+		dc.ECDHCurve,
+	))
 }
