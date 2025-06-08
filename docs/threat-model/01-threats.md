@@ -190,6 +190,8 @@ Not an exhaustive list of threats.
   2. Set and enforce a maximum size for request header and request body
   3. Allow wallet connection server to be disabled or switched off
   4. Protect secret data temporarily stored in memory with a software enclave by using something the like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) in case a memory paging/swapping occurs
+  5. Allow the user to switch the wallet connection server off, even when the server is receiving requests
+  6. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
 
 [Back to top ↑](#table-of-contents)
 
@@ -362,6 +364,8 @@ Similar to *[THREAT-010: Wallet connection server overwhelmed by too many reques
   1. Set and enforce a maximum number of outstanding prompts for the user
   2. Allow the user to turn off the wallet connection server and not accept requests from dApps, even when there are outstanding prompts
   3. Design the UI in a way that makes handling many prompts at the same time easier for the user
+  4. Allow the user to switch the wallet connection server off, even when they are receiving prompts
+  5. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
 
 [Back to top ↑](#table-of-contents)
 
