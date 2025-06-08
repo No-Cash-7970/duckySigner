@@ -32,7 +32,7 @@ func SessionInitPostHandler(
 
 		dAppIdPk, dappIdApiErr, err := ValidateDAppID(dappInfo.DAppID, ecdhCurve)
 		if err != nil {
-			echoInstance.Logger.Fatal(err)
+			echoInstance.Logger.Error(err)
 			return c.JSON(http.StatusBadRequest, dappIdApiErr)
 		}
 
@@ -78,7 +78,7 @@ func SessionInitPostHandler(
 			// TODO: Rename sessionSk -> sessionKey (or sessionKeySk?)
 			sessionId, sessionSk, err := CreateWCSessionKeyPair(ecdhCurve)
 			if err != nil {
-				echoInstance.Logger.Fatal(err)
+				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
 					Message: "Failed to create server session",
@@ -88,7 +88,7 @@ func SessionInitPostHandler(
 			// Store connection session data
 			wcStoreErr := StoreWCSessionData(sessionId, sessionSk, dAppIdPk, echoInstance.Logger)
 			if wcStoreErr != nil {
-				echoInstance.Logger.Fatal(wcStoreErr)
+				echoInstance.Logger.Error(wcStoreErr)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
 					Message: "Failed to create server session",
