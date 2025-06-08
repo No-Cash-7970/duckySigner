@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/awnumar/memguard"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -143,6 +144,16 @@ func (dc *DappConnectService) Stop() bool {
 // IsOn gives whether or not the server is on and running
 func (dc *DappConnectService) IsOn() bool {
 	return dc.serverRunning
+}
+
+// CleanUp end memory enclave sessions and release resources used by this dApp
+// connection service
+//
+// FOR THE BACKEND ONLY
+func (dc *DappConnectService) CleanUp() {
+	// Purge the MemGuard session
+	defer memguard.Purge()
+	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
 }
 
 // setupServerRoutes declares the server routes

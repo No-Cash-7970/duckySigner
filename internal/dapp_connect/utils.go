@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"github.com/awnumar/memguard"
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -25,17 +26,20 @@ const WCSessionInitUIPromptEventName string = "session_init_prompt"
 const WCSessionInitUIRespEventName string = "session_init_response"
 
 // CreateWCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
-// pair that is to be used for a connection session with a dApp. Returns the
-// generated key pair if successful.
+// pair that is to be used for a connect session with a dApp. Sets the session
+// key pair (the key pair for the server) within the given dApp connect session
+// if successful.
 // TODO: Rename to GenerateDCSessionKeyPair
-func CreateWCSessionKeyPair(curve ECDHCurve) (id *ecdh.PublicKey, sk *ecdh.PrivateKey, err error) {
-	sk, err = curve.GenerateKey(rand.Reader)
+func CreateWCSessionKeyPair(dcSession *WalletConnectionSession, curve ECDHCurve) error {
+	sk, err := curve.GenerateKey(rand.Reader)
 	if err != nil {
-		return
+		return err
 	}
 
-	id = sk.PublicKey()
-	return
+	dcSession.ServerKey = memguard.NewEnclave(sk.Bytes())
+	dcSession.SessionID = sk.PublicKey()
+
+	return nil
 }
 
 // ValidateDAppID validates the given Base64-encoded dApp ID according to the
@@ -144,30 +148,22 @@ func PromptUI(
 
 // StoreWCSessionData stores the dApp connection data to a database file
 // TODO: Rename to StoreDCSessionData
-func StoreWCSessionData(
-	sessionId *ecdh.PublicKey,
-	sessionKey *ecdh.PrivateKey,
-	dappId *ecdh.PublicKey,
-	logger echo.Logger,
-) error {
-	// Derive wallet connection shared key using session key and dApp ID
-	wcKey, err := sessionKey.ECDH(dappId)
-	if err != nil {
-		return err
-	}
+func StoreWCSessionData(dcSession *WalletConnectionSession, curve ECDHCurve, logger echo.Logger) (err error) {
+	// Retrieve and decrypt session key from enclave
+	skBuf, err := dcSession.ServerKey.Open()
+	defer skBuf.Destroy()
+	// Convert session key bytes within the locked buffer to a ecdh.PrivateKey
+	sessionKey, err := curve.NewPrivateKey(skBuf.Bytes())
 
-	wcSession := WalletConnectionSession{
-		DAppID:              dappId,
-		SessionID:           sessionId,
-		ServerKey:           sessionKey,
-		WalletConnectionKey: wcKey,
-	}
+	// Derive dApp connect shared key using session key and dApp ID
+	wcKey, err := sessionKey.ECDH(dcSession.DAppID)
+	dcSession.WalletConnectionKey = memguard.NewEnclave(wcKey)
 
 	// TODO: Remove the logs below. It is only here to avoid Go's unused variable error
-	logger.Debug("Created wallet connection session for dApp with ID:", wcSession.DAppID)
+	logger.Debug("Created wallet connection session for dApp with ID:", dcSession.DAppID)
 
 	// TODO: Store connection session data into an encrypted (or password protected?) db file
 	// TODO: Also store DApp info into the db file
 
-	return nil
+	return
 }

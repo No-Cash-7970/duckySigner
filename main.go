@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/awnumar/memguard"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"duckysigner/kmd/config"
@@ -25,6 +26,11 @@ var assets embed.FS
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
 // logs any error that might occur.
 func main() {
+	// Starts an interrupt handler that will clean up by will wipe sensitive
+	// data in memory before terminating suddenly
+	memguard.CatchInterrupt()
+
+	// Create KMD service
 	kmdService := &services.KMDService{
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: uint64((1 * time.Hour).Seconds()),
@@ -40,15 +46,18 @@ func main() {
 			},
 		},
 	}
-
-	kmdService.CatchInterrupt()
-	// Clean up when application terminates and we're returning from this main function
+	// Clean up KMD when application terminates and we're returning from this
+	// main function
 	defer kmdService.CleanUp()
 
+	// Create dApp connection service
 	dcService := &services.DappConnectService{
 		HideServerBanner:    true,
 		UserResponseTimeout: 5 * time.Minute,
 	}
+	// Clean up dApp connection service when application terminates and we're
+	// returning from this main function
+	defer dcService.CleanUp()
 
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.

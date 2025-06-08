@@ -30,6 +30,7 @@ func SessionInitPostHandler(
 
 		echoInstance.Logger.Debug("Incoming request:", dappInfo)
 
+		// Validate dApp ID before doing anything else
 		dAppIdPk, dappIdApiErr, err := ValidateDAppID(dappInfo.DAppID, ecdhCurve)
 		if err != nil {
 			echoInstance.Logger.Error(err)
@@ -72,11 +73,11 @@ func SessionInitPostHandler(
 				)
 			}
 
-			// TODO: Wrap session key in Memguard enclave.
+			// It's now safe to start creating a new connect session
+			dcSession := WalletConnectionSession{DAppID: dAppIdPk}
 
-			// Create session key pair
-			// TODO: Rename sessionSk -> sessionKey (or sessionKeySk?)
-			sessionId, sessionSk, err := CreateWCSessionKeyPair(ecdhCurve)
+			// Create session key pair and add it into the connect session
+			err := CreateWCSessionKeyPair(&dcSession, ecdhCurve)
 			if err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
@@ -85,8 +86,8 @@ func SessionInitPostHandler(
 				})
 			}
 
-			// Store connection session data
-			wcStoreErr := StoreWCSessionData(sessionId, sessionSk, dAppIdPk, echoInstance.Logger)
+			// Store connect session data for use in other server requests later on
+			wcStoreErr := StoreWCSessionData(&dcSession, ecdhCurve, echoInstance.Logger)
 			if wcStoreErr != nil {
 				echoInstance.Logger.Error(wcStoreErr)
 				return c.JSON(http.StatusInternalServerError, ApiError{
@@ -100,8 +101,9 @@ func SessionInitPostHandler(
 				Algorithm: "sha256",
 				// TODO: Create token (e.g. JWT) to use as ID (Maybe?)
 				ID: dappInfo.DAppID,
-				// The dApp will have to derive the real shared key using its private key and this session ID
-				Key: base64.StdEncoding.EncodeToString(sessionId.Bytes()),
+				// The dApp will have to derive the real shared key, but it will
+				// need this session ID along with its private dApp key
+				Key: base64.StdEncoding.EncodeToString(dcSession.SessionID.Bytes()),
 			})
 		}
 	}

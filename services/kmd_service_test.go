@@ -9,6 +9,7 @@ import (
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/awnumar/memguard"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -314,9 +315,11 @@ var _ = Describe("KmdService", func() {
 
 // createKmdService is a helper function that a new KMDService that is
 // configured to use the given walletDirName as the wallet directory
-func createKmdService(walletDirName string) (s KMDService) {
+func createKmdService(walletDirName string) KMDService {
+	// Clean up by will wipe sensitive data if process is terminated suddenly
+	memguard.CatchInterrupt()
 	// Create the service
-	s = KMDService{
+	return KMDService{
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
@@ -333,9 +336,6 @@ func createKmdService(walletDirName string) (s KMDService) {
 			},
 		},
 	}
-	s.CatchInterrupt()
-
-	return
 }
 
 // createKmdServiceCleanup is a helper function that creates function that

@@ -254,17 +254,6 @@ func (service *KMDService) CheckWalletPassword(walletID, password string) error 
 // 	return nil
 // }
 
-// CatchInterrupt starts an interrupt handler that will clean up before exiting.
-// This should be run right after creating a new service and before using it,
-// which would often be in the beginning of a main() function.
-//
-// FOR THE BACKEND ONLY
-func (service *KMDService) CatchInterrupt() {
-	// Start interrupt handler for cleaning up the memory enclaves and locked
-	// buffers
-	memguard.CatchInterrupt()
-}
-
 // CleanUp end memory enclave sessions and release resources used by this KMD
 // service
 //
@@ -272,6 +261,7 @@ func (service *KMDService) CatchInterrupt() {
 func (service *KMDService) CleanUp() {
 	// Purge the MemGuard session
 	defer memguard.Purge()
+	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
 }
 
 // init initializes KMD configuration and drivers for use if it has not been
