@@ -21,7 +21,7 @@ import (
 
 var _ = Describe("DappConnectService", func() {
 	Describe("Start()", func() {
-		It("starts the server", func() {
+		It("starts the connection server", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so
 				// the tests can be run in parallel
@@ -34,11 +34,11 @@ var _ = Describe("DappConnectService", func() {
 				dcService.Stop()
 			})
 
-			By("Attempting to start server")
+			By("Attempting to start connection server")
 			Expect(dcService.Start()).To(Equal(true))
 		})
 
-		It("can handle attempt to start server when it is already running", func() {
+		It("can handle attempt to start connection server when it is already running", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so
 				// the tests can be run in parallel
@@ -51,15 +51,15 @@ var _ = Describe("DappConnectService", func() {
 				dcService.Stop()
 			})
 
-			By("Attempting to start server")
+			By("Attempting to start connection server")
 			Expect(dcService.Start()).To(Equal(true))
-			By("Attempting to start server again while it is running")
+			By("Attempting to start connection server again while it is running")
 			Expect(dcService.Start()).To(Equal(true))
 		})
 	})
 
 	Describe("Stop()", func() {
-		It("stops the server if it running", func() {
+		It("stops the connection server if it running", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
@@ -69,13 +69,13 @@ var _ = Describe("DappConnectService", func() {
 				HideServerPort:   true,
 			}
 
-			By("Attempting to start server")
+			By("Attempting to start connection server")
 			Expect(dcService.Start()).To(Equal(true))
-			By("Attempting to stop server")
+			By("Attempting to stop connection server")
 			Expect(dcService.Stop()).To(Equal(false))
 		})
 
-		It("can handle attempt to stop server that is not running", func() {
+		It("can handle attempt to stop connection server that is not running", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
@@ -85,17 +85,17 @@ var _ = Describe("DappConnectService", func() {
 				HideServerPort:   true,
 			}
 
-			By("Attempting to start server")
+			By("Attempting to start connection server")
 			Expect(dcService.Start()).To(Equal(true))
-			By("Attempting to stop server")
+			By("Attempting to stop connection server")
 			Expect(dcService.Stop()).To(Equal(false))
-			By("Attempting to stop server again while it is not running")
+			By("Attempting to stop connection server again while it is not running")
 			Expect(dcService.Stop()).To(Equal(false))
 		})
 	})
 
 	Describe("IsOn()", func() {
-		It("shows if the server is currently on", func() {
+		It("shows if the connection server is currently on", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
@@ -105,18 +105,18 @@ var _ = Describe("DappConnectService", func() {
 				HideServerPort:   true,
 			}
 
-			By("Starting server")
+			By("Starting connection server")
 			Expect(dcService.Start()).To(Equal(true))
-			By("Running IsOn() to check if the server is running")
+			By("Running IsOn() to check if the connection server is running")
 			Expect(dcService.IsOn()).To(Equal(true))
-			By("Stopping server")
+			By("Stopping connection server")
 			Expect(dcService.Stop()).To(Equal(false))
-			By("Running IsOn() to check if the server is not running")
+			By("Running IsOn() to check if the connection server is not running")
 			Expect(dcService.IsOn()).To(Equal(false))
 		})
 	})
 
-	Describe("Server routes", Ordered, func() {
+	Describe("Connection server routes", Ordered, func() {
 		var dcService DappConnectService
 		const defaultUserRespTimeout = 2 * time.Second
 		// Pre-generated keys for wallet connection session
@@ -140,25 +140,25 @@ var _ = Describe("DappConnectService", func() {
 				UserResponseTimeout: defaultUserRespTimeout,
 				ECDHCurve:           &mocks.EcdhCurveMock{GeneratedPrivateKey: sessionKey},
 			}
-			By("Starting server")
+			By("Starting connection server")
 			dcService.Start()
 			DeferCleanup(func() {
-				By("Stopping server")
+				By("Stopping connection server")
 				dcService.Stop()
 			})
 		})
 
 		Describe("GET /", func() {
 			It("works", func() {
-				By("Making request")
+				By("Making request to connection server")
 				resp, err := http.Get("http://localhost:1384/")
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Processing response")
+				By("Processing response from connection server")
 				body, err := getResponseBody(resp)
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Checking response")
+				By("Checking response from connection server")
 				Expect(string(body)).To(Equal(`"OK"` + "\n"))
 			})
 		})
@@ -171,7 +171,7 @@ var _ = Describe("DappConnectService", func() {
 				go func() {
 					defer GinkgoRecover()
 
-					By("Making a request with valid dApp data")
+					By("Making a request to connection server with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
@@ -179,7 +179,7 @@ var _ = Describe("DappConnectService", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response from UI")
+					By("Processing response from connection server")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -187,6 +187,7 @@ var _ = Describe("DappConnectService", func() {
 					close(respSignal)
 				}()
 
+				// Mock UI/user response to prompt event emitted from server
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
 					defer GinkgoRecover()
 
@@ -205,7 +206,7 @@ var _ = Describe("DappConnectService", func() {
 				// Wait for request to complete before trying to parse & check the response
 				respBody := <-respSignal
 
-				By("Checking response from UI contains new set of Hawk credentials")
+				By("Checking if connection server responds with new set of Hawk credentials")
 				expectedResp, _ := json.Marshal(HawkCredentials{
 					Algorithm: "sha256",
 					ID:        dAppId,
@@ -214,6 +215,92 @@ var _ = Describe("DappConnectService", func() {
 				Expect(respBody).To(Equal(string(expectedResp) + "\n"))
 
 				// TODO: Somehow check that server and client have same shared key (?)
+			})
+
+			It("fails when given a dApp ID that is not valid Base64", func() {
+				// Signals that the request has yielded a response
+				var respSignal = make(chan string)
+
+				go func() {
+					defer GinkgoRecover()
+
+					By("Making a request with a dApp ID that is not valid Base64")
+					resp, err := http.Post(
+						"http://localhost:1384/session/init",
+						"application/json",
+						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"hello world"}`)),
+					)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Processing response from UI")
+					body, err := getResponseBody(resp)
+					Expect(err).NotTo(HaveOccurred())
+					// Signal that request has completed
+					respSignal <- string(body)
+					close(respSignal)
+				}()
+
+				// Mock UI/user response to prompt event emitted from server
+				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+					defer GinkgoRecover()
+					Fail("Connection server should not have emitted event for prompting UI/user")
+				})
+				DeferCleanup(func() {
+					dcService.WailsApp.OffEvent("session_init_prompt")
+				})
+
+				// Wait for request to complete before trying to check the response
+				respBody := <-respSignal
+
+				By("Checking if connection server responds with error")
+				expected, _ := json.Marshal(ApiError{
+					Name:    "invalid_dapp_id_b64",
+					Message: "DApp ID is not a valid Base64 string",
+				})
+				Expect(respBody).To(Equal(string(expected) + "\n"))
+			})
+
+			It("fails when given a dApp ID that is not a valid ECDH public key", func() {
+				// Signals that the request has yielded a response
+				var respSignal = make(chan string)
+
+				go func() {
+					defer GinkgoRecover()
+
+					By("Making a request to connection server with a dApp ID that is not valid ECDH public key")
+					resp, err := http.Post(
+						"http://localhost:1384/session/init",
+						"application/json",
+						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"aGVsbG8gd29ybGQ="}`)),
+					)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("Processing response from connection server")
+					body, err := getResponseBody(resp)
+					Expect(err).NotTo(HaveOccurred())
+					// Signal that request has completed
+					respSignal <- string(body)
+					close(respSignal)
+				}()
+
+				// Mock UI/user response to prompt event emitted from server
+				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+					defer GinkgoRecover()
+					Fail("Connection server should not have emitted event for prompting UI/user")
+				})
+				DeferCleanup(func() {
+					dcService.WailsApp.OffEvent("session_init_prompt")
+				})
+
+				// Wait for request to complete before trying to check the response
+				respBody := <-respSignal
+
+				By("Checking if connection server responds with error")
+				expected, _ := json.Marshal(ApiError{
+					Name:    "invalid_dapp_id_pk",
+					Message: "DApp ID is invalid",
+				})
+				Expect(respBody).To(Equal(string(expected) + "\n"))
 			})
 
 			It("fails when user does not respond", func() {
@@ -229,7 +316,7 @@ var _ = Describe("DappConnectService", func() {
 				go func() {
 					defer GinkgoRecover()
 
-					By("Making a request with valid dApp data")
+					By("Making a request to connection server with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
@@ -237,7 +324,7 @@ var _ = Describe("DappConnectService", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response from UI")
+					By("Processing response from connection server")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -245,6 +332,7 @@ var _ = Describe("DappConnectService", func() {
 					close(respSignal)
 				}()
 
+				// Mock UI/user response to prompt event emitted from server
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
 					defer GinkgoRecover()
 
@@ -262,7 +350,7 @@ var _ = Describe("DappConnectService", func() {
 				// Wait for request to complete before trying to check the response
 				respBody := <-respSignal
 
-				By("Checking response from UI contains error message")
+				By("Checking if connection server responds with error")
 				expected, _ := json.Marshal(ApiError{
 					Name:    "session_no_response",
 					Message: "User did not respond",
@@ -277,7 +365,7 @@ var _ = Describe("DappConnectService", func() {
 				go func() {
 					defer GinkgoRecover()
 
-					By("Making a request with valid dApp data")
+					By("Making a request to connection server with valid dApp data")
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
@@ -285,7 +373,7 @@ var _ = Describe("DappConnectService", func() {
 					)
 					Expect(err).NotTo(HaveOccurred())
 
-					By("Processing response from UI")
+					By("Processing response from connection server")
 					body, err := getResponseBody(resp)
 					Expect(err).NotTo(HaveOccurred())
 					// Signal that request has completed
@@ -293,6 +381,7 @@ var _ = Describe("DappConnectService", func() {
 					close(respSignal)
 				}()
 
+				// Mock UI/user response to prompt event emitted from server
 				dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
 					defer GinkgoRecover()
 
@@ -311,7 +400,7 @@ var _ = Describe("DappConnectService", func() {
 				// Wait for request to complete before trying to check the response
 				respBody := <-respSignal
 
-				By("Checking response from UI contains new set of Hawk credentials")
+				By("Checking if connection server responds with error")
 				expected, _ := json.Marshal(ApiError{
 					Name:    "session_rejected",
 					Message: "Session was rejected",
