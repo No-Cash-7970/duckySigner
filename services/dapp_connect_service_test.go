@@ -175,7 +175,7 @@ var _ = Describe("DappConnectService", func() {
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_id":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -194,7 +194,7 @@ var _ = Describe("DappConnectService", func() {
 					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_id":"` + dAppId + `"}]`))
 
 					By("Wallet user: Approving session connection")
 					dcService.WailsApp.EmitEvent("session_init_response", []string{"account 1", "account 2"})
@@ -228,7 +228,7 @@ var _ = Describe("DappConnectService", func() {
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"hello world"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_id":"hello world"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -271,7 +271,7 @@ var _ = Describe("DappConnectService", func() {
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"aGVsbG8gd29ybGQ="}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_id":"aGVsbG8gd29ybGQ="}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -320,7 +320,7 @@ var _ = Describe("DappConnectService", func() {
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_id":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -339,7 +339,7 @@ var _ = Describe("DappConnectService", func() {
 					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_id":"` + dAppId + `"}]`))
 
 					By("Wallet user: Not responding...")
 				})
@@ -369,7 +369,7 @@ var _ = Describe("DappConnectService", func() {
 					resp, err := http.Post(
 						"http://localhost:1384/session/init",
 						"application/json",
-						bytes.NewReader([]byte(`{"name":"foo","dapp_session_pk":"`+dAppId+`"}`)),
+						bytes.NewReader([]byte(`{"name":"foo","dapp_id":"`+dAppId+`"}`)),
 					)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -388,7 +388,7 @@ var _ = Describe("DappConnectService", func() {
 					By("UI: Prompting user to approve session connection")
 					eventData, err := json.Marshal(e.Data)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_session_pk":"` + dAppId + `"}]`))
+					Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_id":"` + dAppId + `"}]`))
 
 					By("Wallet user: Rejecting session connection")
 					dcService.WailsApp.EmitEvent("session_init_response", []string{})
