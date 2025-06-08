@@ -77,8 +77,7 @@ func SessionInitPostHandler(
 			dcSession := WalletConnectionSession{DAppID: dAppIdPk}
 
 			// Create session key pair and add it into the connect session
-			err := CreateWCSessionKeyPair(&dcSession, ecdhCurve)
-			if err != nil {
+			if err := CreateWCSessionKeyPair(&dcSession, ecdhCurve); err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
@@ -87,9 +86,8 @@ func SessionInitPostHandler(
 			}
 
 			// Store connect session data for use in other server requests later on
-			wcStoreErr := StoreWCSessionData(&dcSession, ecdhCurve, echoInstance.Logger)
-			if wcStoreErr != nil {
-				echoInstance.Logger.Error(wcStoreErr)
+			if err := StoreWCSessionData(&dcSession, ecdhCurve, echoInstance.Logger); err != nil {
+				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
 					Message: "Failed to create server session",

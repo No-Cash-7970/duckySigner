@@ -39,8 +39,7 @@ func (session *WalletSession) Expiration() time.Time {
 
 // GetWalletInfo returns the information of the session wallet
 func (session *WalletSession) GetWalletInfo() (wallet.Metadata, error) {
-	err := session.Check()
-	if err != nil {
+	if err := session.Check(); err != nil {
 		return wallet.Metadata{}, err
 	}
 
@@ -50,8 +49,7 @@ func (session *WalletSession) GetWalletInfo() (wallet.Metadata, error) {
 // ExportWallet exports the session wallet by returning its 25-word mnemonic.
 // The password is always required for security reasons.
 func (session *WalletSession) ExportWallet(password string) (string, error) {
-	err := session.Check()
-	if err != nil {
+	if err := session.Check(); err != nil {
 		return "", err
 	}
 
@@ -65,8 +63,7 @@ func (session *WalletSession) ExportWallet(password string) (string, error) {
 
 // ListAccounts lists the addresses of all accounts within the session wallet
 func (session *WalletSession) ListAccounts() (acctAddrs []string, err error) {
-	err = session.Check()
-	if err != nil {
+	if err = session.Check(); err != nil {
 		return
 	}
 
@@ -84,8 +81,7 @@ func (session *WalletSession) ListAccounts() (acctAddrs []string, err error) {
 // GenerateAccount generates an account for the session wallet using its master
 // derivation key (MDK). Returns the address of the generated account.
 func (session *WalletSession) GenerateAccount() (string, error) {
-	err := session.Check()
-	if err != nil {
+	if err := session.Check(); err != nil {
 		return "", err
 	}
 
@@ -102,8 +98,7 @@ func (session *WalletSession) GenerateAccount() (string, error) {
 // session wallet. Returns the address of the imported account if the import was
 // successful.
 func (session *WalletSession) ImportAccount(acctMnemonic string) (string, error) {
-	err := session.Check()
-	if err != nil {
+	if err := session.Check(); err != nil {
 		return "", err
 	}
 
@@ -126,8 +121,7 @@ func (session *WalletSession) ImportAccount(acctMnemonic string) (string, error)
 // wallet returning the account's 25-word mnemonic. The password is always
 // required for security reasons.
 func (session *WalletSession) ExportAccount(acctAddr, password string) (string, error) {
-	err := session.Check()
-	if err != nil {
+	if err := session.Check(); err != nil {
 		return "", err
 	}
 
@@ -148,8 +142,7 @@ func (session *WalletSession) ExportAccount(acctAddr, password string) (string, 
 // RemoveAccount removes the account with the given acctAddr from the session
 // wallet
 func (session *WalletSession) RemoveAccount(acctAddr string) (err error) {
-	err = session.Check()
-	if err != nil {
+	if err = session.Check(); err != nil {
 		return
 	}
 
@@ -169,8 +162,7 @@ func (session *WalletSession) RemoveAccount(acctAddr string) (err error) {
 // transaction will be used to sign the transaction if it is in the wallet.
 // Returns the signed transaction as a Base64 string if successful.
 func (session *WalletSession) SignTransaction(txB64, acctAddr string) (stxB64 string, err error) {
-	err = session.Check()
-	if err != nil {
+	if err = session.Check(); err != nil {
 		return
 	}
 
@@ -182,8 +174,7 @@ func (session *WalletSession) SignTransaction(txB64, acctAddr string) (stxB64 st
 
 	// Decode the transaction bytes to Transaction struct
 	tx := types.Transaction{}
-	err = msgpack.Decode(txnBytes, &tx)
-	if err != nil {
+	if err = msgpack.Decode(txnBytes, &tx); err != nil {
 		return
 	}
 
