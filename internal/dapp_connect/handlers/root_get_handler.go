@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
+// RootGetHandler is the route handler for `GET /`
 func RootGetHandler(wailsApp *application.App) func(echo.Context) error {
 	return func(c echo.Context) error {
 		wailsApp.EmitEvent("session_init_response", []string{"account 1", "account 2"})

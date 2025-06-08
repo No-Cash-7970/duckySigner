@@ -11,6 +11,7 @@ import (
 	. "duckysigner/internal/dapp_connect"
 )
 
+// SessionInitPostHandler is the route handler for `POST /session/init`
 func SessionInitPostHandler(
 	echoInstance *echo.Echo,
 	wailsApp *application.App,
@@ -35,6 +36,10 @@ func SessionInitPostHandler(
 			return c.JSON(http.StatusBadRequest, dappIdApiErr)
 		}
 
+		// TODO: Check if session exists with dApp ID
+		// - Reject if session with dApp ID exists?
+		// - Ask user if they want new session with dApp with ID?
+
 		// Prompt user to approve wallet connection session
 		userResp, err := PromptUI(
 			dappInfo,
@@ -47,6 +52,8 @@ func SessionInitPostHandler(
 		// which is definitely after the UI response event data is received from
 		// the channel
 		defer wailsApp.OffEvent(WCSessionInitUIRespEventName)
+
+		// TODO: Handle error from prompting UI *after* setting up the removal of the UI response event listener
 
 		// Wait for user response...
 		select {
@@ -65,7 +72,10 @@ func SessionInitPostHandler(
 				)
 			}
 
+			// TODO: Wrap session key in Memguard enclave.
+
 			// Create session key pair
+			// TODO: Rename sessionSk -> sessionKey (or sessionKeySk?)
 			sessionId, sessionSk, err := CreateWCSessionKeyPair(ecdhCurve)
 			if err != nil {
 				echoInstance.Logger.Fatal(err)

@@ -10,14 +10,24 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// TODO: Document this
+// The default address for the dApp connection server
+// Default: localhost:1323
 const DefaultServerAddr string = ":1323"
 
-// TODO: Document this
+// The name for the event for triggering the UI to prompt the user to approve
+// the dApp connection session initialization request
+// TODO: Rename to DCSessionInitUIPromptEventName
 const WCSessionInitUIPromptEventName string = "session_init_prompt"
+
+// The name for the event that the UI uses to forward the user's response to the
+// dApp connection session initialization request
+// TODO: Rename to DCSessionInitUIRespEventName
 const WCSessionInitUIRespEventName string = "session_init_response"
 
-// TODO: document this
+// CreateWCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
+// pair that is to be used for a connection session with a dApp. Returns the
+// generated key pair if successful.
+// TODO: Rename to GenerateDCSessionKeyPair
 func CreateWCSessionKeyPair(curve ECDHCurve) (id *ecdh.PublicKey, sk *ecdh.PrivateKey, err error) {
 	sk, err = curve.GenerateKey(rand.Reader)
 	if err != nil {
@@ -28,9 +38,13 @@ func CreateWCSessionKeyPair(curve ECDHCurve) (id *ecdh.PublicKey, sk *ecdh.Priva
 	return
 }
 
-// TODO: Document this
+// ValidateDAppID validates the given Base64-encoded dApp ID according to the
+// given curve (that is to be used for ECDH (Elliptic-curve Diffie–Hellman)).
+// Returns the dAppId as a ECDH public key if successful. Returns an error and
+// an API error message if unsuccessful.
+// TODO: Rename
 func ValidateDAppID(dAppID string, curve ECDHCurve) (dAppIdPk *ecdh.PublicKey, apiErr ApiError, err error) {
-	// Check if given DApp ID is valid Base64 by attempting to decode it
+	// Check if given dApp ID is a valid Base64 string by attempting to decode it
 	dappIdBytes, err := base64.StdEncoding.DecodeString(dAppID)
 	if err != nil {
 		apiErr = ApiError{
@@ -42,6 +56,7 @@ func ValidateDAppID(dAppID string, curve ECDHCurve) (dAppIdPk *ecdh.PublicKey, a
 
 	// Check if given dApp ID is a valid ECDH public key by attempting to
 	// convert it from a byte slice to a PublicKey
+	// TODO: Rename
 	dAppIdPk, err = curve.NewPublicKey(dappIdBytes)
 	// dappId, err := curve.NewPublicKey(dappIdBytes)
 	if err != nil {
@@ -55,14 +70,43 @@ func ValidateDAppID(dAppID string, curve ECDHCurve) (dAppIdPk *ecdh.PublicKey, a
 	return
 }
 
-// TODO: Document this
-// TODO: Note that event listener should be removed after data in channel is received and read
+// PromptUI sends the given data to the UI by emitting an event with given
+// "prompt event" name to the UI once. It listens and waits only for the first
+// response event from the UI with the given "response event" name. Subsequent
+// responses are ignored. Returns a "UI response" channel that will contain data
+// sent by the UI when the UI responds.
+//
+// NOTE: The event listener for the "response event" should be closed after
+// reading the returned UI response channel or timing out waiting for data to
+// come through the channel.
+//
+// Example:
+//
+//	func f() (string, error) {
+//	    uiRespCh, err := PromptUI(data, "prompt_ui_evt", "ui_resp_evt", app, logger)
+//	    defer wailsApp.OffEvent("ui_resp_evt")
+//	    // Check and possibly return error AFTER setting up to remove the
+//	    // listener when the function terminates
+//	    if err != nil {
+//	        return "", err
+//	    }
+//	    // Wait for UI response...
+//		select {
+//		case <-time.After(5 * time.Minute)
+//	        return "Time ran out waiting for UI to respond", nil
+//	    case uiResp := <-uiRespCh: // Got response from UI
+//	        return uiResp, nil
+//	    }
+//	}
+//
+// TODO: Rename to PromptUIOnce
 func PromptUI(
-	dappInfo *DAppInfo,
+	dappInfo *DAppInfo, // TODO: Change to `data any`
 	promptEvent string,
 	respEvent string,
 	wailsApp *application.App,
 	logger echo.Logger,
+	// TODO: rename to uiRespCh
 ) (uiResp chan []string, err error) {
 	// Check if Wails app is properly initialized
 	if wailsApp == nil {
@@ -87,16 +131,19 @@ func PromptUI(
 		close(uiResp)
 	})
 
-	// Prompt the UI after setting up listener for the expected UI response
-	// event because the UI may respond before being prompted, which is not
-	// ideal when it happens in a unit test.
+	// Prompt the UI *after* setting up the listener for the UI response event
+	// because the UI could quickly respond to the emitted prompt event before
+	// the server has the chance to set up the listener to receive the UI's
+	// response. The server misses the UI's only response, which can be a
+	// problem when unit testing.
 	logger.Debug("Emitted", promptEvent, "event to UI")
 	wailsApp.EmitEvent(promptEvent, dappInfo)
 
 	return
 }
 
-// TODO: Document this
+// StoreWCSessionData stores the dApp connection data to a database file
+// TODO: Rename to StoreDCSessionData
 func StoreWCSessionData(
 	sessionId *ecdh.PublicKey,
 	sessionKey *ecdh.PrivateKey,
@@ -119,7 +166,8 @@ func StoreWCSessionData(
 	// TODO: Remove the logs below. It is only here to avoid Go's unused variable error
 	logger.Debug("Created wallet connection session for dApp with ID:", wcSession.DAppID)
 
-	// TODO: Store connection session data into an encrypted db file
+	// TODO: Store connection session data into an encrypted (or password protected?) db file
+	// TODO: Also store DApp info into the db file
 
 	return nil
 }
