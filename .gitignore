@@ -26,3 +26,4 @@
 # Testing
 **/.test*
 *codecs.test*
+*.test
