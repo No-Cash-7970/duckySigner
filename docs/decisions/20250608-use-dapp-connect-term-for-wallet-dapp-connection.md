@@ -68,5 +68,5 @@ The term "dApp connect" may be used as the proper brand name for the wallet-dApp
 
 ## Links
 
-- Relates to: [Use "DApp" in Prose and "Dapp" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
+- Relates to: [Use \"DApp\" in Prose and \"Dapp\" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
 - [WalletConnect](https://walletconnect.network/)
