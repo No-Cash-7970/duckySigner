@@ -77,3 +77,4 @@ No authentication or authorization scheme is used. The connection between the dA
 
 - Relates to [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps.md)
 - Relates to [Use \"DApp\" in Prose and \"Dapp\" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
+- Refined by [Use ECDH for Hawk Shared Secret Key](20250609-use-ecdh-for-hawk-shared-secret-key.md)
