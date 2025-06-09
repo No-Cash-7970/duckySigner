@@ -1,8 +1,8 @@
 # Use "DApp" in Prose and "Dapp" in Code
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2025-06-08
+- Date: 2025-06-09
 - Tags: dev-process, docs
 
 ## Context and Problem Statement
@@ -21,7 +21,7 @@ The term "decentralized application" is commonly abbreviated using into "dApp" (
 
 ## Decision Outcome
 
-Chose to use "dApp" (with uppercase A) in documentation or other types of prose, and "dapp" (with lowercase A) in code or filenames. The D in with both forms will be capitalized according to English capitalization rules or code style.
+Chose to use "dApp" (with uppercase A) in documentation or other types of prose, and "dapp" (with lowercase A) in code or filenames. The first letter in with both forms will be capitalized according to English capitalization rules or code style like any other English word.
 
 **Confidence:** Very high
 
@@ -33,15 +33,16 @@ Wikipedia always uses "DApp" (with uppercase D and uppercase A) and never "dApp"
 
 - Pro: More obvious that it is an abbreviation for something
 - Pro: More common in formal writing (e.g. research papers, news articles)
-- Con: Less consistent with standard English rules of capitalization
+- Con: Not consistent with standard English rules of capitalization
 - Con: Can cause some awkward-looking variable names in code
 
 ### Dapp (With Lowercase A)
 
-Publications from the Ethereum Foundation use the all-lowercase form and use the standard English rules of capitalization like a typical word.
+Publications from the Ethereum Foundation use the all-lowercase form. This form capitalized like a typical English word.
 
-- Pro: More consistent with the way English words are typically capitalized
-- Pro: Used by the organization (Ethereum Foundation) that coined the term
+- Pro: Consistent with the way English words are typically capitalized
+- Pro: Used by the organization that coined the term (Ethereum Foundation)
+- Pro: May become the most common form in the future
 - Con: Not typically used in formal writing (e.g. research papers, news articles)
 - Con: The way it looks obscures that it is an abbreviation
 
