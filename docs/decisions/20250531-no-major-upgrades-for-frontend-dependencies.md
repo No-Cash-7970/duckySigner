@@ -30,4 +30,4 @@ Chose to make *not* upgrading to later major versions of the frontend dependenci
 
 ## Links
 
-- Relates to: [Deprioritize UI Design and UX](20240602-deprioritize-ui-design-and-ux.md)
+- Relates to [Deprioritize UI Design and UX](20240602-deprioritize-ui-design-and-ux.md)
