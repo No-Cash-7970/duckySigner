@@ -79,5 +79,5 @@ No authentication or authorization scheme is used. The connection between the dA
 - Relates to [Use \"DApp\" in Prose and \"Dapp\" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
 - Relates to [Use \"DApp Connect\" Term for Wallet-DApp Connection](20250608-use-dapp-connect-term-for-wallet-dapp-connection.md)
 - Relates to [Terms for Parts of DApp Connect](20250609-terms-for-parts-of-dapp-connect.md)
-- Refined by [Use ECDH for Hawk Shared Secret Key](20250609-use-ecdh-for-hawk-shared-secret-key.md)
+- Refined by [Use ECDH for Establishing DApp Connect Shared Secret Key](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
 - [Hawk - GitHub](https://github.com/mozilla/hawk)
