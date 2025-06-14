@@ -27,6 +27,7 @@ Not an exhaustive list of threats.
 - [THREAT-019: Impersonation of software dependency](#threat-019-impersonation-of-software-dependency)
 - [THREAT-020: User overwhelmed by too many request prompts](#threat-020-user-overwhelmed-by-too-many-request-prompts)
 - [THREAT-021: Change to less secure settings](#threat-021-change-to-less-secure-settings)
+- [THREAT-022: Multiple dApps establishing connect sessions with the same dApp ID](#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -385,6 +386,29 @@ Similar to *[THREAT-010: Wallet connection server overwhelmed by too many reques
   3. Warn user when a setting is currently set to a value that is less secure or dangerous
   4. Educate the user on what each setting does and how it can affect the functionality of the wallet
   5. Design the UI in a way that makes secure settings as easy and convenient as possible
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-022: Multiple dApps establishing connect sessions with the same dApp ID
+
+Part of this is similar to [THREAT-001](#threat-001-impersonation-of-a-trustworthy-dapp-or-platform), but the focus is on the dApp connect feature.
+
+When establishing a dApp connect session, the ID the dApp creates and sends to the server is *not* secret and *should* to be unique.
+
+> [!TIP]
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250609-terms-for-parts-of-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+
+- **Actor:** Malware, malicious or malfunctioning dApps
+- **Purpose:** To impersonate another dApp (similar to [THREAT-001](#threat-001-impersonation-of-a-trustworthy-dapp-or-platform)), to cause the server to go into error state whenever a targeted dApp tries to connect to the wallet, to overwrite dApp information the server has stored for the dApp with the given dApp ID, malfunction (no purpose)
+- **Target:** The dApp being impersonated, dApp information stored by the server, functionality of the desktop wallet
+- **Action:** The actor somehow (maybe by intercepting messages) obtains the dApp ID of another dApp that is already connected to the wallet or has been connected to the wallet before. The actor then initializes a connect session by sending a request to the server using the obtained dApp ID.
+- **Result of the action:** Depends on how the server is configured. The server may block the target dApp from establishing a dApp connect session because a session with the ID already exists. If configured in another way, the server overwrites the information about the target dApp stored in the server.
+- **Occurrence likelihood**: Medium
+- **Impact:** Medium
+- **Threat type:** Spoofing, tampering, denial of service
+- **Potential mitigations:**
+  1. The dApp connect server must not trust that the dApp ID provided by a dApp is unique and use the dApp ID as a unique identifier for a dApp connect session. Instead, the server must use the session ID it generates as the unique identifier for a session.
+  2. To establish a new dApp connect session, the dApp must *confirm* its connect session by sending an authenticated request after *initializing* the session. This way, the dApp proves to the server that it owns its dApp ID because the dApp key (along with the session ID) is required to derive the shared secret key that is needed to send authenticated requests to the server.
 
 [Back to top ↑](#table-of-contents)
 
