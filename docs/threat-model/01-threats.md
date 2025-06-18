@@ -163,9 +163,9 @@ Not an exhaustive list of threats.
 ## THREAT-009: Interception of HTTP communication between dApp and wallet connection server
 
 - **Actor:** Malware
-- **Purpose:** To disable communication between dApp and wallet connection server, to extract sensitive or secret data (e.g. authentication keys), to modify the communication to change behavior of dApp or desktop wallet
+- **Purpose:** To disable communication between dApp and wallet connection server, to extract sensitive or secret data (e.g. authentication keys), to modify the communication to change behavior of dApp or desktop wallet (a [man-in-the-middle (MitM) attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack))
 - **Target:** Data within the HTTP communications
-- **Action:** Actor listens to HTTP communications and either (1) intercepts and halts these communications or (2) extracts useful data from the communications
+- **Action:** Actor listens to HTTP communications and either (1) intercepts and halts these communications or (2) extracts useful data from the communications. In the case where a variant of a Diffie-Hellman (DH) key exchange protocol is used, the actor generates two key pairs and uses those key pairs to do DH exchanges with both the dApp and the server.
 - **Result of the action:** Actor can then use the extracted data (e.g. authentication key) to impersonate trusted dApp and get user to sign a dangerous transaction
 - **Occurrence likelihood**: Medium
 - **Impact:** High
