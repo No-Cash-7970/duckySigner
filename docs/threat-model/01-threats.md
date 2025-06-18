@@ -173,6 +173,7 @@ Not an exhaustive list of threats.
 - **Potential mitigations:**
   1. Use Transport Layer Security (TLS), if reasonably possible
   2. Do not send secret or sensitive data over HTTP or WebSockets
+  3. When using DH, have the dApp display a code that the user then enters into the wallet
 
 [Back to top ↑](#table-of-contents)
 
@@ -193,6 +194,7 @@ Not an exhaustive list of threats.
   4. Protect secret data temporarily stored in memory with a software enclave by using something the like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) in case a memory paging/swapping occurs
   5. Allow the user to switch the wallet connection server off, even when the server is receiving requests
   6. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
+  7. Have a maximum number of connections to dApps
 
 [Back to top ↑](#table-of-contents)
 
@@ -367,6 +369,7 @@ Similar to *[THREAT-010: Wallet connection server overwhelmed by too many reques
   3. Design the UI in a way that makes handling many prompts at the same time easier for the user
   4. Allow the user to switch the wallet connection server off, even when they are receiving prompts
   5. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
+  6. Have a maximum number of connections to dApps
 
 [Back to top ↑](#table-of-contents)
 
