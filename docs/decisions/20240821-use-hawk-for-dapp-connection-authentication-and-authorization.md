@@ -40,6 +40,7 @@ Chose Hawk. Hawk is a solution that in somewhere between OAuth 2.0 and API key a
 - Pro: Support using "scopes" that would restrict what a connected dApp is allowed to as for in the wallet
 - Con: Not very well known, so there are not that many up-to-date tools and libraries that support Hawk
 - Con: There will no further maintenance at this time because the protocol is considered "complete"
+- Con: Relies on the dApp being able to securely store the shared secret key that is needed to authenticate. Some dApps, especially web page dApps, may not be able to securely store a secret key.
 
 ### API Key Authentication
 

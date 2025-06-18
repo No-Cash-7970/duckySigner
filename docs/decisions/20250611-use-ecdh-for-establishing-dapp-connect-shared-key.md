@@ -43,6 +43,7 @@ Elliptic-curve Diffie–Hellman (ECDH) is the elliptic-curve (EC) variant of the
 - Pro: A commonly used key exchange protocol, so there are a libraries for doing it properly in a large number of languages. Go has the native `crypto/ecdh` package for it.
 - Pro: No secret is transmitted in plaintext, so it works for localhost where SSL/TLS is likely to be ineffective
 - Con: The increased complexity can open the door to more [threats](../threat-model/01-threats.md)
+- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) where a malicious actor intercepts requests and generates their own key pairs to do DH key exchanges with the server and the client. This allows the actor to intercept messages without being detected by either the client or the server. [Other variants of DH](https://signal.org/docs/specifications/doubleratchet/#recovery-from-compromise), not just ECDH, have this issue because this is [an issue with DH](https://asecuritysite.com/dh/diffie_crack) itself.
 
 ### Transmit Shared Secret Key in Plaintext
 
