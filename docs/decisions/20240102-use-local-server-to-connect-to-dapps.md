@@ -71,6 +71,7 @@ Do not bother trying to get the desktop wallet to interact with DApps. The deskt
 
 ## Links
 
+- Relates to [DApp Connect Protocol](20250619-dapp-connect-protocol.md)
 - Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - Relates to [Use \"DApp\" in Prose and \"Dapp\" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
 - [KMD REST API](https://developer.algorand.org/docs/rest-apis/kmd/)
