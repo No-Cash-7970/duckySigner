@@ -402,8 +402,8 @@ When establishing a dApp connect session, the ID the dApp creates and sends to t
 > Refer to the [decision about the vocabulary terms for DApp Connect](20250609-terms-for-parts-of-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
 
 - **Actor:** Malware, malicious or malfunctioning dApps
-- **Purpose:** To impersonate another dApp (similar to [THREAT-001](#threat-001-impersonation-of-a-trustworthy-dapp-or-platform)), to cause the server to go into error state whenever a targeted dApp tries to connect to the wallet, to overwrite dApp information the server has stored for the dApp with the given dApp ID, malfunction (no purpose)
-- **Target:** The dApp being impersonated, dApp information stored by the server, functionality of the desktop wallet
+- **Purpose:** To impersonate another dApp (similar to [THREAT-001](#threat-001-impersonation-of-a-trustworthy-dapp-or-platform)), to cause the server to go into error state whenever a targeted dApp tries to connect to the wallet, to overwrite dApp data the server has stored for the dApp with the given dApp ID, malfunction (no purpose)
+- **Target:** The dApp being impersonated, dApp data stored by the server, functionality of the desktop wallet
 - **Action:** The actor somehow (maybe by intercepting messages) obtains the dApp ID of another dApp that is already connected to the wallet or has been connected to the wallet before. The actor then initializes a connect session by sending a request to the server using the obtained dApp ID.
 - **Result of the action:** Depends on how the server is configured. The server may block the target dApp from establishing a dApp connect session because a session with the ID already exists. If configured in another way, the server overwrites the information about the target dApp stored in the server.
 - **Occurrence likelihood**: Medium
