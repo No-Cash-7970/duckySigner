@@ -399,7 +399,7 @@ Part of this is similar to [THREAT-001](#threat-001-impersonation-of-a-trustwort
 When establishing a dApp connect session, the ID the dApp creates and sends to the server is *not* secret and *should* to be unique.
 
 > [!TIP]
-> Refer to the [decision about the vocabulary terms for DApp Connect](20250609-terms-for-parts-of-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250621-vocab-for-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
 
 - **Actor:** Malware, malicious or malfunctioning dApps
 - **Purpose:** To impersonate another dApp (similar to [THREAT-001](#threat-001-impersonation-of-a-trustworthy-dapp-or-platform)), to cause the server to go into error state whenever a targeted dApp tries to connect to the wallet, to overwrite dApp data the server has stored for the dApp with the given dApp ID, malfunction (no purpose)

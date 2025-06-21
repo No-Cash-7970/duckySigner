@@ -351,7 +351,7 @@ Result: The expiration of the session has been extended and the dApp can continu
 
 ## Links
 
-- Relates to [Terms for Parts of DApp Connect](20250609-terms-for-parts-of-dapp-connect.md)
+- Relates to [Vocabulary for DApp Connect](20250621-vocab-for-dapp-connect.md)
 - Relates to [Use \"DApp Connect\" Term for Wallet-DApp Connection](20250608-use-dapp-connect-term-for-wallet-dapp-connection.md)
 - Relates to [Use ECDH for Establishing session shared Secret Key](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
 - Relates to [Use Hawk for DApp Connection Authentication and Authorization](20240821-use-hawk-for-dapp-connection-authentication-and-authorization.md)
