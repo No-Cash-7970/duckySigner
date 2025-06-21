@@ -60,7 +60,7 @@ There is no session token, unlike [Iteration 3](#iteration-3-establishing-a-sess
    4. Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.) and store it into an encrypted database file protected by the user's password
    5. Server: Generate session key pair (session ID & session secret key)
    6. Server: Generate a "confirmation code"
-   7. Server: Use the confirmation key to create an encrypted "confirmation token" in the [JWT](https://jwt.io/) or [PASETO](https://paseto.io/) format that contains the dApp ID, session key pair, confirmation data and confirmation code
+   7. Server: Use the confirmation key to create an encrypted "confirmation token" in [PASETO](https://paseto.io/) format that contains the dApp ID, session key pair, confirmation data and confirmation code
    8. Server → DApp: Send authenticated response containing confirmation ID, data, code and token
    9. DApp: Derive confirmation shared secret key using dApp key and confirmation ID to verify authentication in the server's response
 2. **Confirm session**
@@ -129,7 +129,7 @@ An approval can last for months while a session can last an hour. When the sessi
    5. Server: Generate approval secret key and approval data (approval index, expiration, etc.)
    6. Server: Store approval key, approval data, dApp ID and dApp data into an encrypted database file protected by the user's password
    7. Server: Generate session key pair (session ID & session secret key) and session data (date created, expiration, etc.)
-   8. Server: Use the approval key to create an encrypted "session token" in the [JWT](https://jwt.io/) or [PASETO](https://paseto.io/) format that contains the dApp ID, session ID, session data and approval index
+   8. Server: Use the approval key to create an encrypted "session token" in the [PASETO](https://paseto.io/) format that contains the dApp ID, session ID, session data and approval index
    9. Server: Derive session shared secret key using dApp ID and session key or sending authenticated response
    10. Server → DApp: Send authenticated response containing the token, session ID and session data
    11. DApp: Derive the session shared key using dApp secret key and session ID to verify authentication in the server's response
@@ -351,6 +351,7 @@ Result: The expiration of the session has been extended and the dApp can continu
 
 ## Links
 
+- Refined by [Use PASETO for Security Tokens](20250621-use-paseto-for-security-tokens.md)
 - Relates to [Vocabulary for DApp Connect](20250621-vocab-for-dapp-connect.md)
 - Relates to [Use \"DApp Connect\" Term for Wallet-DApp Connection](20250608-use-dapp-connect-term-for-wallet-dapp-connection.md)
 - Relates to [Use ECDH for Establishing session shared Secret Key](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
@@ -359,7 +360,6 @@ Result: The expiration of the session has been extended and the dApp can continu
 - [List of threats for this project](../threat-model/01-threats.md)
 - [Hawk API](https://github.com/mozilla/hawk/blob/main/API.md)
 - [Diffie-Hellman (Man-in-the-middle) - Asecuritysite.com](https://asecuritysite.com/dh/diffie_crack)
-- [JSON Web Token (JWT)](https://jwt.io/)
 - [Platform-Agnostic SEcurity TOkens (PASETO)](https://paseto.io/)
 - [Stop using JWT for sessions - joepie91's Ramblings](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)
 - [Stop using JWT for sessions, part 2: Why your solution doesn't work - joepie91's Ramblings](http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/)
