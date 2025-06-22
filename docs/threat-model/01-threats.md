@@ -28,6 +28,8 @@ Not an exhaustive list of threats.
 - [THREAT-020: User overwhelmed by too many request prompts](#threat-020-user-overwhelmed-by-too-many-request-prompts)
 - [THREAT-021: Change to less secure settings](#threat-021-change-to-less-secure-settings)
 - [THREAT-022: Multiple dApps establishing connect sessions with the same dApp ID](#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
+- [THREAT-023: Exposure of sensitive or secret data within desktop wallet files](#threat-023-exposure-of-sensitive-or-secret-data-within-desktop-wallet-files)
+- [THREAT-024: Sudden termination of desktop wallet](#threat-024-sudden-termination-of-desktop-wallet)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -415,7 +417,41 @@ When establishing a dApp connect session, the ID the dApp creates and sends to t
 
 [Back to top ↑](#table-of-contents)
 
+## THREAT-023: Exposure of sensitive or secret data within desktop wallet files
+
+- **Actor:** Malware, cybercriminal
+- **Purpose:** To steal and use the user's sensitive or secret data stored within the files created by the desktop wallet
+- **Target:** Files containing user's sensitive or secret data created by the wallet
+- **Action:** The actor finds the files that contain the user's secret or sensitive data and extracts the data within them
+- **Result of the action:** The actor is able to use the secret and sensitive data to possibly steal the funds and assets within the user's Algorand accounts
+- **Occurrence likelihood**: Medium
+- **Impact:** High
+- **Threat type:** Information disclosure
+- **Potential mitigations:**
+  1. Encrypt the files that contain the user's secret or sensitive data with the user's password. However, this can cause some design challenges for other parts of the desktop wallet.
+  2. Do not store sensitive or secret data on disk
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-024: Sudden termination of desktop wallet
+
+- **Actor:** Bug in desktop wallet, user's operating system, user, malware
+- **Purpose:** To gain access to the user's sensitive or secret data, to fix a problem with some other software, malfunction within the desktop wallet or user's operating system (no purpose)
+- **Target:** Database files containing the user's wallet keys, configuration files, temporary files possibly containing sensitive data
+- **Action:** (A) A bug in the desktop wallet causes the wallet to malfunction and suddenly close down without deleting temporary files or encrypting data on disk that was temporarily unencrypted on disk. (B) The user shuts down or restarts their computer without properly closing the wallet. (C) Malware causes the wallet to enter into an error state that forces it to close suddenly without deleting temporary files or encrypting data on disk.
+- **Result of the action:** Sensitive or secret data is exposed and possibly unencrypted
+- **Occurrence likelihood**: High
+- **Impact:** Medium (High, if wallet keys are unencrypted on disk)
+- **Threat type:** Information disclosure
+- **Potential mitigations:**
+  1. NEVER store ANY sensitive or secret data on disk unencrypted. Unencrypted data should only be in memory. Using a secure software enclave like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) can prevent secret data in memory from being written onto the disk unencrypted.
+  2. When using a SQLite database, encrypt the data and then store it, rather than encrypt the whole database file. That way, the data is never stored on disk unencrypted and the only the data that is needed is unencrypted and placed into memory when it is needed.
+  3. Store data in a file format that supports modular encryption like [Parquet](https://github.com/apache/parquet-format/blob/master/Encryption.md), which can be accessed using [DuckDB](https://duckdb.org/docs/stable/data/parquet/encryption).
+
+[Back to top ↑](#table-of-contents)
+
 <!--
+
 ## THREAT-{{3-DIGIT_ID}}: {{Threat name}}
 
 - **Actor:** {{Who or what instigates the attack?}}
