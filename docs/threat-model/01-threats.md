@@ -30,6 +30,10 @@ Not an exhaustive list of threats.
 - [THREAT-022: Multiple dApps establishing connect sessions with the same dApp ID](#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
 - [THREAT-023: Exposure of sensitive or secret data within desktop wallet files](#threat-023-exposure-of-sensitive-or-secret-data-within-desktop-wallet-files)
 - [THREAT-024: Sudden termination of desktop wallet](#threat-024-sudden-termination-of-desktop-wallet)
+- [THREAT-025: Compromised dApp secret key](#threat-025-compromised-dapp-secret-key)
+- [THREAT-026: Compromised server secret keys](#threat-026-compromised-server-secret-keys)
+- [THREAT-027: DApp connect shared secret key compromised by dApp](#threat-027-dapp-connect-shared-secret-key-compromised-by-dapp)
+- [THREAT-028: DApp connect shared secret keys compromised by server](#threat-028-dapp-connect-shared-secret-keys-compromised-by-server)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -447,6 +451,96 @@ When establishing a dApp connect session, the ID the dApp creates and sends to t
   1. NEVER store ANY sensitive or secret data on disk unencrypted. Unencrypted data should only be in memory. Using a secure software enclave like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) can prevent secret data in memory from being written onto the disk unencrypted.
   2. When using a SQLite database, encrypt the data and then store it, rather than encrypt the whole database file. That way, the data is never stored on disk unencrypted and the only the data that is needed is unencrypted and placed into memory when it is needed.
   3. Store data in a file format that supports modular encryption like [Parquet](https://github.com/apache/parquet-format/blob/master/Encryption.md), which can be accessed using [DuckDB](https://duckdb.org/docs/stable/data/parquet/encryption).
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-025: Compromised dApp secret key
+
+> [!TIP]
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250621-vocab-for-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+
+- **Actor:** DApp, malware, cybercriminal
+- **Purpose:** To send authenticated requests to the dApp connect server as the dApp (e.g. request to sign a transaction), to spoof authenticated server responses to dApp requests
+- **Target:** DApp secret key that is used by the dApp to derive the dApp connect shared secret key
+- **Action:** The actor somehow steals the secret key from the dApp. The dApp could also somehow leak the key.
+- **Result of the action:** The actor can send authenticated requests to the server as if it is the dApp that originally owned the key. The actor can also send authenticated responses to dApp requests.
+- **Occurrence likelihood**: Medium to high, depending on how the key is stored
+- **Impact:** High
+- **Threat type:** Spoofing, information disclosure, elevation of privilege
+- **Potential mitigations:**
+  1. Prevent this threat by encouraging dApps to store key in a secure location, like a [credential storage](https://security.stackexchange.com/a/218999) whenever possible
+  2. For web-based dApps in the browser, prevent this threat by using JavaScript's [Web Cryptography API](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto) to generate and manage the key. Store the `CryptoKey` object for the key into [IndexedDB storage](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) with extraction disabled. [This method](https://security.stackexchange.com/a/219677) makes sure the key can only be used for decryption or signing while allowing it to be stored for an indefinite period of time.
+  3. Reduce the likelihood and impact of this threat by making sessions short and generating a new dApp key pair for each new session
+  4. Require the user's permission for all actions dApps request from the wallet, which makes it so the actor, with the key, cannot do anything without the user's permission
+  5. Allow the user to terminate a session (or all sessions) from the wallet at any time
+  6. Allow dApps to terminate their sessions
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-026: Compromised server secret keys
+
+> [!TIP]
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250621-vocab-for-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+
+- **Actor:** DApp connect server, malware, cybercriminal
+- **Purpose:** To spoof authenticated server responses to requests from dApps, to send authenticated requests to the server as any of the connected dApps (e.g. request to sign a transaction)
+- **Target:** Collection of server secret keys used by the server to derive the dApp connect shared secret keys for each valid dApp connect session
+- **Action:** The actor somehow steals the secret keys from the server. The server could also somehow leak the keys.
+- **Result of the action:** The actor can send authenticated responses to dApp requests. The actor can also send authenticated requests to the server as if it is the dApp that originally owned the key.
+- **Occurrence likelihood**: Low to medium, depending on how the keys are stored
+- **Impact:** Very high
+- **Threat type:** Spoofing, information disclosure, elevation of privilege
+- **Potential mitigations:**
+  1. Encrypt the session keys using the user's password before storing them
+  2. Reduce the likelihood and impact of this threat by making sessions short
+  3. Require the user's permission for all actions dApps request from the wallet, which makes it so the actor, with the key, cannot do anything without the user's permission
+  4. Allow the user to terminate a session (or all sessions) from the wallet at any time
+  5. Allow dApps to terminate their sessions
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-027: DApp connect shared secret key compromised by dApp
+
+> [!TIP]
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250621-vocab-for-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+
+- **Actor:** DApp, malware, cybercriminal
+- **Purpose:** To make authenticated requests to the dApp connect server as the dApp (e.g. request to sign a transaction), to spoof authenticated responses from the server
+- **Target:** DApp connect shared secret key that is used by the dApp to send authenticated requests to the server and by the server to send authenticated responses to the dApp's requests
+- **Action:** The actor somehow steals the shared secret key from the dApp. The dApp could also somehow leak the key.
+- **Result of the action:** The actor can make authenticated requests to the server as if it is the dApp that originally owned the shared secret key. The actor can spoof authenticated server responses to the requests of the dApp that also has the shared key.
+- **Occurrence likelihood**: Medium to high, depending on how the key is stored
+- **Impact:** High
+- **Threat type:** Spoofing, information disclosure, elevation of privilege
+- **Potential mitigations:**
+  1. Prevent this threat by never storing the shared key and always deriving it when needed using the dApp secret key and the session ID
+  2. Reduce the likelihood and impact of this threat by making sessions short
+  3. Require the user's permission for all actions dApps request from the wallet, which makes it so the actor, with the key, cannot do anything without the user's permission
+  4. Allow the user to terminate a session (or all sessions) from the wallet at any time
+  5. Allow dApps to terminate their sessions
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-028: DApp connect shared secret keys compromised by server
+
+> [!TIP]
+> Refer to the [decision about the vocabulary terms for DApp Connect](20250621-vocab-for-dapp-connect.md#decision-outcome) for short explanations of parts of DApp Connect.
+
+- **Actor:** DApp connect server, malware, cybercriminal
+- **Purpose:** To spoof authenticated server responses to requests from dApps, to send authenticated requests to the server as any of the connected dApps (e.g. request to sign a transaction)
+- **Target:** Collection of dApp connect shared secret keys that are used by the server to send authenticated responses to the requests from dApps
+- **Action:** The actor somehow steals the shared secret keys from the server. The server could also somehow leak the keys.
+- **Result of the action:** The actor can spoof authenticated server responses to the requests of dApps. The actor can make authenticated requests to the server as if it is any of the connected dApps.
+- **Occurrence likelihood**: Low to medium, depending on how the keys are stored
+- **Impact:** Very high
+- **Threat type:** Spoofing, information disclosure, elevation of privilege
+- **Potential mitigations:**
+  1. Prevent this threat by never storing the shared keys and always deriving each key when needed using the needed session key and dApp ID
+  2. Encrypt the shared keys using the user's password before storing them
+  3. Reduce the likelihood and impact of this threat by making sessions short
+  4. Require the user's permission for all actions dApps request from the wallet, which makes it so the actor, with the key, cannot do anything without the user's permission
+  5. Allow the user to terminate a session (or all sessions) from the wallet at any time
+  6. Allow dApps to terminate their sessions
 
 [Back to top ↑](#table-of-contents)
 
