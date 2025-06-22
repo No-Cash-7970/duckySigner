@@ -58,7 +58,8 @@ There is no session token, unlike [Iteration 3](#iteration-3-establishing-a-sess
    2. DApp → Server: Send request to `/session/init`, providing dApp ID
    3. Server: Validate received dApp ID
    4. Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.) and store it into an encrypted database file protected by the user's password
-   5. Server: Generate session key pair (session ID & session secret key)
+   5. Server: Generate session key pair (session ID & session secret key).
+      - **Note:** Generating the session key pair and placing it into the confirmation token ensures that a confirmation token is only used once because the server cannot store multiple sessions same session ID. If there is an attempt to use an unexpired confirmation token after it has be used, the server will reject it because it already stores a session with the session ID within the confirmation token.
    6. Server: Generate a "confirmation code"
    7. Server: Use the confirmation key to create an encrypted "confirmation token" in [PASETO](https://paseto.io/) format that contains the dApp ID, session key pair, confirmation data and confirmation code
    8. Server → DApp: Send authenticated response containing confirmation ID, data, code and token
