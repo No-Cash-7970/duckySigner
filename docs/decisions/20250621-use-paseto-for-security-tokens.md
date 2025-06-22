@@ -24,6 +24,8 @@ The [DApp connect protocol](20250619-dapp-connect-protocol.md) requires the serv
 
 Chose PASETO. It is easier to use because it requires less effort to use it securely and safely transmit it through localhost without SSL/TLS.
 
+**Confidence:** Medium. Both the server and dApps should be able to handle PASETOs.
+
 ## Pros and Cons of the Options
 
 ### PASETO
