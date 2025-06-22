@@ -1,0 +1,1974 @@
+<!DOCTYPE html><html lang="en"><head><meta name="theme-color" content="#2176AE"/><link rel="preconnect" href="https://fonts.gstatic.com"/><link rel="stylesheet" data-href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap"/><link rel="stylesheet" data-href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;700&amp;display=swap"/><meta charSet="utf-8"/><meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width"/><link rel="shortcut icon" type="image/x-icon" href="/duckySigner/log4brains/favicon.ico"/><meta name="og:image" content="/duckySigner/log4brains/l4b-static/Log4brains-og.png"/><title>DApp Connect Protocol ADR - Architecture knowledge base of duckySigner</title><meta name="next-head-count" content="5"/><link rel="preload" href="/duckySigner/log4brains/_next/static/css/f4b1bfe580d32a3f533d.css" as="style"/><link rel="stylesheet" href="/duckySigner/log4brains/_next/static/css/f4b1bfe580d32a3f533d.css" data-n-g=""/><noscript data-n-css=""></noscript><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/webpack-50bee04d1dc61f8adf5b.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/commons.dfce197279f840109404.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/39d4b69998343c06c2f6d09982e0011fc76b6c1e.6868553c766a0e95aa6f.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/main-28e0aae90d9f2a0922f0.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/a3e17150ead73d62fba7a33a50672ae3f72841a5.1c962cd369f37d0d37d9.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/pages/_app-6aaf7812569d247f9467.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/364bddfb.28847971f0e02b167249.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/3da477db.e49cd5277ed36ace32c1.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/3b07cb59.4f0af644828e83722dc4.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/b4e962f4.986fa92c462dd01807e1.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/45d2d314fc8da5e3d79852782e4a432ad4da6771.6c9b005b6e9f3de8b888.js" as="script"/><link rel="preload" href="/duckySigner/log4brains/_next/static/chunks/pages/adr/%5B...slug%5D-38695c2819a098ee4898.js" as="script"/><style id="jss-server-side">html {
+  max-width: 100%;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+strong, b {
+  font-weight: 700;
+}
+body {
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
+  padding: 0 !important;
+  font-size: 0.875rem;
+  max-width: 100%;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 400;
+  line-height: 1.43;
+  letter-spacing: 0.01071em;
+  background-color: #fff;
+}
+@media print {
+  body {
+    background-color: #fff;
+  }
+}
+  body::backdrop {
+    background-color: #fff;
+  }
+  blockquote {
+    color: #9e9e9e;
+    margin: 0;
+    padding: 0 1em;
+    border-left: 0.25em solid #F8F8F8;
+  }
+  .MuiSvgIcon-root {
+    fill: currentColor;
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+    font-size: 1.5rem;
+    transition: fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    flex-shrink: 0;
+    user-select: none;
+  }
+  .MuiSvgIcon-colorPrimary {
+    color: #2176AE;
+  }
+  .MuiSvgIcon-colorSecondary {
+    color: #FF007B;
+  }
+  .MuiSvgIcon-colorAction {
+    color: rgba(0, 0, 0, 0.54);
+  }
+  .MuiSvgIcon-colorError {
+    color: #ff1744;
+  }
+  .MuiSvgIcon-colorDisabled {
+    color: rgba(0, 0, 0, 0.26);
+  }
+  .MuiSvgIcon-fontSizeInherit {
+    font-size: inherit;
+  }
+  .MuiSvgIcon-fontSizeSmall {
+    font-size: 1.25rem;
+  }
+  .MuiSvgIcon-fontSizeLarge {
+    font-size: 2.1875rem;
+  }
+  .MuiTooltip-popper {
+    z-index: 1500;
+    pointer-events: none;
+  }
+  .MuiTooltip-popperInteractive {
+    pointer-events: auto;
+  }
+  .MuiTooltip-popperArrow[x-placement*="bottom"] .MuiTooltip-arrow {
+    top: 0;
+    left: 0;
+    margin-top: -0.71em;
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+  .MuiTooltip-popperArrow[x-placement*="top"] .MuiTooltip-arrow {
+    left: 0;
+    bottom: 0;
+    margin-left: 4px;
+    margin-right: 4px;
+    margin-bottom: -0.71em;
+  }
+  .MuiTooltip-popperArrow[x-placement*="right"] .MuiTooltip-arrow {
+    left: 0;
+    width: 0.71em;
+    height: 1em;
+    margin-top: 4px;
+    margin-left: -0.71em;
+    margin-bottom: 4px;
+  }
+  .MuiTooltip-popperArrow[x-placement*="left"] .MuiTooltip-arrow {
+    right: 0;
+    width: 0.71em;
+    height: 1em;
+    margin-top: 4px;
+    margin-right: -0.71em;
+    margin-bottom: 4px;
+  }
+  .MuiTooltip-popperArrow[x-placement*="left"] .MuiTooltip-arrow::before {
+    transform-origin: 0 0;
+  }
+  .MuiTooltip-popperArrow[x-placement*="right"] .MuiTooltip-arrow::before {
+    transform-origin: 100% 100%;
+  }
+  .MuiTooltip-popperArrow[x-placement*="top"] .MuiTooltip-arrow::before {
+    transform-origin: 100% 0;
+  }
+  .MuiTooltip-popperArrow[x-placement*="bottom"] .MuiTooltip-arrow::before {
+    transform-origin: 0 100%;
+  }
+  .MuiTooltip-tooltip {
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 0.625rem;
+    max-width: 300px;
+    word-wrap: break-word;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    line-height: 1.4em;
+    border-radius: 4px;
+    background-color: rgba(97, 97, 97, 0.9);
+  }
+  .MuiTooltip-tooltipArrow {
+    margin: 0;
+    position: relative;
+  }
+  .MuiTooltip-arrow {
+    color: rgba(97, 97, 97, 0.9);
+    width: 1em;
+    height: 0.71em;
+    overflow: hidden;
+    position: absolute;
+    box-sizing: border-box;
+  }
+  .MuiTooltip-arrow::before {
+    width: 100%;
+    height: 100%;
+    margin: auto;
+    content: "";
+    display: block;
+    transform: rotate(45deg);
+    background-color: currentColor;
+  }
+  .MuiTooltip-touch {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.14286em;
+  }
+  .MuiTooltip-tooltipPlacementLeft {
+    margin: 0 24px ;
+    transform-origin: right center;
+  }
+@media (min-width:900px) {
+  .MuiTooltip-tooltipPlacementLeft {
+    margin: 0 14px;
+  }
+}
+  .MuiTooltip-tooltipPlacementRight {
+    margin: 0 24px;
+    transform-origin: left center;
+  }
+@media (min-width:900px) {
+  .MuiTooltip-tooltipPlacementRight {
+    margin: 0 14px;
+  }
+}
+  .MuiTooltip-tooltipPlacementTop {
+    margin: 24px 0;
+    transform-origin: center bottom;
+  }
+@media (min-width:900px) {
+  .MuiTooltip-tooltipPlacementTop {
+    margin: 14px 0;
+  }
+}
+  .MuiTooltip-tooltipPlacementBottom {
+    margin: 24px 0;
+    transform-origin: center top;
+  }
+@media (min-width:900px) {
+  .MuiTooltip-tooltipPlacementBottom {
+    margin: 14px 0;
+  }
+}
+  .MuiButtonBase-root {
+    color: inherit;
+    border: 0;
+    cursor: pointer;
+    margin: 0;
+    display: inline-flex;
+    outline: 0;
+    padding: 0;
+    position: relative;
+    align-items: center;
+    user-select: none;
+    border-radius: 0;
+    vertical-align: middle;
+    -moz-appearance: none;
+    justify-content: center;
+    text-decoration: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .MuiButtonBase-root::-moz-focus-inner {
+    border-style: none;
+  }
+  .MuiButtonBase-root.Mui-disabled {
+    cursor: default;
+    pointer-events: none;
+  }
+@media print {
+  .MuiButtonBase-root {
+    color-adjust: exact;
+  }
+}
+  .MuiButton-root {
+    color: rgba(0, 0, 0, 0.87);
+    padding: 6px 16px;
+    font-size: 0.875rem;
+    min-width: 64px;
+    box-sizing: border-box;
+    transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    line-height: 1.75;
+    border-radius: 4px;
+    letter-spacing: 0.02857em;
+    text-transform: uppercase;
+  }
+  .MuiButton-root:hover {
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  .MuiButton-root.Mui-disabled {
+    color: rgba(0, 0, 0, 0.26);
+  }
+@media (hover: none) {
+  .MuiButton-root:hover {
+    background-color: transparent;
+  }
+}
+  .MuiButton-root:hover.Mui-disabled {
+    background-color: transparent;
+  }
+  .MuiButton-label {
+    width: 100%;
+    display: inherit;
+    align-items: inherit;
+    justify-content: inherit;
+  }
+  .MuiButton-text {
+    padding: 6px 8px;
+  }
+  .MuiButton-textPrimary {
+    color: #2176AE;
+  }
+  .MuiButton-textPrimary:hover {
+    background-color: rgba(33, 118, 174, 0.04);
+  }
+@media (hover: none) {
+  .MuiButton-textPrimary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiButton-textSecondary {
+    color: #FF007B;
+  }
+  .MuiButton-textSecondary:hover {
+    background-color: rgba(255, 0, 123, 0.04);
+  }
+@media (hover: none) {
+  .MuiButton-textSecondary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiButton-outlined {
+    border: 1px solid rgba(0, 0, 0, 0.23);
+    padding: 5px 15px;
+  }
+  .MuiButton-outlined.Mui-disabled {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiButton-outlinedPrimary {
+    color: #2176AE;
+    border: 1px solid rgba(33, 118, 174, 0.5);
+  }
+  .MuiButton-outlinedPrimary:hover {
+    border: 1px solid #2176AE;
+    background-color: rgba(33, 118, 174, 0.04);
+  }
+@media (hover: none) {
+  .MuiButton-outlinedPrimary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiButton-outlinedSecondary {
+    color: #FF007B;
+    border: 1px solid rgba(255, 0, 123, 0.5);
+  }
+  .MuiButton-outlinedSecondary:hover {
+    border: 1px solid #FF007B;
+    background-color: rgba(255, 0, 123, 0.04);
+  }
+  .MuiButton-outlinedSecondary.Mui-disabled {
+    border: 1px solid rgba(0, 0, 0, 0.26);
+  }
+@media (hover: none) {
+  .MuiButton-outlinedSecondary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiButton-contained {
+    color: rgba(0, 0, 0, 0.87);
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12);
+    background-color: #e0e0e0;
+  }
+  .MuiButton-contained:hover {
+    box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12);
+    background-color: #d5d5d5;
+  }
+  .MuiButton-contained.Mui-focusVisible {
+    box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);
+  }
+  .MuiButton-contained:active {
+    box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),0px 8px 10px 1px rgba(0,0,0,0.14),0px 3px 14px 2px rgba(0,0,0,0.12);
+  }
+  .MuiButton-contained.Mui-disabled {
+    color: rgba(0, 0, 0, 0.26);
+    box-shadow: none;
+    background-color: rgba(0, 0, 0, 0.12);
+  }
+@media (hover: none) {
+  .MuiButton-contained:hover {
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12);
+    background-color: #e0e0e0;
+  }
+}
+  .MuiButton-contained:hover.Mui-disabled {
+    background-color: rgba(0, 0, 0, 0.12);
+  }
+  .MuiButton-containedPrimary {
+    color: #fff;
+    background-color: #2176AE;
+  }
+  .MuiButton-containedPrimary:hover {
+    background-color: rgb(23, 82, 121);
+  }
+@media (hover: none) {
+  .MuiButton-containedPrimary:hover {
+    background-color: #2176AE;
+  }
+}
+  .MuiButton-containedSecondary {
+    color: #fff;
+    background-color: #FF007B;
+  }
+  .MuiButton-containedSecondary:hover {
+    background-color: rgb(178, 0, 86);
+  }
+@media (hover: none) {
+  .MuiButton-containedSecondary:hover {
+    background-color: #FF007B;
+  }
+}
+  .MuiButton-disableElevation {
+    box-shadow: none;
+  }
+  .MuiButton-disableElevation:hover {
+    box-shadow: none;
+  }
+  .MuiButton-disableElevation.Mui-focusVisible {
+    box-shadow: none;
+  }
+  .MuiButton-disableElevation:active {
+    box-shadow: none;
+  }
+  .MuiButton-disableElevation.Mui-disabled {
+    box-shadow: none;
+  }
+  .MuiButton-colorInherit {
+    color: inherit;
+    border-color: currentColor;
+  }
+  .MuiButton-textSizeSmall {
+    padding: 4px 5px;
+    font-size: 0.8125rem;
+  }
+  .MuiButton-textSizeLarge {
+    padding: 8px 11px;
+    font-size: 0.9375rem;
+  }
+  .MuiButton-outlinedSizeSmall {
+    padding: 3px 9px;
+    font-size: 0.8125rem;
+  }
+  .MuiButton-outlinedSizeLarge {
+    padding: 7px 21px;
+    font-size: 0.9375rem;
+  }
+  .MuiButton-containedSizeSmall {
+    padding: 4px 10px;
+    font-size: 0.8125rem;
+  }
+  .MuiButton-containedSizeLarge {
+    padding: 8px 22px;
+    font-size: 0.9375rem;
+  }
+  .MuiButton-fullWidth {
+    width: 100%;
+  }
+  .MuiButton-startIcon {
+    display: inherit;
+    margin-left: -4px;
+    margin-right: 8px;
+  }
+  .MuiButton-startIcon.MuiButton-iconSizeSmall {
+    margin-left: -2px;
+  }
+  .MuiButton-endIcon {
+    display: inherit;
+    margin-left: 8px;
+    margin-right: -4px;
+  }
+  .MuiButton-endIcon.MuiButton-iconSizeSmall {
+    margin-right: -2px;
+  }
+  .MuiButton-iconSizeSmall > *:first-child {
+    font-size: 18px;
+  }
+  .MuiButton-iconSizeMedium > *:first-child {
+    font-size: 20px;
+  }
+  .MuiButton-iconSizeLarge > *:first-child {
+    font-size: 22px;
+  }
+@media (min-width:0px) and (max-width:899.95px) {
+  .jss27 {
+    display: none;
+  }
+}
+@media (min-width:0px) {
+  .jss28 {
+    display: none;
+  }
+}
+@media (max-width:899.95px) {
+  .jss29 {
+    display: none;
+  }
+}
+@media (min-width:900px) and (max-width:1059.95px) {
+  .jss30 {
+    display: none;
+  }
+}
+@media (min-width:900px) {
+  .jss31 {
+    display: none;
+  }
+}
+@media (max-width:1059.95px) {
+  .jss32 {
+    display: none;
+  }
+}
+@media (min-width:1060px) and (max-width:1279.95px) {
+  .jss33 {
+    display: none;
+  }
+}
+@media (min-width:1060px) {
+  .jss34 {
+    display: none;
+  }
+}
+@media (max-width:1279.95px) {
+  .jss35 {
+    display: none;
+  }
+}
+@media (min-width:1280px) and (max-width:1919.95px) {
+  .jss36 {
+    display: none;
+  }
+}
+@media (min-width:1280px) {
+  .jss37 {
+    display: none;
+  }
+}
+@media (max-width:1919.95px) {
+  .jss38 {
+    display: none;
+  }
+}
+@media (min-width:1920px) {
+  .jss39 {
+    display: none;
+  }
+}
+@media (min-width:1920px) {
+  .jss40 {
+    display: none;
+  }
+}
+@media (min-width:0px) {
+  .jss41 {
+    display: none;
+  }
+}
+  .MuiDivider-root {
+    border: none;
+    height: 1px;
+    margin: 0;
+    flex-shrink: 0;
+    background-color: rgba(0, 0, 0, 0.12);
+  }
+  .MuiDivider-absolute {
+    left: 0;
+    width: 100%;
+    bottom: 0;
+    position: absolute;
+  }
+  .MuiDivider-inset {
+    margin-left: 72px;
+  }
+  .MuiDivider-light {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+  .MuiDivider-middle {
+    margin-left: 16px;
+    margin-right: 16px;
+  }
+  .MuiDivider-vertical {
+    width: 1px;
+    height: 100%;
+  }
+  .MuiDivider-flexItem {
+    height: auto;
+    align-self: stretch;
+  }
+  .MuiTypography-root {
+    margin: 0;
+  }
+  .MuiTypography-body2 {
+    font-size: 0.875rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 400;
+    line-height: 1.43;
+    letter-spacing: 0.01071em;
+  }
+  .MuiTypography-body1 {
+    font-size: 1rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: 0.00938em;
+  }
+  .MuiTypography-caption {
+    font-size: 0.75rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 400;
+    line-height: 1.66;
+    letter-spacing: 0.03333em;
+  }
+  .MuiTypography-button {
+    font-size: 0.875rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    line-height: 1.75;
+    letter-spacing: 0.02857em;
+    text-transform: uppercase;
+  }
+  .MuiTypography-h1 {
+    font-size: 3.5rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 300;
+    line-height: 1.167;
+    letter-spacing: -0.01562em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h1 {
+    font-size: 5.3556rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h1 {
+    font-size: 5.5698rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h1 {
+    font-size: 5.9983rem;
+  }
+}
+  .MuiTypography-h2 {
+    font-size: 2.375rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 300;
+    line-height: 1.2;
+    letter-spacing: -0.00833em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h2 {
+    font-size: 3.3333rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h2 {
+    font-size: 3.5417rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h2 {
+    font-size: 3.75rem;
+  }
+}
+  .MuiTypography-h3 {
+    font-size: 2rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: 0em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h3 {
+    font-size: 2.7273rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h3 {
+    font-size: 2.7273rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h3 {
+    font-size: 2.9545rem;
+  }
+}
+  .MuiTypography-h4 {
+    font-size: 1.5625rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 400;
+    line-height: 1.235;
+    letter-spacing: 0.00735em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h4 {
+    font-size: 2.0243rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h4 {
+    font-size: 2.0243rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h4 {
+    font-size: 2.0243rem;
+  }
+}
+  .MuiTypography-h5 {
+    font-size: 1.25rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 400;
+    line-height: 1.334;
+    letter-spacing: 0em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h5 {
+    font-size: 1.4993rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h5 {
+    font-size: 1.4993rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h5 {
+    font-size: 1.4993rem;
+  }
+}
+  .MuiTypography-h6 {
+    font-size: 1.125rem;
+    font-family: "Roboto Slab", "Noto Serif", "Times New Roman", serif;
+    font-weight: 500;
+    line-height: 1.6;
+    letter-spacing: 0.0075em;
+  }
+@media (min-width:900px) {
+  .MuiTypography-h6 {
+    font-size: 1.25rem;
+  }
+}
+@media (min-width:1060px) {
+  .MuiTypography-h6 {
+    font-size: 1.25rem;
+  }
+}
+@media (min-width:1280px) {
+  .MuiTypography-h6 {
+    font-size: 1.25rem;
+  }
+}
+  .MuiTypography-subtitle1 {
+    font-size: 1rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 400;
+    line-height: 1.75;
+    letter-spacing: 0.00938em;
+  }
+  .MuiTypography-subtitle2 {
+    font-size: 0.875rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 500;
+    line-height: 1.57;
+    letter-spacing: 0.00714em;
+  }
+  .MuiTypography-overline {
+    font-size: 0.75rem;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    font-weight: 400;
+    line-height: 2.66;
+    letter-spacing: 0.08333em;
+    text-transform: uppercase;
+  }
+  .MuiTypography-srOnly {
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+  }
+  .MuiTypography-alignLeft {
+    text-align: left;
+  }
+  .MuiTypography-alignCenter {
+    text-align: center;
+  }
+  .MuiTypography-alignRight {
+    text-align: right;
+  }
+  .MuiTypography-alignJustify {
+    text-align: justify;
+  }
+  .MuiTypography-noWrap {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .MuiTypography-gutterBottom {
+    margin-bottom: 0.35em;
+  }
+  .MuiTypography-paragraph {
+    margin-bottom: 16px;
+  }
+  .MuiTypography-colorInherit {
+    color: inherit;
+  }
+  .MuiTypography-colorPrimary {
+    color: #2176AE;
+  }
+  .MuiTypography-colorSecondary {
+    color: #FF007B;
+  }
+  .MuiTypography-colorTextPrimary {
+    color: rgba(0, 0, 0, 0.87);
+  }
+  .MuiTypography-colorTextSecondary {
+    color: rgba(0, 0, 0, 0.54);
+  }
+  .MuiTypography-colorError {
+    color: #ff1744;
+  }
+  .MuiTypography-displayInline {
+    display: inline;
+  }
+  .MuiTypography-displayBlock {
+    display: block;
+  }
+  .MuiLink-root:hover {
+    color: rgb(23, 82, 121);
+  }
+  .MuiLink-underlineNone {
+    text-decoration: none;
+  }
+  .MuiLink-underlineHover {
+    text-decoration: none;
+  }
+  .MuiLink-underlineHover:hover {
+    text-decoration: underline;
+  }
+  .MuiLink-underlineAlways {
+    text-decoration: underline;
+  }
+  .MuiLink-button {
+    border: 0;
+    cursor: pointer;
+    margin: 0;
+    outline: 0;
+    padding: 0;
+    position: relative;
+    user-select: none;
+    border-radius: 0;
+    vertical-align: middle;
+    -moz-appearance: none;
+    background-color: transparent;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .MuiLink-button::-moz-focus-inner {
+    border-style: none;
+  }
+  .MuiLink-button.Mui-focusVisible {
+    outline: auto;
+  }
+  .MuiPaper-root {
+    color: rgba(0, 0, 0, 0.87);
+    transition: box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    background-color: #fff;
+  }
+  .MuiPaper-rounded {
+    border-radius: 4px;
+  }
+  .MuiPaper-outlined {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiPaper-elevation0 {
+    box-shadow: none;
+  }
+  .MuiPaper-elevation1 {
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation2 {
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation3 {
+    box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation4 {
+    box-shadow: 0px 2px 4px -1px rgba(0,0,0,0.2),0px 4px 5px 0px rgba(0,0,0,0.14),0px 1px 10px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation5 {
+    box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),0px 5px 8px 0px rgba(0,0,0,0.14),0px 1px 14px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation6 {
+    box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.2),0px 6px 10px 0px rgba(0,0,0,0.14),0px 1px 18px 0px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation7 {
+    box-shadow: 0px 4px 5px -2px rgba(0,0,0,0.2),0px 7px 10px 1px rgba(0,0,0,0.14),0px 2px 16px 1px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation8 {
+    box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),0px 8px 10px 1px rgba(0,0,0,0.14),0px 3px 14px 2px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation9 {
+    box-shadow: 0px 5px 6px -3px rgba(0,0,0,0.2),0px 9px 12px 1px rgba(0,0,0,0.14),0px 3px 16px 2px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation10 {
+    box-shadow: 0px 6px 6px -3px rgba(0,0,0,0.2),0px 10px 14px 1px rgba(0,0,0,0.14),0px 4px 18px 3px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation11 {
+    box-shadow: 0px 6px 7px -4px rgba(0,0,0,0.2),0px 11px 15px 1px rgba(0,0,0,0.14),0px 4px 20px 3px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation12 {
+    box-shadow: 0px 7px 8px -4px rgba(0,0,0,0.2),0px 12px 17px 2px rgba(0,0,0,0.14),0px 5px 22px 4px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation13 {
+    box-shadow: 0px 7px 8px -4px rgba(0,0,0,0.2),0px 13px 19px 2px rgba(0,0,0,0.14),0px 5px 24px 4px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation14 {
+    box-shadow: 0px 7px 9px -4px rgba(0,0,0,0.2),0px 14px 21px 2px rgba(0,0,0,0.14),0px 5px 26px 4px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation15 {
+    box-shadow: 0px 8px 9px -5px rgba(0,0,0,0.2),0px 15px 22px 2px rgba(0,0,0,0.14),0px 6px 28px 5px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation16 {
+    box-shadow: 0px 8px 10px -5px rgba(0,0,0,0.2),0px 16px 24px 2px rgba(0,0,0,0.14),0px 6px 30px 5px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation17 {
+    box-shadow: 0px 8px 11px -5px rgba(0,0,0,0.2),0px 17px 26px 2px rgba(0,0,0,0.14),0px 6px 32px 5px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation18 {
+    box-shadow: 0px 9px 11px -5px rgba(0,0,0,0.2),0px 18px 28px 2px rgba(0,0,0,0.14),0px 7px 34px 6px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation19 {
+    box-shadow: 0px 9px 12px -6px rgba(0,0,0,0.2),0px 19px 29px 2px rgba(0,0,0,0.14),0px 7px 36px 6px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation20 {
+    box-shadow: 0px 10px 13px -6px rgba(0,0,0,0.2),0px 20px 31px 3px rgba(0,0,0,0.14),0px 8px 38px 7px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation21 {
+    box-shadow: 0px 10px 13px -6px rgba(0,0,0,0.2),0px 21px 33px 3px rgba(0,0,0,0.14),0px 8px 40px 7px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation22 {
+    box-shadow: 0px 10px 14px -6px rgba(0,0,0,0.2),0px 22px 35px 3px rgba(0,0,0,0.14),0px 8px 42px 7px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation23 {
+    box-shadow: 0px 11px 14px -7px rgba(0,0,0,0.2),0px 23px 36px 3px rgba(0,0,0,0.14),0px 9px 44px 8px rgba(0,0,0,0.12);
+  }
+  .MuiPaper-elevation24 {
+    box-shadow: 0px 11px 15px -7px rgba(0,0,0,0.2),0px 24px 38px 3px rgba(0,0,0,0.14),0px 9px 46px 8px rgba(0,0,0,0.12);
+  }
+  .MuiIconButton-root {
+    flex: 0 0 auto;
+    color: rgba(0, 0, 0, 0.54);
+    padding: 12px;
+    overflow: visible;
+    font-size: 1.5rem;
+    text-align: center;
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    border-radius: 50%;
+  }
+  .MuiIconButton-root:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  .MuiIconButton-root.Mui-disabled {
+    color: rgba(0, 0, 0, 0.26);
+    background-color: transparent;
+  }
+@media (hover: none) {
+  .MuiIconButton-root:hover {
+    background-color: transparent;
+  }
+}
+  .MuiIconButton-edgeStart {
+    margin-left: -12px;
+  }
+  .MuiIconButton-sizeSmall.MuiIconButton-edgeStart {
+    margin-left: -3px;
+  }
+  .MuiIconButton-edgeEnd {
+    margin-right: -12px;
+  }
+  .MuiIconButton-sizeSmall.MuiIconButton-edgeEnd {
+    margin-right: -3px;
+  }
+  .MuiIconButton-colorInherit {
+    color: inherit;
+  }
+  .MuiIconButton-colorPrimary {
+    color: #2176AE;
+  }
+  .MuiIconButton-colorPrimary:hover {
+    background-color: rgba(33, 118, 174, 0.04);
+  }
+@media (hover: none) {
+  .MuiIconButton-colorPrimary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiIconButton-colorSecondary {
+    color: #FF007B;
+  }
+  .MuiIconButton-colorSecondary:hover {
+    background-color: rgba(255, 0, 123, 0.04);
+  }
+@media (hover: none) {
+  .MuiIconButton-colorSecondary:hover {
+    background-color: transparent;
+  }
+}
+  .MuiIconButton-sizeSmall {
+    padding: 3px;
+    font-size: 1.125rem;
+  }
+  .MuiIconButton-label {
+    width: 100%;
+    display: flex;
+    align-items: inherit;
+    justify-content: inherit;
+  }
+  .MuiAppBar-root {
+    width: 100%;
+    display: flex;
+    z-index: 1100;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    flex-direction: column;
+  }
+  .MuiAppBar-positionFixed {
+    top: 0;
+    left: auto;
+    right: 0;
+    position: fixed;
+  }
+@media print {
+  .MuiAppBar-positionFixed {
+    position: absolute;
+  }
+}
+  .MuiAppBar-positionAbsolute {
+    top: 0;
+    left: auto;
+    right: 0;
+    position: absolute;
+  }
+  .MuiAppBar-positionSticky {
+    top: 0;
+    left: auto;
+    right: 0;
+    position: sticky;
+  }
+  .MuiAppBar-positionStatic {
+    position: static;
+  }
+  .MuiAppBar-positionRelative {
+    position: relative;
+  }
+  .MuiAppBar-colorDefault {
+    color: rgba(0, 0, 0, 0.87);
+    background-color: #f5f5f5;
+  }
+  .MuiAppBar-colorPrimary {
+    color: #fff;
+    background-color: #2176AE;
+  }
+  .MuiAppBar-colorSecondary {
+    color: #fff;
+    background-color: #FF007B;
+  }
+  .MuiAppBar-colorInherit {
+    color: inherit;
+  }
+  .MuiAppBar-colorTransparent {
+    color: inherit;
+    background-color: transparent;
+  }
+  .MuiBackdrop-root {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    z-index: -1;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .MuiBackdrop-invisible {
+    background-color: transparent;
+  }
+  .MuiButtonGroup-root {
+    display: inline-flex;
+    border-radius: 4px;
+  }
+  .MuiButtonGroup-contained {
+    box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),0px 2px 2px 0px rgba(0,0,0,0.14),0px 1px 5px 0px rgba(0,0,0,0.12);
+  }
+  .MuiButtonGroup-disableElevation {
+    box-shadow: none;
+  }
+  .MuiButtonGroup-fullWidth {
+    width: 100%;
+  }
+  .MuiButtonGroup-vertical {
+    flex-direction: column;
+  }
+  .MuiButtonGroup-grouped {
+    min-width: 40px;
+  }
+  .MuiButtonGroup-groupedHorizontal:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .MuiButtonGroup-groupedHorizontal:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .MuiButtonGroup-groupedVertical:not(:first-child) {
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .MuiButtonGroup-groupedVertical:not(:last-child) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .MuiButtonGroup-groupedTextHorizontal:not(:last-child) {
+    border-right: 1px solid rgba(0, 0, 0, 0.23);
+  }
+  .MuiButtonGroup-groupedTextVertical:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.23);
+  }
+  .MuiButtonGroup-groupedTextPrimary:not(:last-child) {
+    border-color: rgba(33, 118, 174, 0.5);
+  }
+  .MuiButtonGroup-groupedTextSecondary:not(:last-child) {
+    border-color: rgba(255, 0, 123, 0.5);
+  }
+  .MuiButtonGroup-groupedOutlinedHorizontal:not(:first-child) {
+    margin-left: -1px;
+  }
+  .MuiButtonGroup-groupedOutlinedHorizontal:not(:last-child) {
+    border-right-color: transparent;
+  }
+  .MuiButtonGroup-groupedOutlinedVertical:not(:first-child) {
+    margin-top: -1px;
+  }
+  .MuiButtonGroup-groupedOutlinedVertical:not(:last-child) {
+    border-bottom-color: transparent;
+  }
+  .MuiButtonGroup-groupedOutlinedPrimary:hover {
+    border-color: #2176AE;
+  }
+  .MuiButtonGroup-groupedOutlinedSecondary:hover {
+    border-color: #FF007B;
+  }
+  .MuiButtonGroup-groupedContained {
+    box-shadow: none;
+  }
+  .MuiButtonGroup-groupedContainedHorizontal:not(:last-child) {
+    border-right: 1px solid #bdbdbd;
+  }
+  .MuiButtonGroup-groupedContainedHorizontal:not(:last-child).Mui-disabled {
+    border-right: 1px solid rgba(0, 0, 0, 0.26);
+  }
+  .MuiButtonGroup-groupedContainedVertical:not(:last-child) {
+    border-bottom: 1px solid #bdbdbd;
+  }
+  .MuiButtonGroup-groupedContainedVertical:not(:last-child).Mui-disabled {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.26);
+  }
+  .MuiButtonGroup-groupedContainedPrimary:not(:last-child) {
+    border-color: rgb(23, 82, 121);
+  }
+  .MuiButtonGroup-groupedContainedSecondary:not(:last-child) {
+    border-color: rgb(178, 0, 86);
+  }
+  .MuiChip-root {
+    color: rgba(0, 0, 0, 0.87);
+    border: none;
+    cursor: default;
+    height: 32px;
+    display: inline-flex;
+    outline: 0;
+    padding: 0;
+    font-size: 0.8125rem;
+    box-sizing: border-box;
+    transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+    align-items: center;
+    font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+    white-space: nowrap;
+    border-radius: 16px;
+    vertical-align: middle;
+    justify-content: center;
+    text-decoration: none;
+    background-color: #e0e0e0;
+  }
+  .MuiChip-root.Mui-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .MuiChip-root .MuiChip-avatar {
+    color: #616161;
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+    margin-left: 5px;
+    margin-right: -6px;
+  }
+  .MuiChip-root .MuiChip-avatarColorPrimary {
+    color: #fff;
+    background-color: rgb(23, 82, 121);
+  }
+  .MuiChip-root .MuiChip-avatarColorSecondary {
+    color: #fff;
+    background-color: rgb(178, 0, 86);
+  }
+  .MuiChip-root .MuiChip-avatarSmall {
+    width: 18px;
+    height: 18px;
+    font-size: 0.625rem;
+    margin-left: 4px;
+    margin-right: -4px;
+  }
+  .MuiChip-sizeSmall {
+    height: 24px;
+  }
+  .MuiChip-colorPrimary {
+    color: #fff;
+    background-color: #2176AE;
+  }
+  .MuiChip-colorSecondary {
+    color: #fff;
+    background-color: #FF007B;
+  }
+  .MuiChip-clickable {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .MuiChip-clickable:hover, .MuiChip-clickable:focus {
+    background-color: rgb(206, 206, 206);
+  }
+  .MuiChip-clickable:active {
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12);
+  }
+  .MuiChip-clickableColorPrimary:hover, .MuiChip-clickableColorPrimary:focus {
+    background-color: rgb(50, 128, 180);
+  }
+  .MuiChip-clickableColorSecondary:hover, .MuiChip-clickableColorSecondary:focus {
+    background-color: rgb(255, 20, 133);
+  }
+  .MuiChip-deletable:focus {
+    background-color: rgb(206, 206, 206);
+  }
+  .MuiChip-deletableColorPrimary:focus {
+    background-color: rgb(77, 145, 190);
+  }
+  .MuiChip-deletableColorSecondary:focus {
+    background-color: rgb(255, 51, 149);
+  }
+  .MuiChip-outlined {
+    border: 1px solid rgba(0, 0, 0, 0.23);
+    background-color: transparent;
+  }
+  .MuiChip-clickable.MuiChip-outlined:hover, .MuiChip-clickable.MuiChip-outlined:focus, .MuiChip-deletable.MuiChip-outlined:focus {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  .MuiChip-outlined .MuiChip-avatar {
+    margin-left: 4px;
+  }
+  .MuiChip-outlined .MuiChip-avatarSmall {
+    margin-left: 2px;
+  }
+  .MuiChip-outlined .MuiChip-icon {
+    margin-left: 4px;
+  }
+  .MuiChip-outlined .MuiChip-iconSmall {
+    margin-left: 2px;
+  }
+  .MuiChip-outlined .MuiChip-deleteIcon {
+    margin-right: 5px;
+  }
+  .MuiChip-outlined .MuiChip-deleteIconSmall {
+    margin-right: 3px;
+  }
+  .MuiChip-outlinedPrimary {
+    color: #2176AE;
+    border: 1px solid #2176AE;
+  }
+  .MuiChip-clickable.MuiChip-outlinedPrimary:hover, .MuiChip-clickable.MuiChip-outlinedPrimary:focus, .MuiChip-deletable.MuiChip-outlinedPrimary:focus {
+    background-color: rgba(33, 118, 174, 0.04);
+  }
+  .MuiChip-outlinedSecondary {
+    color: #FF007B;
+    border: 1px solid #FF007B;
+  }
+  .MuiChip-clickable.MuiChip-outlinedSecondary:hover, .MuiChip-clickable.MuiChip-outlinedSecondary:focus, .MuiChip-deletable.MuiChip-outlinedSecondary:focus {
+    background-color: rgba(255, 0, 123, 0.04);
+  }
+  .MuiChip-icon {
+    color: #616161;
+    margin-left: 5px;
+    margin-right: -6px;
+  }
+  .MuiChip-iconSmall {
+    width: 18px;
+    height: 18px;
+    margin-left: 4px;
+    margin-right: -4px;
+  }
+  .MuiChip-iconColorPrimary {
+    color: inherit;
+  }
+  .MuiChip-iconColorSecondary {
+    color: inherit;
+  }
+  .MuiChip-label {
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 12px;
+    padding-right: 12px;
+    text-overflow: ellipsis;
+  }
+  .MuiChip-labelSmall {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .MuiChip-deleteIcon {
+    color: rgba(0, 0, 0, 0.26);
+    width: 22px;
+    cursor: pointer;
+    height: 22px;
+    margin: 0 5px 0 -6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .MuiChip-deleteIcon:hover {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  .MuiChip-deleteIconSmall {
+    width: 16px;
+    height: 16px;
+    margin-left: -4px;
+    margin-right: 4px;
+  }
+  .MuiChip-deleteIconColorPrimary {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .MuiChip-deleteIconColorPrimary:hover, .MuiChip-deleteIconColorPrimary:active {
+    color: #fff;
+  }
+  .MuiChip-deleteIconColorSecondary {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .MuiChip-deleteIconColorSecondary:hover, .MuiChip-deleteIconColorSecondary:active {
+    color: #fff;
+  }
+  .MuiChip-deleteIconOutlinedColorPrimary {
+    color: rgba(33, 118, 174, 0.7);
+  }
+  .MuiChip-deleteIconOutlinedColorPrimary:hover, .MuiChip-deleteIconOutlinedColorPrimary:active {
+    color: #2176AE;
+  }
+  .MuiChip-deleteIconOutlinedColorSecondary {
+    color: rgba(255, 0, 123, 0.7);
+  }
+  .MuiChip-deleteIconOutlinedColorSecondary:hover, .MuiChip-deleteIconOutlinedColorSecondary:active {
+    color: #FF007B;
+  }
+  .MuiCircularProgress-root {
+    display: inline-block;
+  }
+  .MuiCircularProgress-static {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  }
+  .MuiCircularProgress-indeterminate {
+    animation: MuiCircularProgress-keyframes-circular-rotate 1.4s linear infinite;
+  }
+  .MuiCircularProgress-determinate {
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  }
+  .MuiCircularProgress-colorPrimary {
+    color: #2176AE;
+  }
+  .MuiCircularProgress-colorSecondary {
+    color: #FF007B;
+  }
+  .MuiCircularProgress-svg {
+    display: block;
+  }
+  .MuiCircularProgress-circle {
+    stroke: currentColor;
+  }
+  .MuiCircularProgress-circleStatic {
+    transition: stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  }
+  .MuiCircularProgress-circleIndeterminate {
+    animation: MuiCircularProgress-keyframes-circular-dash 1.4s ease-in-out infinite;
+    stroke-dasharray: 80px, 200px;
+    stroke-dashoffset: 0px;
+  }
+  .MuiCircularProgress-circleDeterminate {
+    transition: stroke-dashoffset 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  }
+@keyframes MuiCircularProgress-keyframes-circular-rotate {
+  0% {
+    transform-origin: 50% 50%;
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes MuiCircularProgress-keyframes-circular-dash {
+  0% {
+    stroke-dasharray: 1px, 200px;
+    stroke-dashoffset: 0px;
+  }
+  50% {
+    stroke-dasharray: 100px, 200px;
+    stroke-dashoffset: -15px;
+  }
+  100% {
+    stroke-dasharray: 100px, 200px;
+    stroke-dashoffset: -125px;
+  }
+}
+  .MuiCircularProgress-circleDisableShrink {
+    animation: none;
+  }
+  .MuiDrawer-docked {
+    flex: 0 0 auto;
+  }
+  .MuiDrawer-paper {
+    top: 0;
+    flex: 1 0 auto;
+    height: 100%;
+    display: flex;
+    outline: 0;
+    z-index: 1200;
+    position: fixed;
+    overflow-y: auto;
+    flex-direction: column;
+    -webkit-overflow-scrolling: touch;
+  }
+  .MuiDrawer-paperAnchorLeft {
+    left: 0;
+    right: auto;
+  }
+  .MuiDrawer-paperAnchorRight {
+    left: auto;
+    right: 0;
+  }
+  .MuiDrawer-paperAnchorTop {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: auto;
+    height: auto;
+    max-height: 100%;
+  }
+  .MuiDrawer-paperAnchorBottom {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: auto;
+    max-height: 100%;
+  }
+  .MuiDrawer-paperAnchorDockedLeft {
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiDrawer-paperAnchorDockedTop {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiDrawer-paperAnchorDockedRight {
+    border-left: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiDrawer-paperAnchorDockedBottom {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+  }
+  .MuiList-root {
+    margin: 0;
+    padding: 0;
+    position: relative;
+    list-style: none;
+  }
+  .MuiList-padding {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+  .MuiList-subheader {
+    padding-top: 0;
+  }
+  .MuiSnackbar-root {
+    left: 8px;
+    right: 8px;
+    display: flex;
+    z-index: 1400;
+    position: fixed;
+    align-items: center;
+    justify-content: center;
+  }
+  .MuiSnackbar-anchorOriginTopCenter {
+    top: 8px;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginTopCenter {
+    top: 24px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+}
+  .MuiSnackbar-anchorOriginBottomCenter {
+    bottom: 8px;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginBottomCenter {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    transform: translateX(-50%);
+  }
+}
+  .MuiSnackbar-anchorOriginTopRight {
+    top: 8px;
+    justify-content: flex-end;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginTopRight {
+    top: 24px;
+    left: auto;
+    right: 24px;
+  }
+}
+  .MuiSnackbar-anchorOriginBottomRight {
+    bottom: 8px;
+    justify-content: flex-end;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginBottomRight {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+  }
+}
+  .MuiSnackbar-anchorOriginTopLeft {
+    top: 8px;
+    justify-content: flex-start;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginTopLeft {
+    top: 24px;
+    left: 24px;
+    right: auto;
+  }
+}
+  .MuiSnackbar-anchorOriginBottomLeft {
+    bottom: 8px;
+    justify-content: flex-start;
+  }
+@media (min-width:900px) {
+  .MuiSnackbar-anchorOriginBottomLeft {
+    left: 24px;
+    right: auto;
+    bottom: 24px;
+  }
+}
+  .MuiToolbar-root {
+    display: flex;
+    position: relative;
+    align-items: center;
+  }
+  .MuiToolbar-gutters {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+@media (min-width:900px) {
+  .MuiToolbar-gutters {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+}
+  .MuiToolbar-regular {
+    min-height: 56px;
+  }
+@media (min-width:0px) and (orientation: landscape) {
+  .MuiToolbar-regular {
+    min-height: 48px;
+  }
+}
+@media (min-width:900px) {
+  .MuiToolbar-regular {
+    min-height: 64px;
+  }
+}
+  .MuiToolbar-dense {
+    min-height: 48px;
+  }
+  .jss80 {
+    height: 18px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    vertical-align: text-bottom;
+  }
+  .jss81 {
+    padding: 0 6px;
+  }
+  .jss82 {
+    color: #424242;
+  }
+  .jss83 {
+    color: #283593;
+  }
+  .jss84 {
+    color: #d84315;
+  }
+  .jss85 {
+    color: #558b2f;
+  }
+  .jss86 {
+    color: #6d4c41;
+  }
+  .jss87 {
+    color: #6d4c41;
+  }
+  .jss93 {
+    text-decoration: line-through;
+  }
+  .jss94 {
+    text-decoration: line-through;
+  }
+  .jss95 {
+    text-decoration: line-through;
+  }
+  .jss88:hover .jss89 {
+    visibility: visible;
+  }
+  .jss89 {
+    color: inherit;
+    visibility: hidden;
+    margin-left: 0.3ch;
+  }
+  .jss89:hover {
+    color: #2176AE;
+  }
+  .jss96 {
+    padding: 3px;
+    border-radius: 4px;
+    background-color: #F8F8F8;
+  }
+  .jss98 > ul {
+    padding: 0 !important;
+  }
+  .jss99 {
+    font-weight: 700;
+    padding-bottom: 8px;
+  }
+  .jss100 {
+    padding-left: 1rem;
+    list-style-type: none;
+  }
+  .jss71 {
+    display: flex;
+  }
+  .jss72 {
+    flex-grow: 0.5;
+  }
+@media (max-width:1279.95px) {
+  .jss72 {
+    display: none;
+  }
+}
+  .jss73 {
+    flex-grow: 1;
+    padding-left: 16px;
+    overflow-wrap: anywhere;
+    padding-right: 16px;
+  }
+@media (min-width:1060px) {
+  .jss73 {
+    flex-grow: 0;
+    flex-basis: 782px;
+    flex-shrink: 0;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+  .jss73 img {
+    max-width: 100%;
+  }
+  .jss74 {
+    flex-grow: 1;
+    flex-basis: 180px;
+  }
+@media (max-width:1279.95px) {
+  .jss74 {
+    display: none;
+  }
+}
+  .jss75 {
+    top: 112px;
+    position: sticky;
+    min-width: 20ch;
+    align-self: flex-start;
+    padding-left: 16px;
+  }
+  .jss43 {
+    padding: 0;
+  }
+  .jss44 {
+    display: block;
+  }
+  .jss45:hover .jss57 {
+    background-color: #2176AE;
+  }
+  .jss46 .jss57 {
+    background-color: #FF007B;
+  }
+  .jss46 .jss44 {
+    color: #FF007B;
+  }
+  .jss46 .jss44:hover {
+    color: #FF007B;
+  }
+  .jss46:hover .jss57 {
+    background-color: #FF007B;
+  }
+  .jss47 {
+    flex: 0 0 calc(12ch - 11.5px);
+  }
+  .jss48 {
+    flex: 0 0 12ch;
+  }
+  .jss49 {
+    width: 35px;
+    height: 35px;
+  }
+  .jss50 {
+    color: #9e9e9e;
+    font-size: 0.8rem;
+  }
+  .jss51 {
+    margin-left: -1ch;
+  }
+  .jss52 {
+    vertical-align: middle;
+  }
+  .jss53 {
+    margin-right: 0.5ch;
+  }
+  .jss54 {
+    color: #616161;
+    font-size: 0.8rem;
+    white-space: pre;
+    vertical-align: text-top;
+  }
+  .jss55 {
+    flex: 0 0 calc(12ch - 12px);
+  }
+  .jss56 {
+    padding-bottom: 16px;
+  }
+  .jss58 {
+    background-color: #FF007B;
+  }
+  .jss62 {
+    text-decoration: line-through;
+  }
+  .jss63 {
+    text-decoration: line-through;
+  }
+  .jss64 {
+    text-decoration: line-through;
+  }
+  .jss1 {
+    display: flex;
+  }
+  .jss2 {
+    flex-grow: 0.5;
+  }
+@media (max-width:1279.95px) {
+  .jss2 {
+    display: none;
+  }
+}
+  .jss3 {
+    flex-grow: 1;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+@media (min-width:1060px) {
+  .jss3 {
+    flex-grow: 0;
+    flex-basis: 782px;
+    flex-shrink: 0;
+  }
+}
+  .jss4 {
+    flex-grow: 1;
+    flex-basis: 180px;
+  }
+@media (max-width:1279.95px) {
+  .jss4 {
+    display: none;
+  }
+}
+  .jss5 {
+    z-index: 1201;
+  }
+@media (min-width:900px) {
+  .jss6 {
+    display: none;
+  }
+}
+  .jss7 {
+    display: none;
+  }
+@media (min-width:900px) {
+  .jss7 {
+    width: 356px;
+    cursor: pointer;
+    display: flex;
+    flex-grow: 0;
+    align-items: center;
+    flex-shrink: 0;
+  }
+}
+  .jss8 {
+    color: inherit;
+    display: block;
+    margin-left: 16px;
+  }
+  .jss8:hover {
+    color: inherit;
+  }
+  .jss9 {
+    z-index: 1298;
+  }
+  .jss10 {
+    width: 100%;
+    z-index: 1299;
+    transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  }
+@media (min-width:1060px) {
+  .jss10 {
+    width: 70%;
+  }
+}
+  .jss11 {
+    width: 100%;
+  }
+@media (min-width:900px) {
+  .jss12 {
+    width: 380px;
+    flex-shrink: 0;
+  }
+}
+  .jss13 {
+    width: 380px;
+  }
+  .jss14 {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+@media (min-width:900px) {
+  .jss14 {
+    padding-top: 48px;
+  }
+}
+  .jss15 {
+    visibility: visible;
+    justify-content: space-between;
+  }
+@media (min-width:900px) {
+  .jss15 {
+    visibility: hidden;
+  }
+}
+  .jss16 {
+    overflow: auto;
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+  .jss16::-webkit-scrollbar {
+    width: 6px;
+    background-color: [object Object];
+  }
+  .jss16::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #bdbdbd;
+    -webkit-box-shadow: inset 0 0 2px rgba(0,0,0,.3);
+  }
+  .jss17 {
+    flex-grow: 0;
+    flex-shrink: 0;
+  }
+  .jss18 {
+    display: flex;
+    padding-left: 16px;
+    padding-right: 24px;
+    padding-bottom: 4px;
+    justify-content: space-between;
+  }
+@media (min-width:900px) {
+  .jss18 {
+    padding-left: 24px;
+  }
+}
+  .jss19 {
+    font-weight: 700;
+  }
+  .jss20 {
+    align-self: center;
+    margin-top: 30vh;
+  }
+  .jss21 {
+    flex-grow: 1;
+    padding-top: 16px;
+  }
+@media (min-width:900px) {
+  .jss21 {
+    padding-top: 48px;
+  }
+}
+  .jss22 {
+    min-height: calc(100vh - 35px - 72px);
+  }
+@media (min-width:900px) {
+  .jss22 {
+    min-height: calc(100vh - 35px - 112px);
+  }
+}
+  .jss23 {
+    color: #9e9e9e;
+    height: 35px;
+    display: flex;
+    margin-top: 48px;
+    background-color: #f5f5f5;
+  }
+  .jss24 {
+    font-size: 0.77rem;
+  }
+  .jss25 {
+    color: #757575;
+    font-size: 0.8rem;
+  }
+  .jss25:hover {
+    color: #424242;
+  }
+  .jss26 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .jss76 {
+    color: #616161;
+    display: flex;
+    justify-content: space-between;
+  }
+  .jss77 {
+    display: flex;
+  }
+  .jss77 > * {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+  .jss77 > *:first-child {
+    margin-left: 0;
+  }
+  .jss77 > *:last-child {
+    margin-right: 0;
+  }
+  .jss78 {
+    vertical-align: middle;
+  }
+  .jss79 {
+    color: #757575;
+  }
+  .jss65 {
+    margin-top: 8px;
+    margin-bottom: 32px;
+  }
+  .jss66 {
+    margin-bottom: 24px;
+  }
+  .jss67 {
+    margin-top: 96px;
+  }
+  .jss68 {
+    display: flex;
+    margin-top: 8px;
+    justify-content: space-between;
+  }
+  .jss70 {
+    color: #757575;
+    font-size: 0.77rem;
+    text-align: center;
+  }</style><style data-href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:normal;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWuaabWmQ.woff) format('woff')}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:normal;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWubEbWmQ.woff) format('woff')}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:normal;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWub2bWmQ.woff) format('woff')}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:normal;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFOMCnqEu92Fr1ME7kSn66aGLdTylUAMQXC89YmC2DPNWuYjammQ.woff) format('woff')}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3GUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3iUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3CUBHMdazTgWw.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3-UBHMdazTgWw.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMawCUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0302-0303,U+0305,U+0307-0308,U+0310,U+0312,U+0315,U+031A,U+0326-0327,U+032C,U+032F-0330,U+0332-0333,U+0338,U+033A,U+0346,U+034D,U+0391-03A1,U+03A3-03A9,U+03B1-03C9,U+03D1,U+03D5-03D6,U+03F0-03F1,U+03F4-03F5,U+2016-2017,U+2034-2038,U+203C,U+2040,U+2043,U+2047,U+2050,U+2057,U+205F,U+2070-2071,U+2074-208E,U+2090-209C,U+20D0-20DC,U+20E1,U+20E5-20EF,U+2100-2112,U+2114-2115,U+2117-2121,U+2123-214F,U+2190,U+2192,U+2194-21AE,U+21B0-21E5,U+21F1-21F2,U+21F4-2211,U+2213-2214,U+2216-22FF,U+2308-230B,U+2310,U+2319,U+231C-2321,U+2336-237A,U+237C,U+2395,U+239B-23B7,U+23D0,U+23DC-23E1,U+2474-2475,U+25AF,U+25B3,U+25B7,U+25BD,U+25C1,U+25CA,U+25CC,U+25FB,U+266D-266F,U+27C0-27FF,U+2900-2AFF,U+2B0E-2B11,U+2B30-2B4C,U+2BFE,U+3030,U+FF5B,U+FF5D,U+1D400-1D7FF,U+1EE00-1EEFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMaxKUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0001-000C,U+000E-001F,U+007F-009F,U+20DD-20E0,U+20E2-20E4,U+2150-218F,U+2190,U+2192,U+2194-2199,U+21AF,U+21E6-21F0,U+21F3,U+2218-2219,U+2299,U+22C4-22C6,U+2300-243F,U+2440-244A,U+2460-24FF,U+25A0-27BF,U+2800-28FF,U+2921-2922,U+2981,U+29BF,U+29EB,U+2B00-2BFF,U+4DC0-4DFF,U+FFF9-FFFB,U+10140-1018E,U+10190-1019C,U+101A0,U+101D0-101FD,U+102E0-102FB,U+10E60-10E7E,U+1D2C0-1D2D3,U+1D2E0-1D37F,U+1F000-1F0FF,U+1F100-1F1AD,U+1F1E6-1F1FF,U+1F30D-1F30F,U+1F315,U+1F31C,U+1F31E,U+1F320-1F32C,U+1F336,U+1F378,U+1F37D,U+1F382,U+1F393-1F39F,U+1F3A7-1F3A8,U+1F3AC-1F3AF,U+1F3C2,U+1F3C4-1F3C6,U+1F3CA-1F3CE,U+1F3D4-1F3E0,U+1F3ED,U+1F3F1-1F3F3,U+1F3F5-1F3F7,U+1F408,U+1F415,U+1F41F,U+1F426,U+1F43F,U+1F441-1F442,U+1F444,U+1F446-1F449,U+1F44C-1F44E,U+1F453,U+1F46A,U+1F47D,U+1F4A3,U+1F4B0,U+1F4B3,U+1F4B9,U+1F4BB,U+1F4BF,U+1F4C8-1F4CB,U+1F4D6,U+1F4DA,U+1F4DF,U+1F4E3-1F4E6,U+1F4EA-1F4ED,U+1F4F7,U+1F4F9-1F4FB,U+1F4FD-1F4FE,U+1F503,U+1F507-1F50B,U+1F50D,U+1F512-1F513,U+1F53E-1F54A,U+1F54F-1F5FA,U+1F610,U+1F650-1F67F,U+1F687,U+1F68D,U+1F691,U+1F694,U+1F698,U+1F6AD,U+1F6B2,U+1F6B9-1F6BA,U+1F6BC,U+1F6C6-1F6CF,U+1F6D3-1F6D7,U+1F6E0-1F6EA,U+1F6F0-1F6F3,U+1F6F7-1F6FC,U+1F700-1F7FF,U+1F800-1F80B,U+1F810-1F847,U+1F850-1F859,U+1F860-1F887,U+1F890-1F8AD,U+1F8B0-1F8BB,U+1F8C0-1F8C1,U+1F900-1F90B,U+1F93B,U+1F946,U+1F984,U+1F996,U+1F9E9,U+1FA00-1FA6F,U+1FA70-1FA7C,U+1FA80-1FA89,U+1FA8F-1FAC6,U+1FACE-1FADC,U+1FADF-1FAE9,U+1FAF0-1FAF8,U+1FB00-1FBFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:300;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3GUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3iUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3CUBHMdazTgWw.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3-UBHMdazTgWw.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMawCUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0302-0303,U+0305,U+0307-0308,U+0310,U+0312,U+0315,U+031A,U+0326-0327,U+032C,U+032F-0330,U+0332-0333,U+0338,U+033A,U+0346,U+034D,U+0391-03A1,U+03A3-03A9,U+03B1-03C9,U+03D1,U+03D5-03D6,U+03F0-03F1,U+03F4-03F5,U+2016-2017,U+2034-2038,U+203C,U+2040,U+2043,U+2047,U+2050,U+2057,U+205F,U+2070-2071,U+2074-208E,U+2090-209C,U+20D0-20DC,U+20E1,U+20E5-20EF,U+2100-2112,U+2114-2115,U+2117-2121,U+2123-214F,U+2190,U+2192,U+2194-21AE,U+21B0-21E5,U+21F1-21F2,U+21F4-2211,U+2213-2214,U+2216-22FF,U+2308-230B,U+2310,U+2319,U+231C-2321,U+2336-237A,U+237C,U+2395,U+239B-23B7,U+23D0,U+23DC-23E1,U+2474-2475,U+25AF,U+25B3,U+25B7,U+25BD,U+25C1,U+25CA,U+25CC,U+25FB,U+266D-266F,U+27C0-27FF,U+2900-2AFF,U+2B0E-2B11,U+2B30-2B4C,U+2BFE,U+3030,U+FF5B,U+FF5D,U+1D400-1D7FF,U+1EE00-1EEFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMaxKUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0001-000C,U+000E-001F,U+007F-009F,U+20DD-20E0,U+20E2-20E4,U+2150-218F,U+2190,U+2192,U+2194-2199,U+21AF,U+21E6-21F0,U+21F3,U+2218-2219,U+2299,U+22C4-22C6,U+2300-243F,U+2440-244A,U+2460-24FF,U+25A0-27BF,U+2800-28FF,U+2921-2922,U+2981,U+29BF,U+29EB,U+2B00-2BFF,U+4DC0-4DFF,U+FFF9-FFFB,U+10140-1018E,U+10190-1019C,U+101A0,U+101D0-101FD,U+102E0-102FB,U+10E60-10E7E,U+1D2C0-1D2D3,U+1D2E0-1D37F,U+1F000-1F0FF,U+1F100-1F1AD,U+1F1E6-1F1FF,U+1F30D-1F30F,U+1F315,U+1F31C,U+1F31E,U+1F320-1F32C,U+1F336,U+1F378,U+1F37D,U+1F382,U+1F393-1F39F,U+1F3A7-1F3A8,U+1F3AC-1F3AF,U+1F3C2,U+1F3C4-1F3C6,U+1F3CA-1F3CE,U+1F3D4-1F3E0,U+1F3ED,U+1F3F1-1F3F3,U+1F3F5-1F3F7,U+1F408,U+1F415,U+1F41F,U+1F426,U+1F43F,U+1F441-1F442,U+1F444,U+1F446-1F449,U+1F44C-1F44E,U+1F453,U+1F46A,U+1F47D,U+1F4A3,U+1F4B0,U+1F4B3,U+1F4B9,U+1F4BB,U+1F4BF,U+1F4C8-1F4CB,U+1F4D6,U+1F4DA,U+1F4DF,U+1F4E3-1F4E6,U+1F4EA-1F4ED,U+1F4F7,U+1F4F9-1F4FB,U+1F4FD-1F4FE,U+1F503,U+1F507-1F50B,U+1F50D,U+1F512-1F513,U+1F53E-1F54A,U+1F54F-1F5FA,U+1F610,U+1F650-1F67F,U+1F687,U+1F68D,U+1F691,U+1F694,U+1F698,U+1F6AD,U+1F6B2,U+1F6B9-1F6BA,U+1F6BC,U+1F6C6-1F6CF,U+1F6D3-1F6D7,U+1F6E0-1F6EA,U+1F6F0-1F6F3,U+1F6F7-1F6FC,U+1F700-1F7FF,U+1F800-1F80B,U+1F810-1F847,U+1F850-1F859,U+1F860-1F887,U+1F890-1F8AD,U+1F8B0-1F8BB,U+1F8C0-1F8C1,U+1F900-1F90B,U+1F93B,U+1F946,U+1F984,U+1F996,U+1F9E9,U+1FA00-1FA6F,U+1FA70-1FA7C,U+1FA80-1FA89,U+1FA8F-1FAC6,U+1FACE-1FADC,U+1FADF-1FAE9,U+1FAF0-1FAF8,U+1FB00-1FBFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:400;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3GUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3iUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3CUBHMdazTgWw.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3-UBHMdazTgWw.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMawCUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0302-0303,U+0305,U+0307-0308,U+0310,U+0312,U+0315,U+031A,U+0326-0327,U+032C,U+032F-0330,U+0332-0333,U+0338,U+033A,U+0346,U+034D,U+0391-03A1,U+03A3-03A9,U+03B1-03C9,U+03D1,U+03D5-03D6,U+03F0-03F1,U+03F4-03F5,U+2016-2017,U+2034-2038,U+203C,U+2040,U+2043,U+2047,U+2050,U+2057,U+205F,U+2070-2071,U+2074-208E,U+2090-209C,U+20D0-20DC,U+20E1,U+20E5-20EF,U+2100-2112,U+2114-2115,U+2117-2121,U+2123-214F,U+2190,U+2192,U+2194-21AE,U+21B0-21E5,U+21F1-21F2,U+21F4-2211,U+2213-2214,U+2216-22FF,U+2308-230B,U+2310,U+2319,U+231C-2321,U+2336-237A,U+237C,U+2395,U+239B-23B7,U+23D0,U+23DC-23E1,U+2474-2475,U+25AF,U+25B3,U+25B7,U+25BD,U+25C1,U+25CA,U+25CC,U+25FB,U+266D-266F,U+27C0-27FF,U+2900-2AFF,U+2B0E-2B11,U+2B30-2B4C,U+2BFE,U+3030,U+FF5B,U+FF5D,U+1D400-1D7FF,U+1EE00-1EEFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMaxKUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0001-000C,U+000E-001F,U+007F-009F,U+20DD-20E0,U+20E2-20E4,U+2150-218F,U+2190,U+2192,U+2194-2199,U+21AF,U+21E6-21F0,U+21F3,U+2218-2219,U+2299,U+22C4-22C6,U+2300-243F,U+2440-244A,U+2460-24FF,U+25A0-27BF,U+2800-28FF,U+2921-2922,U+2981,U+29BF,U+29EB,U+2B00-2BFF,U+4DC0-4DFF,U+FFF9-FFFB,U+10140-1018E,U+10190-1019C,U+101A0,U+101D0-101FD,U+102E0-102FB,U+10E60-10E7E,U+1D2C0-1D2D3,U+1D2E0-1D37F,U+1F000-1F0FF,U+1F100-1F1AD,U+1F1E6-1F1FF,U+1F30D-1F30F,U+1F315,U+1F31C,U+1F31E,U+1F320-1F32C,U+1F336,U+1F378,U+1F37D,U+1F382,U+1F393-1F39F,U+1F3A7-1F3A8,U+1F3AC-1F3AF,U+1F3C2,U+1F3C4-1F3C6,U+1F3CA-1F3CE,U+1F3D4-1F3E0,U+1F3ED,U+1F3F1-1F3F3,U+1F3F5-1F3F7,U+1F408,U+1F415,U+1F41F,U+1F426,U+1F43F,U+1F441-1F442,U+1F444,U+1F446-1F449,U+1F44C-1F44E,U+1F453,U+1F46A,U+1F47D,U+1F4A3,U+1F4B0,U+1F4B3,U+1F4B9,U+1F4BB,U+1F4BF,U+1F4C8-1F4CB,U+1F4D6,U+1F4DA,U+1F4DF,U+1F4E3-1F4E6,U+1F4EA-1F4ED,U+1F4F7,U+1F4F9-1F4FB,U+1F4FD-1F4FE,U+1F503,U+1F507-1F50B,U+1F50D,U+1F512-1F513,U+1F53E-1F54A,U+1F54F-1F5FA,U+1F610,U+1F650-1F67F,U+1F687,U+1F68D,U+1F691,U+1F694,U+1F698,U+1F6AD,U+1F6B2,U+1F6B9-1F6BA,U+1F6BC,U+1F6C6-1F6CF,U+1F6D3-1F6D7,U+1F6E0-1F6EA,U+1F6F0-1F6F3,U+1F6F7-1F6FC,U+1F700-1F7FF,U+1F800-1F80B,U+1F810-1F847,U+1F850-1F859,U+1F860-1F887,U+1F890-1F8AD,U+1F8B0-1F8BB,U+1F8C0-1F8C1,U+1F900-1F90B,U+1F93B,U+1F946,U+1F984,U+1F996,U+1F9E9,U+1FA00-1FA6F,U+1FA70-1FA7C,U+1FA80-1FA89,U+1FA8F-1FAC6,U+1FACE-1FADC,U+1FADF-1FAE9,U+1FAF0-1FAF8,U+1FB00-1FBFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:500;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3GUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3iUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3CUBHMdazTgWw.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3-UBHMdazTgWw.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMawCUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0302-0303,U+0305,U+0307-0308,U+0310,U+0312,U+0315,U+031A,U+0326-0327,U+032C,U+032F-0330,U+0332-0333,U+0338,U+033A,U+0346,U+034D,U+0391-03A1,U+03A3-03A9,U+03B1-03C9,U+03D1,U+03D5-03D6,U+03F0-03F1,U+03F4-03F5,U+2016-2017,U+2034-2038,U+203C,U+2040,U+2043,U+2047,U+2050,U+2057,U+205F,U+2070-2071,U+2074-208E,U+2090-209C,U+20D0-20DC,U+20E1,U+20E5-20EF,U+2100-2112,U+2114-2115,U+2117-2121,U+2123-214F,U+2190,U+2192,U+2194-21AE,U+21B0-21E5,U+21F1-21F2,U+21F4-2211,U+2213-2214,U+2216-22FF,U+2308-230B,U+2310,U+2319,U+231C-2321,U+2336-237A,U+237C,U+2395,U+239B-23B7,U+23D0,U+23DC-23E1,U+2474-2475,U+25AF,U+25B3,U+25B7,U+25BD,U+25C1,U+25CA,U+25CC,U+25FB,U+266D-266F,U+27C0-27FF,U+2900-2AFF,U+2B0E-2B11,U+2B30-2B4C,U+2BFE,U+3030,U+FF5B,U+FF5D,U+1D400-1D7FF,U+1EE00-1EEFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMaxKUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0001-000C,U+000E-001F,U+007F-009F,U+20DD-20E0,U+20E2-20E4,U+2150-218F,U+2190,U+2192,U+2194-2199,U+21AF,U+21E6-21F0,U+21F3,U+2218-2219,U+2299,U+22C4-22C6,U+2300-243F,U+2440-244A,U+2460-24FF,U+25A0-27BF,U+2800-28FF,U+2921-2922,U+2981,U+29BF,U+29EB,U+2B00-2BFF,U+4DC0-4DFF,U+FFF9-FFFB,U+10140-1018E,U+10190-1019C,U+101A0,U+101D0-101FD,U+102E0-102FB,U+10E60-10E7E,U+1D2C0-1D2D3,U+1D2E0-1D37F,U+1F000-1F0FF,U+1F100-1F1AD,U+1F1E6-1F1FF,U+1F30D-1F30F,U+1F315,U+1F31C,U+1F31E,U+1F320-1F32C,U+1F336,U+1F378,U+1F37D,U+1F382,U+1F393-1F39F,U+1F3A7-1F3A8,U+1F3AC-1F3AF,U+1F3C2,U+1F3C4-1F3C6,U+1F3CA-1F3CE,U+1F3D4-1F3E0,U+1F3ED,U+1F3F1-1F3F3,U+1F3F5-1F3F7,U+1F408,U+1F415,U+1F41F,U+1F426,U+1F43F,U+1F441-1F442,U+1F444,U+1F446-1F449,U+1F44C-1F44E,U+1F453,U+1F46A,U+1F47D,U+1F4A3,U+1F4B0,U+1F4B3,U+1F4B9,U+1F4BB,U+1F4BF,U+1F4C8-1F4CB,U+1F4D6,U+1F4DA,U+1F4DF,U+1F4E3-1F4E6,U+1F4EA-1F4ED,U+1F4F7,U+1F4F9-1F4FB,U+1F4FD-1F4FE,U+1F503,U+1F507-1F50B,U+1F50D,U+1F512-1F513,U+1F53E-1F54A,U+1F54F-1F5FA,U+1F610,U+1F650-1F67F,U+1F687,U+1F68D,U+1F691,U+1F694,U+1F698,U+1F6AD,U+1F6B2,U+1F6B9-1F6BA,U+1F6BC,U+1F6C6-1F6CF,U+1F6D3-1F6D7,U+1F6E0-1F6EA,U+1F6F0-1F6F3,U+1F6F7-1F6FC,U+1F700-1F7FF,U+1F800-1F80B,U+1F810-1F847,U+1F850-1F859,U+1F860-1F887,U+1F890-1F8AD,U+1F8B0-1F8BB,U+1F8C0-1F8C1,U+1F900-1F90B,U+1F93B,U+1F946,U+1F984,U+1F996,U+1F9E9,U+1FA00-1FA6F,U+1FA70-1FA7C,U+1FA80-1FA89,U+1FA8F-1FAC6,U+1FACE-1FADC,U+1FADF-1FAE9,U+1FAF0-1FAF8,U+1FB00-1FBFF}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3OUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3KUBHMdazTgWw.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto';font-style:normal;font-weight:700;font-stretch:100%;font-display:swap;src:url(https://fonts.gstatic.com/s/roboto/v48/KFO7CnqEu92Fr1ME7kSn66aGLdTylUAMa3yUBHMdazQ.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style><style data-href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;400;500;700&display=swap">@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjo0oSWaw.woff) format('woff')}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjojISWaw.woff) format('woff')}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjovoSWaw.woff) format('woff')}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngbUXZYTXPIvIBgJJSb6s3BzlRRfKOFbvjoa4OWaw.woff) format('woff')}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufA5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufJ5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufB5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufO5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufC5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufD5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:300;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufN5qWr4xCC.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufA5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufJ5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufB5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufO5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufC5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufD5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:400;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufN5qWr4xCC.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufA5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufJ5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufB5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufO5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufC5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufD5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:500;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufN5qWr4xCC.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufA5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0460-052F,U+1C80-1C8A,U+20B4,U+2DE0-2DFF,U+A640-A69F,U+FE2E-FE2F}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufJ5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufB5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+1F00-1FFF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufO5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0370-0377,U+037A-037F,U+0384-038A,U+038C,U+038E-03A1,U+03A3-03FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufC5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufD5qWr4xCCQ_k.woff2) format('woff2');unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}@font-face{font-family:'Roboto Slab';font-style:normal;font-weight:700;font-display:swap;src:url(https://fonts.gstatic.com/s/robotoslab/v35/BngMUXZYTXPIvIBgJJSb6ufN5qWr4xCC.woff2) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}</style></head><body><div id="__next"><div class="jss1"><header class="MuiPaper-root MuiAppBar-root MuiAppBar-positionFixed MuiAppBar-colorPrimary jss5 mui-fixed MuiPaper-elevation4"><div class="MuiToolbar-root MuiToolbar-regular MuiToolbar-gutters"><button class="MuiButtonBase-root MuiIconButton-root jss6 MuiIconButton-colorInherit MuiIconButton-edgeStart" tabindex="0" type="button" aria-label="open drawer"><span class="MuiIconButton-label"><svg class="MuiSvgIcon-root" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"></path></svg></span></button><div class="jss7"><div><img src="/duckySigner/log4brains/l4b-static/Log4brains-logo-dark.png" alt="Log4brains logo" width="50" height="50"/></div><div><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss8 MuiTypography-h6 MuiTypography-colorPrimary MuiTypography-noWrap" href="/duckySigner/log4brains/">duckySigner</a><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss8 MuiTypography-body2 MuiTypography-colorPrimary MuiTypography-noWrap" href="/duckySigner/log4brains/">Architecture knowledge base</a></div></div><div class="jss2"></div><div class="jss3"><div class="MuiBackdrop-root jss9" aria-hidden="true" style="opacity:0;visibility:hidden"></div></div><div class="jss4"></div></div></header><nav class="jss12" aria-label="architecture decision records list"><div class="jss31"></div><div class="jss29"><div class="MuiDrawer-root MuiDrawer-docked"><div class="MuiPaper-root MuiDrawer-paper jss13 MuiDrawer-paperAnchorLeft MuiDrawer-paperAnchorDockedLeft MuiPaper-elevation0"><div class="jss14"><div class="MuiToolbar-root MuiToolbar-regular jss15 MuiToolbar-gutters"><div></div><a class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-sizeSmall" tabindex="0" aria-disabled="false" aria-label="go to homepage" title="Architecture knowledge base of duckySigner" href="/duckySigner/log4brains/"><span class="MuiIconButton-label"><img src="/duckySigner/log4brains/l4b-static/Log4brains-logo.png" alt="Log4brains logo" width="40" height="40"/></span></a><button class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-sizeSmall" tabindex="0" type="button" aria-label="close drawer" title="Close"><span class="MuiIconButton-label"><svg class="MuiSvgIcon-root MuiSvgIcon-fontSizeSmall" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span></button></div><div class="jss18"><h6 class="MuiTypography-root jss19 MuiTypography-subtitle2">Decision log</h6><div class="MuiCircularProgress-root MuiCircularProgress-colorPrimary MuiCircularProgress-indeterminate" style="width:13px;height:13px;opacity:0;visibility:hidden" role="progressbar"><svg class="MuiCircularProgress-svg" viewBox="22 22 44 44"><circle class="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"></circle></svg></div></div><div class="MuiCircularProgress-root jss20 MuiCircularProgress-colorPrimary MuiCircularProgress-indeterminate" style="width:30px;height:30px" role="progressbar"><svg class="MuiCircularProgress-svg" viewBox="22 22 44 44"><circle class="MuiCircularProgress-circle MuiCircularProgress-circleIndeterminate" cx="44" cy="44" r="20.2" fill="none" stroke-width="3.6"></circle></svg></div><ul class="MuiList-root jss17 MuiList-padding"></ul></div></div></div></div></nav><div class="jss21"><div class="MuiToolbar-root MuiToolbar-regular MuiToolbar-gutters"></div><main class="jss22"><div class="jss71"><div class="jss72"></div><div class="jss73"><h3 class="MuiTypography-root MuiTypography-h3 MuiTypography-gutterBottom">DApp Connect Protocol</h3><hr class="MuiDivider-root"/><div class="jss65 jss76"><div><div class="jss77"><p class="MuiTypography-root MuiTypography-body2" title="Publication date"><svg class="MuiSvgIcon-root jss78 MuiSvgIcon-fontSizeInherit" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"></path></svg> <!-- -->Jun 20, 2025</p><div title="Status"><div class="MuiChip-root jss80 jss82 MuiChip-outlined MuiChip-sizeSmall"><span class="MuiChip-label MuiChip-labelSmall jss81">DRAFT</span></div></div></div><p class="MuiTypography-root MuiTypography-body2" title="Decider"><svg class="MuiSvgIcon-root jss78 MuiSvgIcon-fontSizeInherit" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg> <!-- -->No-Cash-7970</p><p class="MuiTypography-root MuiTypography-body2" title="Tags"><svg class="MuiSvgIcon-root jss78 MuiSvgIcon-fontSizeInherit" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16z"></path></svg> <span class="jss79">#dapp-connect #security #backend</span></p></div><div><div><div role="group" class="MuiButtonGroup-root"><button class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButtonGroup-grouped MuiButtonGroup-groupedHorizontal MuiButtonGroup-groupedOutlined MuiButtonGroup-groupedOutlinedHorizontal MuiButtonGroup-groupedOutlined" tabindex="0" type="button" title="Copy link"><span class="MuiButton-label"><svg class="MuiSvgIcon-root" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></svg></span></button><a class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButtonGroup-grouped MuiButtonGroup-groupedHorizontal MuiButtonGroup-groupedOutlined MuiButtonGroup-groupedOutlinedHorizontal MuiButtonGroup-groupedOutlined" tabindex="0" aria-disabled="false" href="https://github.com/No-Cash-7970/duckySigner/blob/master/docs/decisions/20250619-dapp-connect-protocol.md" target="_blank" rel="noopener" title="View/edit on Github"><span class="MuiButton-label"><svg class="MuiSvgIcon-root" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9a127.5 127.5 0 0 1 38.1 91v112.5c.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.5-447.3z"></path></svg></svg></span></a></div></div></div></div><div><div><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="context-and-problem-statement">Context and Problem Statement<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#context-and-problem-statement" title="Permanent link">¶</a></h2><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">For the user to be able to interact with a dApp using the desktop wallet, the dApp must be able to connect with the wallet to securely send and receive data from the wallet. A protocol needs to be established between the dApp and the desktop wallet&#x27;s <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20240102-use-local-server-to-connect-to-dapps/">dApp connect server on localhost</a>. Each dApp (or dApp instance) must be able to identify itself to the server and confirm its unique identity.</p><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="decision-drivers">Decision Drivers<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#decision-drivers" title="Permanent link">¶</a></h2><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Includes the decision drivers for the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20240821-use-hawk-for-dapp-connection-authentication-and-authorization/">decision to use Hawk</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>DApp connect session management:</strong> The dApp connect protocol needs to be able to (1) establish a session between a dApp and the desktop wallet, (2) let dApps end their sessions, (3) let the server end any session, and (4) let the server receive and store information about connected dApps</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Known related threats:</strong> <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>, <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large">THREAT-010</a>, <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-012-modifying-security-settings-in-configuration-files">THREAT-012</a>, <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location">THREAT-013</a>, <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id">THREAT-022</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>User experience (UX):</strong> Asking the user to enter their password too frequently degrades UX. The user needs to be presented with relevant information for making an informed decision when approving and when ending a session.</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Session data stored in encrypted file(s):</strong> The session data being stored in an encrypted file imposes constraints that affect UX because the user&#x27;s wallet password would be needed to decrypt and access the session data. This problem is lessened by the fact that the wallet password is typically stored in memory while the wallet is unlocked and open.</span></li></ul><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="considered-options">Considered Options<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#considered-options" title="Permanent link">¶</a></h2><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Iteration 4: Mitigate <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="./threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a> by requiring a &quot;confirmation code&quot;, revert use of approvals and session tokens, remove session renewal</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Iteration 3: Authentication using short sessions with long &quot;approval&quot;</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Iteration 2: Mitigate <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id">THREAT-022</a>, allow session to end if server is offline, add session &quot;ping&quot;</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Iteration 1: Simplest iteration</span></li></ul><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="decision-outcome">Decision Outcome<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#decision-outcome" title="Permanent link">¶</a></h2><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Chose Iteration 4. It strikes the right balance between security and UX.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph"><strong>Confidence</strong>: Low. Despite this protocol being inspired by other protocols like OAuth, it is uncertain if this protocol is too complex for dApps. There may be some unknown security vulnerabilities lurking within this protocol.</p><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="positive-consequences">Positive Consequences<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#positive-consequences" title="Permanent link">¶</a></h3><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">No secret data is transmitted unencrypted</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">A dApp that is not web-based can authenticate and interact with the desktop wallet</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">The user immediately knows when a dApp is trying to connect to the wallet</span></li></ul><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="negative-consequences">Negative Consequences<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#negative-consequences" title="Permanent link">¶</a></h3><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">The dApp must be able to generate and store a secret key securely, which can be a problem for web dApps in a browser</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">This protocol adds more parts and moving pieces to the desktop wallet, which increases the attack surface of the wallet. There may be some unknown or unforeseen threats lurking in this protocol.</span></li></ul><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="pros-and-cons-of-the-options">Pros and Cons of the Options<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#pros-and-cons-of-the-options" title="Permanent link">¶</a></h2><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="iteration-4">Iteration 4<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4" title="Permanent link">¶</a></h3><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">This is the fourth attempt at designing the dApp connect protocol. In this iteration, session renewal and the use of session tokens were dropped. Instead of session tokens, there are single-use session confirmation tokens that are used for the checking the &quot;confirmation code&quot; when confirming a session. Parts from the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1">first</a> and <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2">second</a> iterations were combined to make a simpler protocol compared to the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-3">third iteration</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-4-establishing-a-session">Iteration 4: Establishing a Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4-establishing-a-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Like with the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">second</a> and <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">third</a> iterations, establishing a session consists of initializing the session and then confirming it. However, confirming the session requires the user to enter a &quot;confirmation code&quot;, displayed by the dApp, into the wallet&#x27;s UI. This mitigates the threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>) that was present int the previous iterations.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">There is no session token, unlike <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-3-establishing-a-session">Iteration 3</a>. Instead, there is a single-use &quot;confirmation token&quot;. The confirmation token is used check the confirmation code entered by the user. This way, tokens are <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/">used in the way in which they are most suited</a>.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Initialize session</strong>
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Generate dApp key pair (dApp ID &amp; dApp secret key)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send request to <code class="jss96">/session/init</code>, providing dApp ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Validate received dApp ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.) and store it into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate session key pair (session ID &amp; session secret key).
+<ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Note:</strong> Generating the session key pair and placing it into the confirmation token ensures that a confirmation token is only used once because the server cannot store multiple sessions same session ID. If there is an attempt to use an unexpired confirmation token after it has be used, the server will reject it because it already stores a session with the session ID within the confirmation token.</span></li></ul></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate a &quot;confirmation code&quot;</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Use the confirmation key to create an encrypted &quot;confirmation token&quot; in <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://paseto.io/">PASETO</a> format that contains the dApp ID, session key pair, confirmation data and confirmation code</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing confirmation ID, data, code and token</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive confirmation shared secret key using dApp key and confirmation ID to verify authentication in the server&#x27;s response</span></li></ol></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Confirm session</strong>
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → User: Display confirmation code</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/confirm</code>, providing dApp data (dApp name, icon, etc.), confirmation token and confirmation ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Retrieve confirmation key using given confirmation ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive confirmation shared key using the confirmation key and dApp ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication and validate dApp data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Extract data from confirmation token by decrypting it using confirmation key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → User: <em>(Through the UI)</em> Present dApp data and ask for approval of connection to dApp</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">User → Server: Approve the connection to dApp by entering password and confirmation code</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate session data (date created, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive session shared secret key using dApp ID and session key for sending authenticated response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store session ID, session shared key, session data, dApp ID and dApp data into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the shared key using dApp key and session ID to verify authentication in the server&#x27;s response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store session ID and session data</span></li></ol></span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp can now use the session shared key to send authenticated requests to the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-4-authenticated-request">Iteration 4: Authenticated Request<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4-authenticated-request" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-authenticated-request">Iteration 1</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-4-end-session-from-dapp">Iteration 4: End session from DApp<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4-end-session-from-dapp" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">A dApp can optionally end its session by contacting the server before deleting its stored session data, just like ending a session in <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-end-session-from-dapp">Iteration 1</a>. This is most ideal way for a dApp to end the session. However, if the dApp cannot contact the server, deleting its stored session data, like with <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-end-session-from-dapp">Iteration 2</a>, is acceptable.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-4-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-4-end-session-from-wallet">Iteration 4: End Session from Wallet<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4-end-session-from-wallet" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-end-session-from-wallet">Iteration 2</a>.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-4-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-4-renew-session">Iteration 4: Renew Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-4-renew-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Session renewal is removed because it is unnecessary. A session does not need to be short because no secret session data is transmitted unencrypted. A session should be able to safely last about 1-2 weeks, which should be long enough to not hurt UX too much.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">This dApp connect protocol is supposed to replace the wallet session protocol used by <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20240217-integrate-kmd-wallet-management-code/">Algorand&#x27;s KMD wallet</a>. With KMD, renewing sessions was needed because the &quot;wallet handle&quot; a dApp (client) needed to authenticate with the server was always sent in plain text. The ability to renew a wallet handle was a compromise to make it easier to use KMD. However, that renewal feature undermined the security of the KMD wallet session because a malicious actor could steal a wallet handle while it is still valid and renew it.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="pros-and-cons-of-iteration-4">Pros and Cons of Iteration 4<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-4" title="Permanent link">¶</a></h4><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Pro: The requirement of a confirmation code when establishing a session mitigates threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Like with <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-2">Iteration 2</a>, sessions cannot be very long or very short. Finding the right session length will require some approximation and trial-and-error.</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Like with <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-2">Iteration 2</a>, the extra &quot;ping&quot; requests from dApps checking their session&#x27;s validity can lead to a higher chance of the server being overwhelmed (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large">THREAT-010</a>).</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: More work for a dApp because it needs to provide a way to display the confirmation code to the user.</span></li></ul><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="iteration-3">Iteration 3<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3" title="Permanent link">¶</a></h3><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">This is the third attempt at designing the dApp connect protocol. It is supposed to improve upon the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2">second iteration</a> by allowing for short sessions without the user needing to enter their password for a long period of time.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-3-establishing-a-session">Iteration 3: Establishing a Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3-establishing-a-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Like with the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">second iteration</a>, establishing a session consists of initializing the session and then confirming it. Unlike the second iteration, this iteration includes the creation of an &quot;approval&quot; during session confirmation. An &quot;approval&quot; is data that represents the user&#x27;s approval of the wallet&#x27;s connection to a dApp. The server uses the &quot;approval secret key&quot; to create an encrypted &quot;session token&quot; and gives it to the dApp to use for authentication.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">An approval can last for months while a session can last an hour. When the session expires, the dApp can renew the session and get a new token as long as the approval is valid. This mechanism is similar to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://oauth.net/2/grant-types/">OAuth 2.0 grants</a>.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Initialize session</strong><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">Iteration 2</a></span></li></ul></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Confirm session</strong>
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/confirm</code>, providing dApp data (dApp name, icon, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → User: <em>(Through the UI)</em> Present dApp data and ask for approval of connection to dApp</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">User → Server: Approve the connection to dApp (by entering password) and send approval</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate approval secret key and approval data (approval index, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store approval key, approval data, dApp ID and dApp data into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate session key pair (session ID &amp; session secret key) and session data (date created, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Use the approval key to create an encrypted &quot;session token&quot; in the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://paseto.io/">PASETO</a> format that contains the dApp ID, session ID, session data and approval index</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive session shared secret key using dApp ID and session key or sending authenticated response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing the token, session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the session shared key using dApp secret key and session ID to verify authentication in the server&#x27;s response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store token, session ID, session data and shared key</span></li></ol></span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp can now use the session shared key to send authenticated requests to the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-3-authenticated-request">Iteration 3: Authenticated Request<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3-authenticated-request" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Certain requests require the dApp to be authenticated.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Use the Hawk authentication scheme to create Hawk header data using session token and shared secret key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Place the Hawk header data into the request <code class="jss96">Authorization</code> header and send request</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Use the approval index (a part of the session token) to retrieve the approval key that will be used to decrypt the session token</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Extract the shared session key from the decrypted token data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify the authentication of the dApp using the shared key according to the Hawk authentication scheme</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Do some stuff</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp gets the data it needed from the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-3-end-session-from-dapp">Iteration 3: End session from DApp<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3-end-session-from-dapp" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-end-session-from-dapp">Iteration 2</a>.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-3-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-3-end-session-from-wallet">Iteration 3: End Session from Wallet<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3-end-session-from-wallet" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-end-session-from-wallet">Iteration 1</a>. Because sessions are short, the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-end-session-from-wallet">&quot;ping&quot; requests for checking session validity in Iteration 2</a> are unnecessary.</p><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-3-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-3-renew-session">Iteration 3: Renew Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-3-renew-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Before a session is expired, a dApp can &quot;renew&quot; its session to continue being connected to the wallet after the (old) session expiration.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/renew</code></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Decrypt session token and extract data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Check approval is not expired</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Create new session key pair and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive new session shared secret key using dApp ID and new session key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Create a new token containing the dApp ID, approval index, new session ID, new session data and new shared secret key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing the new token, session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the new session shared key using dApp secret key and new session ID to verify authentication in the server&#x27;s response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store new token, session ID, session data and shared key</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The expiration of the session has been extended and the dApp can continue sending authenticated requests.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="pros-and-cons-of-iteration-3">Pros and Cons of Iteration 3<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-3" title="Permanent link">¶</a></h4><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Pro: Allows for short sessions while not bothering the user asking them to approve the connection frequently</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Shorter sessions can lead to a higher chance of the server being overwhelmed (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large">THREAT-010</a>) when too many dApps are renewing their sessions too frequently. Finding the right session length is crucial.</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: When a session expires, the session cannot be renewed and the dApp must establish a new session, starting all over again. This makes the session renewal mechanism essentially useless and defeats the purpose of having this short-session/long-approval scheme. Attempting the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/">myriad of ways</a> of working around this issue leads to more issues or back to the some of the same issues as before, which is why it is said that tokens are <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/">not suited to be used for sessions</a>.</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Vulnerable to a Man-in-the-Middle (MitM) attack (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>) that is <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://asecuritysite.com/dh/diffie_crack">common to Diffie-Hellman (DH) protocols</a> where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.</span></li></ul><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="iteration-2">Iteration 2<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2" title="Permanent link">¶</a></h3><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">This is the second attempt at designing the dApp connect protocol. It is supposed to improve upon the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1">first iteration</a> by addressing and fixing its core issues.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-2-establishing-a-session">Iteration 2: Establishing a Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">To be able to authenticate itself to the server, the dApp must obtain a session shared secret key by establishing a session with the server. To establish a session, the dApp must &quot;initialize&quot; the session to get a confirmation ID and then &quot;confirm&quot; the session by authenticating itself to the server. In confirming the session, the dApp proves it owns the dApp ID it initially provided to the server.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Initialize session</strong>
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Generate dApp key pair (dApp ID &amp; dApp secret key)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send request to <code class="jss96">/session/init</code>, providing dApp ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Validate received dApp ID</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive confirmation shared secret key using dApp ID and confirmation key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store confirmation ID, confirmation shared key and confirmation data into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing confirmation ID and confirmation data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive confirmation shared key using dApp key and confirmation ID to verify authentication in the server&#x27;s response</span></li></ol></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><strong>Confirm session</strong>
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/confirm</code>, providing dApp data (dApp name, icon, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication and validate dApp data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → User: <em>(Through the UI)</em> Present dApp data and ask for approval of connection to dApp</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">User → Server: Approve the connection to dApp (by entering password)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate session key pair (session ID &amp; session secret key) and session data (date created, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive session shared secret key using dApp ID and session key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store session ID, shared key, session data (date created, expiration, etc.), dApp ID and dApp data into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send authenticated response containing session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the shared key using dApp key and session ID to verify authentication in the server&#x27;s response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store session ID and session data</span></li></ol></span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp can now use the session shared key to send authenticated requests to the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-2-authenticated-request">Iteration 2: Authenticated Request<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2-authenticated-request" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-authenticated-request">Iteration 1</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-2-end-session-from-dapp">Iteration 2: End session from DApp<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2-end-session-from-dapp" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">The dApp can end the session before the session expires. Unlike the <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-end-session-from-dapp">first iteration</a>, the dApp does not contact the server.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Delete its stored session data (session ID, shared key, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: <em>No contact with server</em></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server <em>(Some time later)</em>: Delete its stored session data because it expired or the session was manually ended from the wallet.</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-2-end-session-from-wallet">Iteration 2: End Session from Wallet<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2-end-session-from-wallet" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">The user, through the UI, can command the server to end the session before the session expires. However, the dApp does not immediately know that the session has ended, so it must periodically &quot;ping&quot; the server to check if the session is still valid.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">[Optional] Session validity check (Valid session)
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/:session_id</code></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Check if session still exists</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp <em>(session exists)</em>: Send authenticated response with <code class="jss96">200 OK</code> HTTP code</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Use session shared key to verify authentication in the server&#x27;s response</span></li></ol></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">End session
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">UI → Server: End session</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Delete session data (date created, expiration, etc.) from session database</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → UI: Respond with success</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: <em>No contact with DApp</em></span></li></ol></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">[Optional] Session validity check (Invalid session)
+<ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/:session_id</code></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Check if session still exists</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp <em>(session does not exist)</em>: Send authenticated response with <code class="jss96">404 Not Found</code> HTTP code</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Use session shared key to verify authentication in the server&#x27;s response</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Delete stored session data (session ID, shared key, etc.)</span></li></ol></span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-2-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-2-renew-session">Iteration 2: Renew Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-2-renew-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Same as <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-renew-session">Iteration 1</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="pros-and-cons-of-iteration-2">Pros and Cons of Iteration 2<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-2" title="Permanent link">¶</a></h4><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Pro: The server does not have to be online for a dApp to be able to end the session</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Pro: Mitigates <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id">THREAT-022</a>. A malicious actor cannot impersonate a dApp simply by using its dApp ID.</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Sessions cannot be very long because the shared key should be changed frequently to reduce the likelihood of <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">sensitive data being intercepted (THREAT-009)</a> and to reduce the damage if the shared key is stolen (because the key can only be used for a short period of time). However, short sessions ruin UX because the user has to connect with password more frequently. Consequently, the user is more likely to store their password insecurely (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location">THREAT-013</a>).</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: The extra &quot;ping&quot; requests for a dApp to periodically check the session&#x27;s validity are an extra burden on the server, which can lead to a higher chance of the server being overwhelmed (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large">THREAT-010</a>).</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Vulnerable to a Man-in-the-Middle (MitM) attack (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>) that is <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://asecuritysite.com/dh/diffie_crack">common to Diffie-Hellman (DH) protocols</a> where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.</span></li></ul><h3 class="MuiTypography-root jss88 MuiTypography-h5 MuiTypography-gutterBottom" id="iteration-1">Iteration 1<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1" title="Permanent link">¶</a></h3><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">This is the first attempt at designing the dApp connect protocol, so it is the simplest one.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-1-establishing-a-session">Iteration 1: Establishing a Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1-establishing-a-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">To be able to authenticate itself to the server, the dApp must obtain a session shared secret key key by establishing a session with the server.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Generate dApp key pair (dApp ID &amp; dApp secret key)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send request to <code class="jss96">/session/init</code>, providing dApp ID and dApp data (dApp name, icon, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Validate received dApp ID and information</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → User: <em>(Through the UI)</em> Present dApp data and ask for approval of connection to dApp</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">User → Server: Approve the connection to dApp (by entering password) and send approval</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Generate session key pair (session ID &amp; session secret key) and session data (date created, expiration, etc.)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive the shared secret key using dApp ID and session key using <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20250611-use-ecdh-for-establishing-dapp-connect-shared-key/">ECDH</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store session ID, shared key, session data, dApp ID and dApp data into an encrypted database file protected by the user&#x27;s password</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Respond with session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the shared key using dApp key and session ID using ECDH</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store session ID, session data and shared key</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp can now use the session shared key to send authenticated requests to the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-1-authenticated-request">Iteration 1: Authenticated Request<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1-authenticated-request" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Certain requests require the dApp to be authenticated.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Use the Hawk authentication scheme to create Hawk header data using session ID and shared secret key</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Place the Hawk header data into the request <code class="jss96">Authorization</code> header and send request</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify the authentication of the dApp using the shared key according to the Hawk authentication scheme</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Do some stuff</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Send response</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp gets the data it needed from the server.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-1-end-session-from-dapp">Iteration 1: End session from DApp<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1-end-session-from-dapp" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">The dApp can end the session before the session expires.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/end</code></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Delete session data from session database</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Respond with HTTP success code (maybe <code class="jss96">200 OK</code> or <code class="jss96">204 No Content</code>)</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Delete stored session data (session ID, shared key, etc.)</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-1-end-session-from-wallet">Iteration 1: End Session from Wallet<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1-end-session-from-wallet" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">The user, through the UI, can command the server to end the session before it expires.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">UI → Server: Command to end session</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Delete session data from session database</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → UI: Respond with success</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The dApp cannot successfully send authenticated requests to the server without <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="#iteration-1-establishing-a-session">establishing a new session</a>.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="iteration-1-renew-session">Iteration 1: Renew Session<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#iteration-1-renew-session" title="Permanent link">¶</a></h4><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Before the session is expired, a dApp can &quot;renew&quot; its session to continue being connected to the wallet after the (old) session expiration.</p><ol start="1"><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp → Server: Send authenticated request to <code class="jss96">/session/renew</code></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Verify authentication</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Check session is not expired</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Discard old session data, and create new session key pair and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Derive new session shared secret key using dApp ID and new session key using <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20250611-use-ecdh-for-establishing-dapp-connect-shared-key/">ECDH</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server: Store new session ID, shared key and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Server → DApp: Respond with new session ID and session data</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Derive the new shared key using dApp key (unchanged) and new session ID using ECDH</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">DApp: Store session ID, session data and shared key</span></li></ol><p class="MuiTypography-root MuiTypography-body1 MuiTypography-paragraph">Result: The expiration of the session has been extended and the dApp can continue sending authenticated requests.</p><h4 class="MuiTypography-root jss88 MuiTypography-h6 MuiTypography-gutterBottom" id="pros-and-cons-of-iteration-1">Pros and Cons of Iteration 1<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#pros-and-cons-of-iteration-1" title="Permanent link">¶</a></h4><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Pro: Less complex, which makes it easier to understand</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Vulnerable to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id">THREAT-022</a>, where two or more dApps using the same dApp ID breaks the security of the protocol</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: DApp cannot properly end session if server is offline</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: DApp would still show user as connected to wallet (until session expiration passes) if session was terminated from wallet</span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Con: Vulnerable to a Man-in-the-Middle (MitM) attack (<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server">THREAT-009</a>) that is <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://asecuritysite.com/dh/diffie_crack">common to Diffie-Hellman (DH) protocols</a> where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.</span></li></ul><h2 class="MuiTypography-root jss88 MuiTypography-h4 MuiTypography-gutterBottom" id="links">Links<a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss89 MuiTypography-colorPrimary" href="#links" title="Permanent link">¶</a></h2><ul><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Refined by <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss90 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20250621-use-paseto-for-security-tokens/">Use PASETO for Security Tokens</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Relates to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20250621-vocab-for-dapp-connect/">Vocabulary for DApp Connect</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Relates to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="20250608-use-dapp-connect-term-for-wallet-dapp-connection.md">Use &quot;DApp Connect&quot; Term for Wallet-DApp Connection</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Relates to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20250611-use-ecdh-for-establishing-dapp-connect-shared-key/">Use ECDH for Establishing session shared Secret Key</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Relates to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20240821-use-hawk-for-dapp-connection-authentication-and-authorization/">Use Hawk for DApp Connection Authentication and Authorization</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1">Relates to <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss92 MuiTypography-colorPrimary" href="/duckySigner/log4brains/adr/20240102-use-local-server-to-connect-to-dapps/">Use Local Server to Connect to DApps</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="../threat-model/01-threats.md">List of threats for this project</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://github.com/mozilla/hawk/blob/main/API.md">Hawk API</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://asecuritysite.com/dh/diffie_crack">Diffie-Hellman (Man-in-the-middle) - Asecuritysite.com</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="https://paseto.io/">Platform-Agnostic SEcurity TOkens (PASETO)</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/">Stop using JWT for sessions - joepie91&#x27;s Ramblings</a></span></li><li class="jss97"><span class="MuiTypography-root MuiTypography-body1"><a class="MuiTypography-root MuiLink-root MuiLink-underlineNone MuiTypography-colorPrimary" href="http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/">Stop using JWT for sessions, part 2: Why your solution doesn&#x27;t work - joepie91&#x27;s Ramblings</a></span></li></ul></div></div><hr class="MuiDivider-root jss67"/><nav class="jss68"><div></div><div class="jss69"><p class="MuiTypography-root jss70 MuiTypography-body1">Last edited by <!-- -->No-Cash-7970</p><p class="MuiTypography-root jss70 MuiTypography-body1">on <!-- -->Jun 22, 2025 11:12 AM</p></div><div></div></nav></div><div class="jss74 jss75"></div></div></main><footer class="jss23"><div class="jss2"></div><div class="jss3 jss26"><p class="MuiTypography-root jss24 MuiTypography-body1">Powered by<!-- --> <a class="MuiTypography-root MuiLink-root MuiLink-underlineNone jss25 MuiTypography-colorPrimary" href="https://github.com/thomvaill/log4brains" target="_blank" rel="noopener">Log4brains</a> <span style="font-size:0.8em">(v1.1.0)</span></p></div><div class="jss4"></div></footer></div></div></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"projectName":"duckySigner","currentAdr":{"slug":"20250619-dapp-connect-protocol","package":null,"title":"DApp Connect Protocol","status":"draft","supersededBy":null,"tags":["dapp-connect","security","backend"],"deciders":["No-Cash-7970"],"body":{"enhancedMdx":"\n## Context and Problem Statement\n\nFor the user to be able to interact with a dApp using the desktop wallet, the dApp must be able to connect with the wallet to securely send and receive data from the wallet. A protocol needs to be established between the dApp and the desktop wallet's \u003cAdrLink slug=\"20240102-use-local-server-to-connect-to-dapps\" status=\"accepted\" title=\"Use Local Server to Connect to DApps\" customLabel=\"dApp connect server on localhost\" /\u003e. Each dApp (or dApp instance) must be able to identify itself to the server and confirm its unique identity.\n\n## Decision Drivers\n\n- Includes the decision drivers for the \u003cAdrLink slug=\"20240821-use-hawk-for-dapp-connection-authentication-and-authorization\" status=\"accepted\" title=\"Use Hawk for DApp Connection Authentication and Authorization\" customLabel=\"decision to use Hawk\" /\u003e\n- **DApp connect session management:** The dApp connect protocol needs to be able to (1) establish a session between a dApp and the desktop wallet, (2) let dApps end their sessions, (3) let the server end any session, and (4) let the server receive and store information about connected dApps\n- **Known related threats:** [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server), [THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large), [THREAT-012](../threat-model/01-threats.md#threat-012-modifying-security-settings-in-configuration-files), [THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location), [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)\n- **User experience (UX):** Asking the user to enter their password too frequently degrades UX. The user needs to be presented with relevant information for making an informed decision when approving and when ending a session.\n- **Session data stored in encrypted file(s):** The session data being stored in an encrypted file imposes constraints that affect UX because the user's wallet password would be needed to decrypt and access the session data. This problem is lessened by the fact that the wallet password is typically stored in memory while the wallet is unlocked and open.\n\n## Considered Options\n\n- Iteration 4: Mitigate [THREAT-009](./threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server) by requiring a \"confirmation code\", revert use of approvals and session tokens, remove session renewal\n- Iteration 3: Authentication using short sessions with long \"approval\"\n- Iteration 2: Mitigate [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id), allow session to end if server is offline, add session \"ping\"\n- Iteration 1: Simplest iteration\n\n## Decision Outcome\n\nChose Iteration 4. It strikes the right balance between security and UX.\n\n**Confidence**: Low. Despite this protocol being inspired by other protocols like OAuth, it is uncertain if this protocol is too complex for dApps. There may be some unknown security vulnerabilities lurking within this protocol.\n\n### Positive Consequences\n\n- No secret data is transmitted unencrypted\n- A dApp that is not web-based can authenticate and interact with the desktop wallet\n- The user immediately knows when a dApp is trying to connect to the wallet\n\n### Negative Consequences\n\n- The dApp must be able to generate and store a secret key securely, which can be a problem for web dApps in a browser\n- This protocol adds more parts and moving pieces to the desktop wallet, which increases the attack surface of the wallet. There may be some unknown or unforeseen threats lurking in this protocol.\n\n## Pros and Cons of the Options\n\n### Iteration 4\n\nThis is the fourth attempt at designing the dApp connect protocol. In this iteration, session renewal and the use of session tokens were dropped. Instead of session tokens, there are single-use session confirmation tokens that are used for the checking the \"confirmation code\" when confirming a session. Parts from the [first](#iteration-1) and [second](#iteration-2) iterations were combined to make a simpler protocol compared to the [third iteration](#iteration-3).\n\n#### Iteration 4: Establishing a Session\n\nLike with the [second](#iteration-2-establishing-a-session) and [third](#iteration-2-establishing-a-session) iterations, establishing a session consists of initializing the session and then confirming it. However, confirming the session requires the user to enter a \"confirmation code\", displayed by the dApp, into the wallet's UI. This mitigates the threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that was present int the previous iterations.\n\nThere is no session token, unlike [Iteration 3](#iteration-3-establishing-a-session). Instead, there is a single-use \"confirmation token\". The confirmation token is used check the confirmation code entered by the user. This way, tokens are [used in the way in which they are most suited](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/).\n\n1. **Initialize session**\n   1. DApp: Generate dApp key pair (dApp ID \u0026 dApp secret key)\n   2. DApp → Server: Send request to `/session/init`, providing dApp ID\n   3. Server: Validate received dApp ID\n   4. Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.) and store it into an encrypted database file protected by the user's password\n   5. Server: Generate session key pair (session ID \u0026 session secret key).\n      - **Note:** Generating the session key pair and placing it into the confirmation token ensures that a confirmation token is only used once because the server cannot store multiple sessions same session ID. If there is an attempt to use an unexpired confirmation token after it has be used, the server will reject it because it already stores a session with the session ID within the confirmation token.\n   6. Server: Generate a \"confirmation code\"\n   7. Server: Use the confirmation key to create an encrypted \"confirmation token\" in [PASETO](https://paseto.io/) format that contains the dApp ID, session key pair, confirmation data and confirmation code\n   8. Server → DApp: Send authenticated response containing confirmation ID, data, code and token\n   9. DApp: Derive confirmation shared secret key using dApp key and confirmation ID to verify authentication in the server's response\n2. **Confirm session**\n   1. DApp → User: Display confirmation code\n   2. DApp → Server: Send authenticated request to `/session/confirm`, providing dApp data (dApp name, icon, etc.), confirmation token and confirmation ID\n   3. Server: Retrieve confirmation key using given confirmation ID\n   4. Server: Derive confirmation shared key using the confirmation key and dApp ID\n   5. Server: Verify authentication and validate dApp data\n   6. Server: Extract data from confirmation token by decrypting it using confirmation key\n   7. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp\n   8. User → Server: Approve the connection to dApp by entering password and confirmation code\n   9. Server: Generate session data (date created, expiration, etc.)\n   10. Server: Derive session shared secret key using dApp ID and session key for sending authenticated response\n   11. Server: Store session ID, session shared key, session data, dApp ID and dApp data into an encrypted database file protected by the user's password\n   12. Server → DApp: Send authenticated response containing session ID and session data\n   13. DApp: Derive the shared key using dApp key and session ID to verify authentication in the server's response\n   14. DApp: Store session ID and session data\n\nResult: The dApp can now use the session shared key to send authenticated requests to the server.\n\n#### Iteration 4: Authenticated Request\n\nSame as [Iteration 1](#iteration-1-authenticated-request).\n\n#### Iteration 4: End session from DApp\n\nA dApp can optionally end its session by contacting the server before deleting its stored session data, just like ending a session in [Iteration 1](#iteration-1-end-session-from-dapp). This is most ideal way for a dApp to end the session. However, if the dApp cannot contact the server, deleting its stored session data, like with [Iteration 2](#iteration-2-end-session-from-dapp), is acceptable.\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-4-establishing-a-session).\n\n#### Iteration 4: End Session from Wallet\n\nSame as [Iteration 2](#iteration-2-end-session-from-wallet).\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-4-establishing-a-session).\n\n#### Iteration 4: Renew Session\n\nSession renewal is removed because it is unnecessary. A session does not need to be short because no secret session data is transmitted unencrypted. A session should be able to safely last about 1-2 weeks, which should be long enough to not hurt UX too much.\n\nThis dApp connect protocol is supposed to replace the wallet session protocol used by \u003cAdrLink slug=\"20240217-integrate-kmd-wallet-management-code\" status=\"accepted\" title=\"Integrate KMD Wallet Management Code\" customLabel=\"Algorand's KMD wallet\" /\u003e. With KMD, renewing sessions was needed because the \"wallet handle\" a dApp (client) needed to authenticate with the server was always sent in plain text. The ability to renew a wallet handle was a compromise to make it easier to use KMD. However, that renewal feature undermined the security of the KMD wallet session because a malicious actor could steal a wallet handle while it is still valid and renew it.\n\n#### Pros and Cons of Iteration 4\n\n- Pro: The requirement of a confirmation code when establishing a session mitigates threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server))\n- Con: Like with [Iteration 2](#pros-and-cons-of-iteration-2), sessions cannot be very long or very short. Finding the right session length will require some approximation and trial-and-error.\n- Con: Like with [Iteration 2](#pros-and-cons-of-iteration-2), the extra \"ping\" requests from dApps checking their session's validity can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).\n- Con: More work for a dApp because it needs to provide a way to display the confirmation code to the user.\n\n### Iteration 3\n\nThis is the third attempt at designing the dApp connect protocol. It is supposed to improve upon the [second iteration](#iteration-2) by allowing for short sessions without the user needing to enter their password for a long period of time.\n\n#### Iteration 3: Establishing a Session\n\nLike with the [second iteration](#iteration-2-establishing-a-session), establishing a session consists of initializing the session and then confirming it. Unlike the second iteration, this iteration includes the creation of an \"approval\" during session confirmation. An \"approval\" is data that represents the user's approval of the wallet's connection to a dApp. The server uses the \"approval secret key\" to create an encrypted \"session token\" and gives it to the dApp to use for authentication.\n\nAn approval can last for months while a session can last an hour. When the session expires, the dApp can renew the session and get a new token as long as the approval is valid. This mechanism is similar to [OAuth 2.0 grants](https://oauth.net/2/grant-types/).\n\n1. **Initialize session** - Same as [Iteration 2](#iteration-2-establishing-a-session)\n2. **Confirm session**\n   1. DApp → Server: Send authenticated request to `/session/confirm`, providing dApp data (dApp name, icon, etc.)\n   2. Server: Verify authentication\n   3. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp\n   4. User → Server: Approve the connection to dApp (by entering password) and send approval\n   5. Server: Generate approval secret key and approval data (approval index, expiration, etc.)\n   6. Server: Store approval key, approval data, dApp ID and dApp data into an encrypted database file protected by the user's password\n   7. Server: Generate session key pair (session ID \u0026 session secret key) and session data (date created, expiration, etc.)\n   8. Server: Use the approval key to create an encrypted \"session token\" in the [PASETO](https://paseto.io/) format that contains the dApp ID, session ID, session data and approval index\n   9. Server: Derive session shared secret key using dApp ID and session key or sending authenticated response\n   10. Server → DApp: Send authenticated response containing the token, session ID and session data\n   11. DApp: Derive the session shared key using dApp secret key and session ID to verify authentication in the server's response\n   12. DApp: Store token, session ID, session data and shared key\n\nResult: The dApp can now use the session shared key to send authenticated requests to the server.\n\n#### Iteration 3: Authenticated Request\n\nCertain requests require the dApp to be authenticated.\n\n1. DApp: Use the Hawk authentication scheme to create Hawk header data using session token and shared secret key\n2. DApp → Server: Place the Hawk header data into the request `Authorization` header and send request\n3. Server: Use the approval index (a part of the session token) to retrieve the approval key that will be used to decrypt the session token\n4. Server: Extract the shared session key from the decrypted token data\n5. Server: Verify the authentication of the dApp using the shared key according to the Hawk authentication scheme\n6. Server: Do some stuff\n7. Server → DApp: Send authenticated response\n\nResult: The dApp gets the data it needed from the server.\n\n#### Iteration 3: End session from DApp\n\nSame as [Iteration 2](#iteration-2-end-session-from-dapp).\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-3-establishing-a-session).\n\n#### Iteration 3: End Session from Wallet\n\nSame as [Iteration 1](#iteration-1-end-session-from-wallet). Because sessions are short, the [\"ping\" requests for checking session validity in Iteration 2](#iteration-2-end-session-from-wallet) are unnecessary.\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-3-establishing-a-session).\n\n#### Iteration 3: Renew Session\n\nBefore a session is expired, a dApp can \"renew\" its session to continue being connected to the wallet after the (old) session expiration.\n\n1. DApp → Server: Send authenticated request to `/session/renew`\n2. Server: Decrypt session token and extract data\n3. Server: Verify authentication\n4. Server: Check approval is not expired\n5. Server: Create new session key pair and session data\n6. Server: Derive new session shared secret key using dApp ID and new session key\n7. Server: Create a new token containing the dApp ID, approval index, new session ID, new session data and new shared secret key\n8. Server → DApp: Send authenticated response containing the new token, session ID and session data\n9. DApp: Derive the new session shared key using dApp secret key and new session ID to verify authentication in the server's response\n10. DApp: Store new token, session ID, session data and shared key\n\nResult: The expiration of the session has been extended and the dApp can continue sending authenticated requests.\n\n#### Pros and Cons of Iteration 3\n\n- Pro: Allows for short sessions while not bothering the user asking them to approve the connection frequently\n- Con: Shorter sessions can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)) when too many dApps are renewing their sessions too frequently. Finding the right session length is crucial.\n- Con: When a session expires, the session cannot be renewed and the dApp must establish a new session, starting all over again. This makes the session renewal mechanism essentially useless and defeats the purpose of having this short-session/long-approval scheme. Attempting the [myriad of ways](http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/) of working around this issue leads to more issues or back to the some of the same issues as before, which is why it is said that tokens are [not suited to be used for sessions](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/).\n- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.\n\n### Iteration 2\n\nThis is the second attempt at designing the dApp connect protocol. It is supposed to improve upon the [first iteration](#iteration-1) by addressing and fixing its core issues.\n\n#### Iteration 2: Establishing a Session\n\nTo be able to authenticate itself to the server, the dApp must obtain a session shared secret key by establishing a session with the server. To establish a session, the dApp must \"initialize\" the session to get a confirmation ID and then \"confirm\" the session by authenticating itself to the server. In confirming the session, the dApp proves it owns the dApp ID it initially provided to the server.\n\n1. **Initialize session**\n   1. DApp: Generate dApp key pair (dApp ID \u0026 dApp secret key)\n   2. DApp → Server: Send request to `/session/init`, providing dApp ID\n   3. Server: Validate received dApp ID\n   4. Server: Generate confirmation key pair (confirmation ID + confirmation secret key) and confirmation data (date created, expiration, etc.)\n   5. Server: Derive confirmation shared secret key using dApp ID and confirmation key\n   6. Server: Store confirmation ID, confirmation shared key and confirmation data into an encrypted database file protected by the user's password\n   7. Server → DApp: Send authenticated response containing confirmation ID and confirmation data\n   8. DApp: Derive confirmation shared key using dApp key and confirmation ID to verify authentication in the server's response\n2. **Confirm session**\n   1. DApp → Server: Send authenticated request to `/session/confirm`, providing dApp data (dApp name, icon, etc.)\n   2. Server: Verify authentication and validate dApp data\n   3. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp\n   4. User → Server: Approve the connection to dApp (by entering password)\n   5. Server: Generate session key pair (session ID \u0026 session secret key) and session data (date created, expiration, etc.)\n   6. Server: Derive session shared secret key using dApp ID and session key\n   7. Server: Store session ID, shared key, session data (date created, expiration, etc.), dApp ID and dApp data into an encrypted database file protected by the user's password\n   8. Server → DApp: Send authenticated response containing session ID and session data\n   9. DApp: Derive the shared key using dApp key and session ID to verify authentication in the server's response\n   10. DApp: Store session ID and session data\n\nResult: The dApp can now use the session shared key to send authenticated requests to the server.\n\n#### Iteration 2: Authenticated Request\n\nSame as [Iteration 1](#iteration-1-authenticated-request).\n\n#### Iteration 2: End session from DApp\n\nThe dApp can end the session before the session expires. Unlike the [first iteration](#iteration-1-end-session-from-dapp), the dApp does not contact the server.\n\n1. DApp: Delete its stored session data (session ID, shared key, etc.)\n2. DApp: *No contact with server*\n3. Server *(Some time later)*: Delete its stored session data because it expired or the session was manually ended from the wallet.\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-2-establishing-a-session).\n\n#### Iteration 2: End Session from Wallet\n\nThe user, through the UI, can command the server to end the session before the session expires. However, the dApp does not immediately know that the session has ended, so it must periodically \"ping\" the server to check if the session is still valid.\n\n1. \\[Optional\\] Session validity check (Valid session)\n   1. DApp → Server: Send authenticated request to `/session/:session_id`\n   2. Server: Verify authentication\n   3. Server: Check if session still exists\n   4. Server → DApp *(session exists)*: Send authenticated response with `200 OK` HTTP code\n   5. DApp: Use session shared key to verify authentication in the server's response\n2. End session\n   1. UI → Server: End session\n   2. Server: Delete session data (date created, expiration, etc.) from session database\n   3. Server → UI: Respond with success\n   4. Server: *No contact with DApp*\n3. \\[Optional\\] Session validity check (Invalid session)\n   1. DApp → Server: Send authenticated request to `/session/:session_id`\n   2. Server: Verify authentication\n   3. Server: Check if session still exists\n   4. Server → DApp *(session does not exist)*: Send authenticated response with `404 Not Found` HTTP code\n   5. DApp: Use session shared key to verify authentication in the server's response\n   6. DApp: Delete stored session data (session ID, shared key, etc.)\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-2-establishing-a-session).\n\n#### Iteration 2: Renew Session\n\nSame as [Iteration 1](#iteration-1-renew-session).\n\n#### Pros and Cons of Iteration 2\n\n- Pro: The server does not have to be online for a dApp to be able to end the session\n- Pro: Mitigates [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id). A malicious actor cannot impersonate a dApp simply by using its dApp ID.\n- Con: Sessions cannot be very long because the shared key should be changed frequently to reduce the likelihood of [sensitive data being intercepted (THREAT-009)](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server) and to reduce the damage if the shared key is stolen (because the key can only be used for a short period of time). However, short sessions ruin UX because the user has to connect with password more frequently. Consequently, the user is more likely to store their password insecurely ([THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location)).\n- Con: The extra \"ping\" requests for a dApp to periodically check the session's validity are an extra burden on the server, which can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).\n- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.\n\n### Iteration 1\n\nThis is the first attempt at designing the dApp connect protocol, so it is the simplest one.\n\n#### Iteration 1: Establishing a Session\n\nTo be able to authenticate itself to the server, the dApp must obtain a session shared secret key key by establishing a session with the server.\n\n1. DApp: Generate dApp key pair (dApp ID \u0026 dApp secret key)\n2. DApp → Server: Send request to `/session/init`, providing dApp ID and dApp data (dApp name, icon, etc.)\n3. Server: Validate received dApp ID and information\n4. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp\n5. User → Server: Approve the connection to dApp (by entering password) and send approval\n6. Server: Generate session key pair (session ID \u0026 session secret key) and session data (date created, expiration, etc.)\n7. Server: Derive the shared secret key using dApp ID and session key using \u003cAdrLink slug=\"20250611-use-ecdh-for-establishing-dapp-connect-shared-key\" status=\"accepted\" title=\"Use ECDH for Establishing DApp Connect Shared Secret Key\" customLabel=\"ECDH\" /\u003e\n8. Server: Store session ID, shared key, session data, dApp ID and dApp data into an encrypted database file protected by the user's password\n9. Server → DApp: Respond with session ID and session data\n10. DApp: Derive the shared key using dApp key and session ID using ECDH\n11. DApp: Store session ID, session data and shared key\n\nResult: The dApp can now use the session shared key to send authenticated requests to the server.\n\n#### Iteration 1: Authenticated Request\n\nCertain requests require the dApp to be authenticated.\n\n1. DApp: Use the Hawk authentication scheme to create Hawk header data using session ID and shared secret key\n2. DApp → Server: Place the Hawk header data into the request `Authorization` header and send request\n3. Server: Verify the authentication of the dApp using the shared key according to the Hawk authentication scheme\n4. Server: Do some stuff\n5. Server → DApp: Send response\n\nResult: The dApp gets the data it needed from the server.\n\n#### Iteration 1: End session from DApp\n\nThe dApp can end the session before the session expires.\n\n1. DApp → Server: Send authenticated request to `/session/end`\n2. Server: Verify authentication\n3. Server: Delete session data from session database\n4. Server → DApp: Respond with HTTP success code (maybe `200 OK` or `204 No Content`)\n5. DApp: Delete stored session data (session ID, shared key, etc.)\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-1-establishing-a-session).\n\n#### Iteration 1: End Session from Wallet\n\nThe user, through the UI, can command the server to end the session before it expires.\n\n1. UI → Server: Command to end session\n2. Server: Delete session data from session database\n3. Server → UI: Respond with success\n\nResult: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-1-establishing-a-session).\n\n#### Iteration 1: Renew Session\n\nBefore the session is expired, a dApp can \"renew\" its session to continue being connected to the wallet after the (old) session expiration.\n\n1. DApp → Server: Send authenticated request to `/session/renew`\n2. Server: Verify authentication\n3. Server: Check session is not expired\n4. Server: Discard old session data, and create new session key pair and session data\n5. Server: Derive new session shared secret key using dApp ID and new session key using \u003cAdrLink slug=\"20250611-use-ecdh-for-establishing-dapp-connect-shared-key\" status=\"accepted\" title=\"Use ECDH for Establishing DApp Connect Shared Secret Key\" customLabel=\"ECDH\" /\u003e\n6. Server: Store new session ID, shared key and session data\n7. Server → DApp: Respond with new session ID and session data\n8. DApp: Derive the new shared key using dApp key (unchanged) and new session ID using ECDH\n9. DApp: Store session ID, session data and shared key\n\nResult: The expiration of the session has been extended and the dApp can continue sending authenticated requests.\n\n#### Pros and Cons of Iteration 1\n\n- Pro: Less complex, which makes it easier to understand\n- Con: Vulnerable to [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id), where two or more dApps using the same dApp ID breaks the security of the protocol\n- Con: DApp cannot properly end session if server is offline\n- Con: DApp would still show user as connected to wallet (until session expiration passes) if session was terminated from wallet\n- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two sets of key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.\n\n## Links\n\n- Refined by \u003cAdrLink slug=\"20250621-use-paseto-for-security-tokens\" status=\"draft\" title=\"Use PASETO for Security Tokens\" customLabel=\"Use PASETO for Security Tokens\" /\u003e\n- Relates to \u003cAdrLink slug=\"20250621-vocab-for-dapp-connect\" status=\"accepted\" title=\"Vocabulary for DApp Connect\" customLabel=\"Vocabulary for DApp Connect\" /\u003e\n- Relates to [Use \\\"DApp Connect\\\" Term for Wallet-DApp Connection](20250608-use-dapp-connect-term-for-wallet-dapp-connection.md)\n- Relates to \u003cAdrLink slug=\"20250611-use-ecdh-for-establishing-dapp-connect-shared-key\" status=\"accepted\" title=\"Use ECDH for Establishing DApp Connect Shared Secret Key\" customLabel=\"Use ECDH for Establishing session shared Secret Key\" /\u003e\n- Relates to \u003cAdrLink slug=\"20240821-use-hawk-for-dapp-connection-authentication-and-authorization\" status=\"accepted\" title=\"Use Hawk for DApp Connection Authentication and Authorization\" customLabel=\"Use Hawk for DApp Connection Authentication and Authorization\" /\u003e\n- Relates to \u003cAdrLink slug=\"20240102-use-local-server-to-connect-to-dapps\" status=\"accepted\" title=\"Use Local Server to Connect to DApps\" customLabel=\"Use Local Server to Connect to DApps\" /\u003e\n- [List of threats for this project](../threat-model/01-threats.md)\n- [Hawk API](https://github.com/mozilla/hawk/blob/main/API.md)\n- [Diffie-Hellman (Man-in-the-middle) - Asecuritysite.com](https://asecuritysite.com/dh/diffie_crack)\n- [Platform-Agnostic SEcurity TOkens (PASETO)](https://paseto.io/)\n- [Stop using JWT for sessions - joepie91's Ramblings](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)\n- [Stop using JWT for sessions, part 2: Why your solution doesn't work - joepie91's Ramblings](http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/)\n"},"creationDate":"2025-06-20T04:13:20.000Z","lastEditDate":"2025-06-22T11:12:18.000Z","lastEditAuthor":"No-Cash-7970","publicationDate":"2025-06-20T06:59:59.000Z","file":{"relativePath":"docs/decisions/20250619-dapp-connect-protocol.md","absolutePath":"/home/runner/work/duckySigner/duckySigner/docs/decisions/20250619-dapp-connect-protocol.md"},"repository":{"provider":"github","viewUrl":"https://github.com/No-Cash-7970/duckySigner/blob/master/docs/decisions/20250619-dapp-connect-protocol.md"}},"l4bVersion":"1.1.0"},"__N_SSG":true},"page":"/adr/[...slug]","query":{"slug":["20250619-dapp-connect-protocol"]},"buildId":"l_1AZHniXJrN0B92zUWhZ","assetPrefix":"/duckySigner/log4brains","runtimeConfig":{},"isFallback":false,"gsp":true}</script><script nomodule="" src="/duckySigner/log4brains/_next/static/chunks/polyfills-694d8cb7f00ed89b8e7e.js"></script><script src="/duckySigner/log4brains/_next/static/chunks/webpack-50bee04d1dc61f8adf5b.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/commons.dfce197279f840109404.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/39d4b69998343c06c2f6d09982e0011fc76b6c1e.6868553c766a0e95aa6f.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/main-28e0aae90d9f2a0922f0.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/a3e17150ead73d62fba7a33a50672ae3f72841a5.1c962cd369f37d0d37d9.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/pages/_app-6aaf7812569d247f9467.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/364bddfb.28847971f0e02b167249.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/3da477db.e49cd5277ed36ace32c1.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/3b07cb59.4f0af644828e83722dc4.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/b4e962f4.986fa92c462dd01807e1.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/45d2d314fc8da5e3d79852782e4a432ad4da6771.6c9b005b6e9f3de8b888.js" async=""></script><script src="/duckySigner/log4brains/_next/static/chunks/pages/adr/%5B...slug%5D-38695c2819a098ee4898.js" async=""></script><script src="/duckySigner/log4brains/_next/static/l_1AZHniXJrN0B92zUWhZ/_buildManifest.js" async=""></script><script src="/duckySigner/log4brains/_next/static/l_1AZHniXJrN0B92zUWhZ/_ssgManifest.js" async=""></script></body></html>
