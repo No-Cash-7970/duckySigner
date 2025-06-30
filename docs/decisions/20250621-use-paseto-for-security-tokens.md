@@ -1,19 +1,19 @@
 # Use PASETO for Security Tokens
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2025-06-21
+- Date: 2025-06-30
 - Tags: dapp-connect, security, backend
 
 ## Context and Problem Statement
 
-The [DApp connect protocol](20250619-dapp-connect-protocol.md) requires the server to issue tokens to dApps. Each dApp eventually presents their token to the server. The tokens need to be in a format that enables the dApp connect protocol to be secure when the token is transferred over an insecure localhost connection.
+The [DApp connect protocol](20250619-dapp-connect-protocol.md) requires the server to issue security tokens to dApps. Each dApp eventually presents their token to the server. The tokens need to be in a format that enables the dApp connect protocol to be secure when the token is transferred over an insecure localhost connection.
 
 ## Decision Drivers
 
 - **Security:** The token format should not be able to be cracked by any entity besides the issuer of the token (usually the server), thus making it safe to use on [localhost, where there is no SSL/TLS](20240102-use-local-server-to-connect-to-dapps.md)
-- **Library in Go:** The security token must be able to be created in Go, the language used for the server. The library for the security token format must be maintained and up-to-date.
-- **Library in JavaScript/TypeScript and other languages:** Allow the possibility of dApps creating security tokens instead of the server. DApps could be implemented in a variety of languages.
+- **Library in Go:** The security token must be able to be easily created in Go, the language used for the server. The library for the security token format must be maintained and up-to-date.
+- **Library in JavaScript/TypeScript and other languages:** Although it is unlikely that dApps will need to create their own security tokens, allow for it to be a possibility. DApps could be built in a variety of languages.
 
 ## Considered Options
 
@@ -22,9 +22,9 @@ The [DApp connect protocol](20250619-dapp-connect-protocol.md) requires the serv
 
 ## Decision Outcome
 
-Chose PASETO. It is easier to use because it requires less effort to use it securely and safely transmit it through localhost without SSL/TLS.
+Chose PASETO. It is easier to use because it requires less effort to use it securely and transmit it safely through localhost without SSL/TLS.
 
-**Confidence:** Medium. Both the server and dApps should be able to handle PASETOs.
+**Confidence:** Medium. Both the server and dApps should be able to handle PASETOs. However, PASETO is relatively unknown in the web development world.
 
 ## Pros and Cons of the Options
 
@@ -41,13 +41,13 @@ Chose PASETO. It is easier to use because it requires less effort to use it secu
 [JWT (JSON Web Token)](https://jwt.io/introduction) (pronounced like "jot") has been around since 2010 and is often used for [OAuth 2.0](https://oauth.net/2/).
 
 - Pro: The popularity of JWT means that there are plenty of tools and literature for JWT, which makes it easier to find help regarding JWT
-- Con: Transmitting JWT without SSL/TLS is [not recommended](https://snyk.io/blog/top-3-security-best-practices-for-handling-jwts/), which makes using JWT difficult to use securely on localhost
-- Con: The numerous options for JWT make it difficult to use. JWT's level of security can greatly vary and depends on how it is implemented in a library.
+- Con: Transmitting JWT without SSL/TLS is [not recommended](https://snyk.io/blog/top-3-security-best-practices-for-handling-jwts/), which makes it difficult to use securely on localhost
+- Con: The overwhelming number of options for JWT make it difficult to use. JWT's level of security can vary greatly depending on the library that is used to create a token.
 
 ## Links
 
-- Refines [Vocabulary for DApp Connect](20250621-vocab-for-dapp-connect.md)
-- Relates to [DApp Connect Protocol](20250619-dapp-connect-protocol.md)
+- Refines [DApp Connect Protocol](20250619-dapp-connect-protocol.md)
+- Relates to [Vocabulary for DApp Connect](20250621-vocab-for-dapp-connect.md)
 - [Platform-Agnostic SEcurity TOkens (PASETO)](https://paseto.io/)
 - [A Thorough Introduction to PASETO - Okta Developer](https://developer.okta.com/blog/2019/10/17/a-thorough-introduction-to-paseto)
 - [Paseto is a Secure Alternative to the JOSE Standards (JWT, etc.) - Paragon Initiative](https://paragonie.com/blog/2018/03/paseto-platform-agnostic-security-tokens-is-secure-alternative-jose-standards-jwt-etc)
