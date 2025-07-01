@@ -3,20 +3,23 @@ workspace {
     model {
         user = person "User" "A user of the Ducky Signer desktop wallet"
         wallet = softwareSystem "Ducky Signer" "Algorand wallet software for desktop computers" {
-            walletUI = container "User Interface" ""
-            walletServer = container "Wallet Connection Server" ""
-            keyStore = container "Key Store" "Encrypted storage of the private keys for the user's accounts" {
+            walletUI = container "User Interface"
+            connectServer = container "DApp Connect Server" "Allows dApp to connect to the wallet"
+            acctKeyStore = container "Account Key Store" "Encrypted storage of the private keys for the user's Algorand accounts" {
                 tags Database
             }
-            grantStore = container "DApp Grants Store" "Storage for credentials and permissions granted to dApps" {
+            sessionStore = container "Connect Session Store" "Storage for connect session key pairs and data" {
                 tags Database
             }
-            settingsStore = container "Settings Store" "Storage for the user's wallet settings. Maybe a file or localStorage." {
+            settingsStore = container "Settings Store" "Storage for the user's wallet settings" {
                 tags Database
             }
         }
-        dapp = softwareSystem "DApp" "App using Algorand" {
+        dapp1 = softwareSystem "DApp #1" "Typical web app using Algorand" {
             tags DApp External
+        }
+        dapp2 = softwareSystem "DApp #2" "Another app using Algorand, but is not in the browser" {
+            tags NonBrowserDApp External
         }
         algorand = softwareSystem "Algorand" "Blockchain network" {
             tags Algorand External
@@ -28,27 +31,42 @@ workspace {
             tags Database External
         }
 
-        # System landscape relationships
+        ### System landscape relationships ###
+
         user -> wallet "Uses"
-        user -> dapp "Interacts with"
-        dapp -> user "Responds to"
-        dapp -> wallet "Communicates with" "HTTP/2"
-        dapp -> algoNode "Interacts with"
+
+        user -> dapp1 "Interacts with"
+        dapp1 -> user "Responds to"
+        dapp1 -> wallet "Communicates with" "HTTP/2"
+        dapp1 -> algoNode "Interacts with"
+
+        user -> dapp2 "Also interacts with"
+        dapp2 -> user "Also responds to"
+        dapp2 -> wallet "Also communicates with" "HTTP/2"
+        dapp2 -> algoNode "Also interacts with"
+
         algoNode -> algorand "Connected to"
+        wallet -> algoNode "Pull blockchain data using"
+
         user -> ledgerDevice "Signs using"
         ledgerDevice -> user "Requests approval to sign from"
-        # wallet -> algorand "Interacts with"
 
-        # Wallet relationships
+        ### Wallet relationships ###
+
         user -> walletUI "Interfaces with"
         walletUI -> user "Requests input from"
-        dapp -> walletServer "Makes requests to" "HTTP/2"
-        walletUI -> walletServer "Notifies of user response" "Event"
-        walletServer -> walletUI "Notifies of dApp request" "Event"
-        walletUI -> keyStore "Temporarily retrieves key from" "With password from user"
-        walletUI -> settingsStore "Retrieves user preferences from" ""
+
+        dapp1 -> connectServer "Makes requests to" "HTTP/2"
+        dapp2 -> connectServer "Also makes requests to" "HTTP/2"
+        walletUI -> connectServer "Send user response to" "Event"
+        connectServer -> walletUI "Request action from user through" "Event"
+
+        walletUI -> acctKeyStore "Temporarily retrieves key from" "With password from user"
+        walletUI -> settingsStore "Stores & retrieves user preferences from" "With password from user"
         walletUI -> ledgerDevice "Sends signing request to"
-        walletServer -> grantStore "Manages credentials & permissions given to dApps" ""
+
+        connectServer -> settingsStore "Stores & retrieves user preferences from" "With password from user"
+        connectServer -> sessionStore "Stores & retrieves session keys and data from" "With password from user"
 
     }
 
@@ -68,68 +86,75 @@ workspace {
             autoLayout
         }
 
-        dynamic wallet DAppConnect "DApp establish connection with wallet" {
+        dynamic wallet DAppConnectSessionEstablishment "DApp establishes connect session with wallet" {
             autoLayout
-            user -> dapp "Initiates action that requires connecting to wallet within"
-            dapp -> walletServer "Requests authentication credentials from"
-            walletServer -> walletUI "Forwards request to approve dApp connection to"
-            walletUI -> user "Asks for approval of dApp connection from"
-            user -> walletUI "Approves dApp connection using"
-            walletUI -> walletServer "Forwards dApp connection approval data to"
-            walletServer -> grantStore "Saves dApp connection approval data into"
-            walletServer -> dapp "Responds with the set of authentication credentials created from approval data to"
+            # Initialization
+            user -> dapp1 "Needs to connect to wallet within"
+            dapp1 -> connectServer "Sends request to initialize session to"
+            connectServer -> sessionStore "Generates confirmation key pair & add them to"
+            connectServer -> dapp1 "Responds with confirmation token, code & data to"
+            # Confirmation
+            dapp1 -> user "Displays confirmation code to"
+            dapp1 -> connectServer "Sends request to confirm session to"
+            connectServer -> sessionStore "Retrieves confirmation key from"
+            connectServer -> walletUI "Forwards request for user approval to"
+            walletUI -> user "Ask for approval from"
+            user -> walletUI "Approves connection by entering wallet password & confirmation code"
+            walletUI -> connectServer "Forwards user approval to"
+            connectServer -> sessionStore "Extract session key pair from confirmation token & add them to"
+            connectServer -> dapp1 "Responds with session ID & data to"
+            dapp1 -> user "Shows it is connected to wallet to"
+        }
+
+        dynamic wallet DappConnectDisconnectThroughDApp "User terminates connect session though dApp (preferred method)" {
+            autoLayout
+            user -> dapp1 "Initiates session termination within"
+            dapp1 -> connectServer "Sends request to terminate session to"
+            connectServer -> sessionStore "Removes session data for dApp from"
+            connectServer -> dapp1 "Responds with success message to"
+            dapp1 -> user "Deletes its session data & shows it is disconnected from wallet to"
+        }
+
+        dynamic wallet DappConnectDisconnectThroughDAppAlt "User terminates connect session though dApp (alternate method)" {
+            autoLayout
+            user -> dapp1 "Initiates session termination within"
+            dapp1 -> user "Deletes its session data & shows it is disconnected from wallet to"
+        }
+
+        dynamic wallet DappConnectDisconnectThroughWallet "User terminates connect session though wallet" {
+            autoLayout
+            user -> walletUI "Initiates termination of session with dApp within"
+            walletUI -> connectServer "Forwards request to terminate dApp's session to"
+            connectServer -> sessionStore "Removes session data for dApp within"
+            connectServer -> walletUI "Responds with success message to"
+            walletUI -> user "Shows it is disconnected from dApp to"
         }
 
         dynamic wallet SignTransaction "DApp requests user to sign a transaction" {
             autoLayout
-            user -> dapp "Initiates action that requires signing a transaction within"
-            dapp -> walletServer "Sends request to sign transaction to"
-            walletServer -> walletUI "Forwards request to sign transaction to"
-            walletUI -> user "Asks for password to retrieve key to sign transaction from"
-            user -> walletUI "Enters password into"
-            walletUI -> keyStore "Retrieves key for signing from"
-            walletUI -> walletServer "Creates signed transaction data & forwards it to"
-            walletServer -> dapp "Responds with signed transaction data to"
-            dapp -> algoNode "Sends signed transaction using"
+            user -> dapp1 "Needs to sign a transaction within"
+            dapp1 -> connectServer "Sends request to sign transaction to"
+            connectServer -> walletUI "Forwards request to sign transaction to"
+            walletUI -> user "Asks for approval to sign transaction from"
+            user -> walletUI "Approves signing transaction using"
+            walletUI -> acctKeyStore "Retrieves key for signing from"
+            walletUI -> connectServer "Creates signed transaction data & forwards it to"
+            connectServer -> dapp1 "Responds with signed transaction data to"
+            dapp1 -> algoNode "Sends signed transaction using"
         }
 
-        dynamic wallet SignTransactionWithLedger "DApp requests user (with a Ledger device) to sign a transaction" {
+        dynamic wallet SignTransactionWithLedger "DApp requests user (with Ledger device) to sign a transaction" {
             autoLayout
-            user -> dapp "Initiates action that requires signing a transaction within"
-            dapp -> walletServer "Sends request to sign transaction to"
-            walletServer -> walletUI "Forwards request to sign transaction to"
+            user -> dapp1 "Needs to sign a transaction within"
+            dapp1 -> connectServer "Sends request to sign transaction to"
+            connectServer -> walletUI "Forwards request to sign transaction to"
             walletUI -> ledgerDevice "Sends unsigned transaction data to"
-            walletUI -> user "Asks for signing of transaction using Ledger device from"
+            walletUI -> user "Asks for approval to sign transaction from"
             user -> ledgerDevice "Signs transaction using"
             ledgerDevice -> walletUI "Sends signed transaction data to"
-            walletUI -> walletServer "Forwards signed transaction data to"
-            walletServer -> dapp "Responds with signed transaction data to"
-            dapp -> algoNode "Sends signed transaction using"
-        }
-
-        dynamic wallet DisconnectThroughDApp "User disconnects wallet from dApp though the dApp (e.g. \"Disconnect\" button)" {
-            autoLayout
-            user -> dapp "Initiates disconnect by clicking \"Disconnect wallet\" button within"
-            dapp -> walletServer "Sends request to remove dApp connection approval data to"
-            walletServer -> grantStore "Removes dApp connection approval data from"
-            walletServer -> dapp "Responds with success message to"
-            dapp -> user "Shows it is disconnected from wallet after removing its now old and invalid authentication credentials to"
-        }
-
-        dynamic wallet DisconnectThroughWallet "User disconnects wallet from dApp though the wallet" {
-            autoLayout
-            user -> walletUI "Initiates disconnect by clicking \"Disconnect wallet\" button within"
-            walletUI -> walletServer "Sends request to disconnect from dApp to"
-            walletServer -> grantStore "Removes dApp connection approval data from"
-            walletServer -> walletUI "Responds with success message to"
-            walletUI -> user "Shows it is disconnected from dApp to"
-        }
-
-        dynamic wallet DAppRenewCredentials "DApp renews its set of authentication credentials created from dApp connection approval data" {
-            autoLayout
-            dapp -> walletServer "Send request to renew authentication credentials to"
-            walletServer -> grantStore "Checks if dApp connection approval is valid by looking in"
-            walletServer -> dapp "Responds with new set of authentication credentials created from approval data to"
+            walletUI -> connectServer "Forwards signed transaction data to"
+            connectServer -> dapp1 "Responds with signed transaction data to"
+            dapp1 -> algoNode "Sends signed transaction using"
         }
 
         theme default
@@ -140,7 +165,10 @@ workspace {
                 color #222222
             }
             element DApp {
-                shape Hexagon
+                shape WebBrowser
+            }
+            element NonBrowserDApp {
+                shape Robot
             }
             element AlgoNode {
                 shape Hexagon
