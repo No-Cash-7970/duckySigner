@@ -72,7 +72,7 @@ There is no session token, unlike [Iteration 3](#iteration-3-session-establishme
    5. Server: Verify authentication and validate dApp data
    6. Server: Extract data from confirmation token by decrypting it using confirmation key
    7. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp
-   8. User → Server: Approve the connection to the dApp by entering password and confirmation code
+   8. User → Server: *(Through the UI)* Approve the connection to the dApp by entering password and confirmation code
    9. Server: Generate session data (date created, expiration, etc.)
    10. Server: Derive "session shared secret key" using dApp ID and session key for sending authenticated response
    11. Server: Store session ID, session shared key, session data, dApp ID and dApp data into an encrypted file protected by the user's wallet password
@@ -86,15 +86,15 @@ Result: The dApp can now use the session shared key to send authenticated reques
 
 Same as [Iteration 1](#iteration-1-authenticated-request).
 
-#### Iteration 4 Session Termination from DApp
+#### Iteration 4 Session Termination Through DApp
 
-A dApp can optionally end its session by contacting the server before deleting its stored session data, just like ending a session in [Iteration 1](#iteration-1-session-termination-from-dapp). This is the preferred method for a dApp to end its session. However, if the dApp cannot contact the server, the dApp simply deleting its stored session data, like with [Iteration 2](#iteration-2-session-termination-from-dapp), is acceptable.
+A dApp can optionally end its session by contacting the server before deleting its stored session data, just like ending a session in [Iteration 1](#iteration-1-session-termination-through-dapp). This is the preferred method for a dApp to end its session. However, if the dApp cannot contact the server, the dApp simply deleting its stored session data, like with [Iteration 2](#iteration-2-session-termination-through-dapp), is acceptable.
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-4-session-establishment).
 
-#### Iteration 4 Session Termination from Wallet
+#### Iteration 4 Session Termination Through Wallet
 
-Same as [Iteration 2](#iteration-2-session-termination-from-wallet).
+Same as [Iteration 2](#iteration-2-session-termination-through-wallet).
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-4-session-establishment).
 
@@ -126,7 +126,7 @@ An approval can last for months while a session can last an hour. When the sessi
    1. DApp → Server: Send authenticated request to `/session/confirm`, providing dApp data (dApp name, icon, etc.)
    2. Server: Verify authentication
    3. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp
-   4. User → Server: Approve the connection to the dApp (by entering wallet password) and send the approval
+   4. User → Server: *(Through the UI)* Approve the connection to the dApp (by entering wallet password) and send the approval
    5. Server: Generate approval secret key and approval data (approval index, expiration, etc.)
    6. Server: Store approval key, approval data, dApp ID and dApp data into an encrypted file protected by the user's wallet password
    7. Server: Generate session key pair (session ID & session secret key) and session data (date created, expiration, etc.)
@@ -152,15 +152,15 @@ Certain requests require the dApp to be authenticated.
 
 Result: The dApp (maybe) gets what it needed from the server.
 
-#### Iteration 3 Session Termination from DApp
+#### Iteration 3 Session Termination Through DApp
 
-Same as [Iteration 2](#iteration-2-session-termination-from-dapp).
+Same as [Iteration 2](#iteration-2-session-termination-through-dapp).
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-3-session-establishment).
 
-#### Iteration 3 Session Termination from Wallet
+#### Iteration 3 Session Termination Through Wallet
 
-Same as [Iteration 1](#iteration-1-session-termination-from-wallet). Because sessions are short, the ["ping" requests for checking session validity in Iteration 2](#iteration-2-session-termination-from-wallet) are unnecessary.
+Same as [Iteration 1](#iteration-1-session-termination-through-wallet). Because sessions are short, the ["ping" requests for checking session validity in Iteration 2](#iteration-2-session-termination-through-wallet) are unnecessary.
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-3-session-establishment).
 
@@ -209,7 +209,7 @@ To be able to authenticate itself to the server, a dApp must first obtain a "ses
    1. DApp → Server: Send authenticated request to `/session/confirm`, providing dApp data (dApp name, icon, etc.)
    2. Server: Verify authentication and validate dApp data
    3. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp
-   4. User → Server: Approve the connection to the dApp (by entering wallet password) and send the approval
+   4. User → Server: *(Through the UI)* Approve the connection to the dApp (by entering wallet password) and send the approval
    5. Server: Generate session key pair (session ID & session secret key) and session data (date created, expiration, etc.)
    6. Server: Derive the "session shared secret key" using dApp ID and session key
    7. Server: Store session ID, shared key, session data (date created, expiration, etc.), dApp ID and dApp data into an encrypted file protected by the user's wallet password
@@ -223,9 +223,9 @@ Result: The dApp can now use the session shared key to send authenticated reques
 
 Same as [Iteration 1](#iteration-1-authenticated-request).
 
-#### Iteration 2 Session Termination from DApp
+#### Iteration 2 Session Termination Through DApp
 
-The dApp can end the session before the session expires. Unlike the [first iteration](#iteration-1-session-termination-from-dapp), the dApp does not contact the server.
+The dApp can end the session before the session expires. Unlike the [first iteration](#iteration-1-session-termination-through-dapp), the dApp does not contact the server.
 
 1. DApp: Delete its stored session data (session ID, shared key, etc.)
 2. DApp: *No contact with server*
@@ -233,7 +233,7 @@ The dApp can end the session before the session expires. Unlike the [first itera
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-2-session-establishment).
 
-#### Iteration 2 Session Termination from Wallet
+#### Iteration 2 Session Termination Through Wallet
 
 The user, through the UI, can command the server to end the session before the session expires. However, the dApp does not immediately know that the session has ended. For the dApp to know when its session has as soon as possible, it should periodically "ping" the server to check if the session is still valid.
 
@@ -282,7 +282,7 @@ To be able to authenticate itself to the server, the dApp must obtain a "session
 2. DApp → Server: Send request to `/session/init`, providing dApp ID and dApp data (dApp name, icon, etc.)
 3. Server: Validate received dApp ID and information
 4. Server → User: *(Through the UI)* Present dApp data and ask for approval of connection to dApp
-5. User → Server: Approve the connection to the dApp (by entering wallet password) and send the approval
+5. User → Server: *(Through the UI)* Approve the connection to the dApp (by entering wallet password) and send the approval
 6. Server: Generate session key pair (session ID & session secret key) and session data (date created, expiration, etc.)
 7. Server: Derive the shared key using dApp ID and session key using [ECDH](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
 8. Server: Store session ID, shared key, session data, dApp ID and dApp data into an encrypted file protected by the user's wallet password
@@ -304,7 +304,7 @@ Certain requests require the dApp to be authenticated.
 
 Result: The dApp (maybe) gets what it needed from the server.
 
-#### Iteration 1 Session Termination from DApp
+#### Iteration 1 Session Termination Through DApp
 
 The dApp can end the session before the session expires.
 
@@ -316,7 +316,7 @@ The dApp can end the session before the session expires.
 
 Result: The dApp cannot successfully send authenticated requests to the server without [establishing a new session](#iteration-1-session-establishment).
 
-#### Iteration 1 Session Termination from Wallet
+#### Iteration 1 Session Termination Through Wallet
 
 The user, through the wallet UI, can command the server to end the session before it expires.
 
