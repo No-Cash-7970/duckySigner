@@ -119,12 +119,12 @@ var _ = Describe("DappConnectService", func() {
 	Describe("Connection server routes", Ordered, func() {
 		var dcService DappConnectService
 		const defaultUserRespTimeout = 2 * time.Second
-		// Pre-generated keys for wallet connection session
+		// Pre-generated keys for dApp connect session
 		const dAppId = "c+2pz3JaUkIEMnbi1vuv7RWdGpfyiv6O3xaYbYbieAg="
 		const dAppKey = "5zYnEKdGIcQSakSTwd21ZEygbX3mQ4vqV8WMZavvBb8="
 		const sessionId = "dNoKnxinOqUNKQIbSTn5nk/pTjOtVznlXV5+MaWSH3k="
 		const sessionKey = "OA7vIBYGze5Vapw/qO3iPr+F9nRnaxsWSVnViTEZ1Ag="
-		const wcKey = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
+		const dcKey = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
 
 		BeforeAll(func() {
 			dcService = DappConnectService{
@@ -164,7 +164,7 @@ var _ = Describe("DappConnectService", func() {
 		})
 
 		Describe("POST /session/init", func() {
-			It("creates a new wallet connection session", func() {
+			It("creates a new dApp connect session", func() {
 				// Signal for when the request has yielded a response
 				var respSignal = make(chan string)
 

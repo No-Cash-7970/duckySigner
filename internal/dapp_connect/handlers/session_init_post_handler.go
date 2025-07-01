@@ -31,7 +31,7 @@ func SessionInitPostHandler(
 		echoInstance.Logger.Debug("Incoming request:", dappInfo)
 
 		// Validate dApp ID before doing anything else
-		dAppIdPk, dappIdApiErr, err := ValidateDAppID(dappInfo.DAppID, ecdhCurve)
+		dappIdPk, dappIdApiErr, err := ValidateDappID(dappInfo.DappId, ecdhCurve)
 		if err != nil {
 			echoInstance.Logger.Error(err)
 			return c.JSON(http.StatusBadRequest, dappIdApiErr)
@@ -41,18 +41,18 @@ func SessionInitPostHandler(
 		// - Reject if session with dApp ID exists?
 		// - Ask user if they want new session with dApp with ID?
 
-		// Prompt user to approve wallet connection session
+		// Prompt user to approve dApp connect session
 		userResp, err := PromptUI(
 			dappInfo,
-			WCSessionInitUIPromptEventName,
-			WCSessionInitUIRespEventName,
+			DCSessionInitUIPromptEventName,
+			DCSessionInitUIRespEventName,
 			wailsApp,
 			echoInstance.Logger,
 		)
 		// Remove listener for UI response event when the server request ends,
 		// which is definitely after the UI response event data is received from
 		// the channel
-		defer wailsApp.OffEvent(WCSessionInitUIRespEventName)
+		defer wailsApp.OffEvent(DCSessionInitUIRespEventName)
 
 		// TODO: Handle error from prompting UI *after* setting up the removal of the UI response event listener
 
@@ -74,10 +74,10 @@ func SessionInitPostHandler(
 			}
 
 			// It's now safe to start creating a new connect session
-			dcSession := WalletConnectionSession{DAppID: dAppIdPk}
+			dcSession := DappConnectSession{DappId: dappIdPk}
 
 			// Create session key pair and add it into the connect session
-			if err := CreateWCSessionKeyPair(&dcSession, ecdhCurve); err != nil {
+			if err := CreateDCSessionKeyPair(&dcSession, ecdhCurve); err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
@@ -86,7 +86,7 @@ func SessionInitPostHandler(
 			}
 
 			// Store connect session data for use in other server requests later on
-			if err := StoreWCSessionData(&dcSession, ecdhCurve, echoInstance.Logger); err != nil {
+			if err := StoreDCSessionData(&dcSession, ecdhCurve, echoInstance.Logger); err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, ApiError{
 					Name:    "session_create_fail",
@@ -98,7 +98,7 @@ func SessionInitPostHandler(
 			return c.JSON(http.StatusOK, HawkCredentials{
 				Algorithm: "sha256",
 				// TODO: Create token (e.g. JWT) to use as ID (Maybe?)
-				ID: dappInfo.DAppID,
+				ID: dappInfo.DappId,
 				// The dApp will have to derive the real shared key, but it will
 				// need this session ID along with its private dApp key
 				Key: base64.StdEncoding.EncodeToString(dcSession.SessionID.Bytes()),

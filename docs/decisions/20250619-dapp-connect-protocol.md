@@ -13,7 +13,7 @@ For the user to be able to interact with a dApp using the desktop wallet, the dA
 
 - Includes the decision drivers for the [decision to use Hawk](20240821-use-hawk-for-dapp-connection-authentication-and-authorization.md)
 - **DApp connect session management:** The dApp connect protocol needs to be able to (1) establish a session between a dApp and the desktop wallet, (2) let dApps end their sessions, (3) let the server end any session, and (4) let the server receive and store information about connected dApps
-- **Known related threats:** [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server), [THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large), [THREAT-012](../threat-model/01-threats.md#threat-012-modifying-security-settings-in-configuration-files), [THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location), [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
+- **Known related threats:** [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server), [THREAT-010](../threat-model/01-threats.md#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large), [THREAT-012](../threat-model/01-threats.md#threat-012-modifying-security-settings-in-configuration-files), [THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location), [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
 - **User experience (UX):** Asking the user to enter their password too frequently degrades UX. Also, the user needs to be presented with relevant information for making an informed decision when approving a session and when ending a session.
 - **Session data stored in encrypted file(s):** DApp connect session data being stored in an encrypted file imposes some constraints that affect UX because the user's wallet password is needed to decrypt and access the session data. This problem is lessened by the fact that the wallet password is typically stored in memory while the wallet is unlocked and open.
 
@@ -49,7 +49,7 @@ This is the fourth attempt at designing the dApp connect protocol. In this itera
 
 #### Iteration 4 Session Establishment
 
-Like with the [second](#iteration-2-session-establishment) and [third](#iteration-3-session-establishment) iterations, establishing a session consists of initializing the session and then confirming it. However, confirming a session requires the dApp to display a "confirmation code" and the user to enter the code into the wallet's UI. This mitigates the threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that was not mitigated in the previous iterations.
+Like with the [second](#iteration-2-session-establishment) and [third](#iteration-3-session-establishment) iterations, establishing a session consists of initializing the session and then confirming it. However, confirming a session requires the dApp to display a "confirmation code" and the user to enter the code into the wallet's UI. This mitigates the threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server)) that was not mitigated in the previous iterations.
 
 There is no session token, unlike [Iteration 3](#iteration-3-session-establishment). Instead, there is a single-use "confirmation token". The confirmation token is used check the confirmation code entered by the user. This way, web tokens are [used in the way in which they are most suited](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/).
 
@@ -106,9 +106,9 @@ This dApp connect protocol is supposed to replace the wallet session protocol us
 
 #### Pros and Cons of Iteration 4
 
-- Pro: The requirement of a confirmation code when establishing a session mitigates threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server))
+- Pro: The requirement of a confirmation code when establishing a session mitigates threat of the Diffie-Hellman (DH) Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server))
 - Con: Like with [Iteration 2](#pros-and-cons-of-iteration-2), sessions cannot be very long and should not be very short. Finding the right session length will require some trial-and-error.
-- Con: Like with [Iteration 2](#pros-and-cons-of-iteration-2), the extra "ping" requests from dApps checking their session's validity can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).
+- Con: Like with [Iteration 2](#pros-and-cons-of-iteration-2), the extra "ping" requests from dApps checking their session's validity can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).
 - Con: More work for a dApp because it needs to provide a way to display the confirmation code to the user
 
 ### Iteration 3
@@ -184,9 +184,9 @@ Result: The expiration of the session has been extended and the dApp can continu
 #### Pros and Cons of Iteration 3
 
 - Pro: Allows for short sessions while not bothering the user asking them to approve a dApp connection frequently
-- Con: Shorter sessions can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)) when too many dApps are renewing their sessions too frequently. Finding the right session length is crucial.
+- Con: Shorter sessions can lead to a higher chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)) when too many dApps are renewing their sessions too frequently. Finding the right session length is crucial.
 - Con: When a session expires, the session cannot be renewed and the dApp must establish a new session, starting all over again. This makes the session renewal mechanism essentially useless and defeats the purpose of having this short-session/long-approval scheme. Attempting the [myriad of ways](http://cryto.net/~joepie91/blog/2016/06/19/stop-using-jwt-for-sessions-part-2-why-your-solution-doesnt-work/) of working around this issue leads to more issues or back to one of the same issues as before, which is why it is said that tokens are [not suited to be used for sessions](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/).
-- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp (client) requests and server responses by doing DH key exchanges with both of them.
+- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp (client) requests and server responses by doing DH key exchanges with both of them.
 
 ### Iteration 2
 
@@ -267,8 +267,8 @@ Same as [Iteration 1](#iteration-1-session-renewal).
 - Pro: The server does not have to be online for a dApp to be able to end the session
 - Pro: Mitigates [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id). A malicious actor cannot impersonate a dApp simply by using its dApp ID.
 - Con: Sessions cannot be very long (more than 2 weeks) because the shared key needs be changed frequently to reduce the damage in the case of the shared key being stolen. With short sessions, an attacker with a stolen key would be limited in how much damage they can cause. However, short sessions can ruin UX because the user has to enter their wallet password more frequently, which increases the likelihood of the user storing their password insecurely ([THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location)).
-- Con: The extra "ping" requests for a dApp to periodically check the session's validity are an extra burden on the server, which increases the chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).
-- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp requests and server responses by doing DH key exchanges with both the dApp and the server.
+- Con: The extra "ping" requests for a dApp to periodically check the session's validity are an extra burden on the server, which increases the chance of the server being overwhelmed ([THREAT-010](../threat-model/01-threats.md#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)).
+- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp requests and server responses by doing DH key exchanges with both the dApp and the server.
 
 ### Iteration 1
 
@@ -348,7 +348,7 @@ Result: The expiration of the session has been extended and the dApp can continu
 - Con: Vulnerable to [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id), where two or more dApps using the same dApp ID breaks the security of the protocol
 - Con: DApp cannot properly end session if server is offline
 - Con: DApp would still show user as connected to wallet (until session expiration passes) if session was terminated from wallet
-- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.
+- Con: Vulnerable to a Man-in-the-Middle (MitM) attack ([THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server)) that is [common to Diffie-Hellman (DH) protocols](https://asecuritysite.com/dh/diffie_crack) where a malicious actor generates two key pairs to intercept dApp requests and server responses by doing DH key exchanges with both of them.
 
 ## Links
 

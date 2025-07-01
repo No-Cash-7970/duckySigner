@@ -14,8 +14,8 @@ Not an exhaustive list of threats.
 - [THREAT-006: Exploitation of vulnerabilities exposed in publicly published source code](#threat-006-exploitation-of-vulnerabilities-exposed-in-publicly-published-source-code)
 - [THREAT-007: Guessing the wallet password](#threat-007-guessing-the-wallet-password)
 - [THREAT-008: Modification of data sent to hardware wallet](#threat-008-modification-of-data-sent-to-hardware-wallet)
-- [THREAT-009: Interception of HTTP communication between dApp and wallet connection server](#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server)
-- [THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large](#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)
+- [THREAT-009: Interception of HTTP communication between dApp and dApp connect server](#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server)
+- [THREAT-010: DApp connect server overwhelmed by too many requests or requests that are too large](#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)
 - [THREAT-011: Cracking encryption on wallet files offline](#threat-011-cracking-encryption-on-wallet-files-offline)
 - [THREAT-012: Modifying security settings in configuration files](#threat-012-modifying-security-settings-in-configuration-files)
 - [THREAT-013: Wallet password is written down and stored in insecure location](#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location)
@@ -166,10 +166,10 @@ Not an exhaustive list of threats.
 
 [Back to top ↑](#table-of-contents)
 
-## THREAT-009: Interception of HTTP communication between dApp and wallet connection server
+## THREAT-009: Interception of HTTP communication between dApp and dApp connect server
 
 - **Actor:** Malware
-- **Purpose:** To disable communication between dApp and wallet connection server, to extract sensitive or secret data (e.g. authentication keys), to modify the communication to change behavior of dApp or desktop wallet (a [man-in-the-middle (MitM) attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack))
+- **Purpose:** To disable communication between dApp and dApp connect server, to extract sensitive or secret data (e.g. authentication keys), to modify the communication to change behavior of dApp or desktop wallet (a [man-in-the-middle (MitM) attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack))
 - **Target:** Data within the HTTP communications
 - **Action:** Actor listens to HTTP communications and either (1) intercepts and halts these communications or (2) extracts useful data from the communications. In the case where a variant of a Diffie-Hellman (DH) key exchange protocol is used, the actor generates two key pairs and uses those key pairs to do DH exchanges with both the dApp and the server.
 - **Result of the action:** Actor can then use the extracted data (e.g. authentication key) to impersonate trusted dApp and get user to sign a dangerous transaction
@@ -183,12 +183,12 @@ Not an exhaustive list of threats.
 
 [Back to top ↑](#table-of-contents)
 
-## THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large
+## THREAT-010: DApp connect server overwhelmed by too many requests or requests that are too large
 
 - **Actor:** Malware, malicious or malfunctioning dApp
-- **Purpose:** To overwhelm the wallet connection server and cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk, malfunction (no purpose)
+- **Purpose:** To overwhelm the dApp connect server and cause it to go into an invalid state or disable it, to cause the desktop wallet to consume too much memory that paging/swapping is needed which can cause unencrypted secret data (e.g. private keys, authentication keys) to be written onto the disk, malfunction (no purpose)
 - **Target:** Functionality of the desktop wallet, secret data (e.g. private keys, authentication keys)
-- **Action:** The actor creates and sends a large number of HTTP requests or a few large request (e.g. 1 GB of data) to the wallet connection server
+- **Action:** The actor creates and sends a large number of HTTP requests or a few large request (e.g. 1 GB of data) to the dApp connect server
 - **Result of the action:** The desktop wallet is unable to communicate with legitimate dApps, and exposed secret data may be used to impersonate a trusted dApp or drain the user's accounts
 - **Occurrence likelihood**: Medium
 - **Impact:** High
@@ -196,10 +196,10 @@ Not an exhaustive list of threats.
 - **Potential mitigations:**
   1. Throttle the number of requests
   2. Set and enforce a maximum size for request header and request body
-  3. Allow wallet connection server to be disabled or switched off
+  3. Allow dApp connect server to be disabled or switched off
   4. Protect secret data temporarily stored in memory with a software enclave by using something the like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) in case a memory paging/swapping occurs
-  5. Allow the user to switch the wallet connection server off, even when the server is receiving requests
-  6. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
+  5. Allow the user to switch the dApp connect server off, even when the server is receiving requests
+  6. Allow the user to switch the dApp connect server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
   7. Have a maximum number of connections to dApps
 
 [Back to top ↑](#table-of-contents)
@@ -359,22 +359,22 @@ Not an exhaustive list of threats.
 
 ## THREAT-020: User overwhelmed by too many request prompts
 
-Similar to *[THREAT-010: Wallet connection server overwhelmed by too many requests or requests that are too large](#threat-010-wallet-connection-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)*, but with focus on the user instead of the wallet connection server.
+Similar to *[THREAT-010: DApp connect server overwhelmed by too many requests or requests that are too large](#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large)*, but with focus on the user instead of the dApp connect server.
 
 - **Actor:** Malware, malicious or malfunctioning dApp
 - **Purpose:** To harass the user, to make the wallet unusable for the user, malfunction (no purpose), dApp intentionally wants user to sign a large number of transactions
 - **Target:** User, functionality of the desktop wallet
-- **Action:** The actor creates and sends a large number of HTTP requests to the wallet connection server that are all supposed to trigger a prompt to the user (e.g. wallet session initialization prompt, sign transaction prompt). The wallet connection server forwards all of these requests to the UI. The UI displays a prompt for each of the received requests, which is more than what a human user can reasonably handle.
+- **Action:** The actor creates and sends a large number of HTTP requests to the dApp connect server that are all supposed to trigger a prompt to the user (e.g. wallet session initialization prompt, sign transaction prompt). The dApp connect server forwards all of these requests to the UI. The UI displays a prompt for each of the received requests, which is more than what a human user can reasonably handle.
 - **Result of the action:** The user is unable to use most of the desktop wallet functions because there are too many prompts in the way. This would typically result in the user being annoyed by the overwhelming number of prompts.
 - **Occurrence likelihood**: Medium
 - **Impact:** Medium
 - **Threat type:** Denial of service
 - **Potential mitigations:**
   1. Set and enforce a maximum number of outstanding prompts for the user
-  2. Allow the user to turn off the wallet connection server and not accept requests from dApps, even when there are outstanding prompts
+  2. Allow the user to turn off the dApp connect server and not accept requests from dApps, even when there are outstanding prompts
   3. Design the UI in a way that makes handling many prompts at the same time easier for the user
-  4. Allow the user to switch the wallet connection server off, even when they are receiving prompts
-  5. Allow the user to switch the wallet connection server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
+  4. Allow the user to switch the dApp connect server off, even when they are receiving prompts
+  5. Allow the user to switch the dApp connect server on for a limited period of time. This would limit the window of opportunity the actor has in doing this type of attack.
   6. Have a maximum number of connections to dApps
 
 [Back to top ↑](#table-of-contents)

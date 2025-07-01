@@ -17,20 +17,18 @@ const DefaultServerAddr string = ":1323"
 
 // The name for the event for triggering the UI to prompt the user to approve
 // the dApp connection session initialization request
-// TODO: Rename to DCSessionInitUIPromptEventName
-const WCSessionInitUIPromptEventName string = "session_init_prompt"
+const DCSessionInitUIPromptEventName string = "session_init_prompt"
 
 // The name for the event that the UI uses to forward the user's response to the
 // dApp connection session initialization request
-// TODO: Rename to DCSessionInitUIRespEventName
-const WCSessionInitUIRespEventName string = "session_init_response"
+const DCSessionInitUIRespEventName string = "session_init_response"
 
-// CreateWCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
+// CreateDCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
 // pair that is to be used for a connect session with a dApp. Sets the session
 // key pair (the key pair for the server) within the given dApp connect session
 // if successful.
 // TODO: Rename to GenerateDCSessionKeyPair
-func CreateWCSessionKeyPair(dcSession *WalletConnectionSession, curve ECDHCurve) error {
+func CreateDCSessionKeyPair(dcSession *DappConnectSession, curve ECDHCurve) error {
 	sk, err := curve.GenerateKey(rand.Reader)
 	if err != nil {
 		return err
@@ -42,12 +40,11 @@ func CreateWCSessionKeyPair(dcSession *WalletConnectionSession, curve ECDHCurve)
 	return nil
 }
 
-// ValidateDAppID validates the given Base64-encoded dApp ID according to the
+// ValidateDappID validates the given Base64-encoded dApp ID according to the
 // given curve (that is to be used for ECDH (Elliptic-curve Diffie–Hellman)).
 // Returns the dAppId as a ECDH public key if successful. Returns an error and
 // an API error message if unsuccessful.
-// TODO: Rename
-func ValidateDAppID(dAppID string, curve ECDHCurve) (dAppIdPk *ecdh.PublicKey, apiErr ApiError, err error) {
+func ValidateDappID(dAppID string, curve ECDHCurve) (dappIdPk *ecdh.PublicKey, apiErr ApiError, err error) {
 	// Check if given dApp ID is a valid Base64 string by attempting to decode it
 	dappIdBytes, err := base64.StdEncoding.DecodeString(dAppID)
 	if err != nil {
@@ -60,8 +57,7 @@ func ValidateDAppID(dAppID string, curve ECDHCurve) (dAppIdPk *ecdh.PublicKey, a
 
 	// Check if given dApp ID is a valid ECDH public key by attempting to
 	// convert it from a byte slice to a PublicKey
-	// TODO: Rename
-	dAppIdPk, err = curve.NewPublicKey(dappIdBytes)
+	dappIdPk, err = curve.NewPublicKey(dappIdBytes)
 	// dappId, err := curve.NewPublicKey(dappIdBytes)
 	if err != nil {
 		apiErr = ApiError{
@@ -146,9 +142,8 @@ func PromptUI(
 	return
 }
 
-// StoreWCSessionData stores the dApp connection data to a database file
-// TODO: Rename to StoreDCSessionData
-func StoreWCSessionData(dcSession *WalletConnectionSession, curve ECDHCurve, logger echo.Logger) (err error) {
+// StoreDCSessionData stores the dApp connection data to a database file
+func StoreDCSessionData(dcSession *DappConnectSession, curve ECDHCurve, logger echo.Logger) (err error) {
 	// Retrieve and decrypt session key from enclave
 	skBuf, err := dcSession.ServerKey.Open()
 	defer skBuf.Destroy()
@@ -156,11 +151,11 @@ func StoreWCSessionData(dcSession *WalletConnectionSession, curve ECDHCurve, log
 	sessionKey, err := curve.NewPrivateKey(skBuf.Bytes())
 
 	// Derive dApp connect shared key using session key and dApp ID
-	wcKey, err := sessionKey.ECDH(dcSession.DAppID)
-	dcSession.WalletConnectionKey = memguard.NewEnclave(wcKey)
+	dcKey, err := sessionKey.ECDH(dcSession.DappId)
+	dcSession.DappConnectSharedKey = memguard.NewEnclave(dcKey)
 
 	// TODO: Remove the logs below. It is only here to avoid Go's unused variable error
-	logger.Debug("Created wallet connection session for dApp with ID:", dcSession.DAppID)
+	logger.Debug("Created dApp connect session for dApp with ID:", dcSession.DappId)
 
 	// TODO: Store connection session data into an encrypted (or password protected?) db file
 	// TODO: Also store DApp info into the db file

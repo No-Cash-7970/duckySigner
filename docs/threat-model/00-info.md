@@ -32,7 +32,7 @@
   - [ENTRY-03: Configuration files](#entry-03-configuration-files)
   - [ENTRY-04: Database files](#entry-04-database-files)
   - [ENTRY-05: Memory](#entry-05-memory)
-  - [ENTRY-06: Wallet connection server API](#entry-06-wallet-connection-server-api)
+  - [ENTRY-06: DApp connect server API](#entry-06-dapp-connect-server-api)
   - [ENTRY-07: Algorand node API](#entry-07-algorand-node-api)
   - [ENTRY-08: Software dependency](#entry-08-software-dependency)
   - [ENTRY-09: Codebase contribution](#entry-09-codebase-contribution)
@@ -42,7 +42,7 @@
   - [EXIT-03: Configuration files](#exit-03-configuration-files)
   - [EXIT-04: Database files](#exit-04-database-files)
   - [EXIT-05: Memory](#exit-05-memory)
-  - [EXIT-06: Wallet connection server API](#exit-06-wallet-connection-server-api)
+  - [EXIT-06: DApp connect server API](#exit-06-dapp-connect-server-api)
   - [EXIT-07: Algorand node API](#exit-07-algorand-node-api)
   - [EXIT-08: External server connection](#exit-08-external-server-connection)
 - [Assets](#assets)
@@ -176,9 +176,9 @@ Like all software, the desktop wallet requires reading data stored temporarily i
 1. Authenticated wallet user
 2. Anonymous wallet user
 
-### ENTRY-06: Wallet connection server API
+### ENTRY-06: DApp connect server API
 
-The wallet connection server API is for allowing for other software, dApps in particular, to communicate with the desktop wallet. This communication would be through HTTP. It is possible for multiple applications to attempt to communicate with the desktop wallet at the same time.
+The dApp connect server API is for allowing for other software, dApps in particular, to communicate with the desktop wallet. This communication would be through HTTP. It is possible for multiple applications to attempt to communicate with the desktop wallet at the same time.
 
 **Trust Levels**:
 
@@ -275,9 +275,9 @@ Like all software, the desktop wallet requires writing data into memory. However
 2. DApp
 3. Anonymous wallet user
 
-### EXIT-06: Wallet connection server API
+### EXIT-06: DApp connect server API
 
-The wallet connection server API responds with data when requested by some entity. Typically, this entity should be a dApp approved by the user.
+The dApp connect server API responds with data when requested by some entity. Typically, this entity should be a dApp approved by the user.
 
 **Trust Levels**:
 

@@ -11,7 +11,7 @@ For the [dApp connection server](20240102-use-local-server-to-connect-to-dapps.m
 
 ## Decision Drivers
 
-- **Security:** The authentication/authorization solution should mitigate security threats [THREAT-001](../threat-model/01-threats.md#threat-001-impersonation-of-a-trustworthy-dapp-or-platform) and [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server).
+- **Security:** The authentication/authorization solution should mitigate security threats [THREAT-001](../threat-model/01-threats.md#threat-001-impersonation-of-a-trustworthy-dapp-or-platform) and [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server).
 - **Ability to be used for localhost:** Localhost does not behave exactly like a normal web server connection. One of the most notable differences is the efficacy of using SSL/TLS. Using SSL/TLS on localhost is largely useless.
 - **DApp developer experience:** DApps come in a variety of shapes and sizes, and not all of them may be web-based in a web browser. The goal is to maintain a satisfying developer experience for dApps of all kinds when using this desktop wallet. This means making the integration of the desktop wallet as simple and easy as possible for as many platforms as possible.
 - **Flexibility:** Allow for software other than a browser to connect to and use the wallet. Also allow for the dApp connection server to separated from local user's computer and placed into a global web server.
@@ -55,14 +55,14 @@ API key authentication is a simple method for authentication where the dApp is g
 OAuth 2.0 is one of the most common tools for authentication/authorization. It is the mechanism used to create the "Log in with XXX" methods that make it easier and safer for users to log in without entering a password.
 
 - Pro: A commonly used method for authentication and authorization, so there are plenty of tools and libraries that support OAuth 2.0
-- Pro: Provides dApps with more flexibility in storing wallet connection session data
+- Pro: Provides dApps with more flexibility in storing dApp connect session data
 - Pro: Support using "scopes" that would restrict what a connected dApp is allowed to ask for in the wallet
 - Con: Heavily relies on SSL/TLS for security, which is not ideal for a localhost connection
 - Con: Does not provide a straightforward scheme for authentication/authorization, so using a third-party authentication/authorization service is typically encouraged
 
 ### Cookie
 
-Using a cookie to store wallet connection session data. The data is stored on the server by the wallet and within the browser (in the form of a cookie) by the dApp.
+Using a cookie to store dApp connect session data. The data is stored on the server by the wallet and within the browser (in the form of a cookie) by the dApp.
 
 - Pro: A tried-and-true method that is sometimes considered more secure than "stateless" methods like OAuth 2.0 and API key.
 - Con: Browser only

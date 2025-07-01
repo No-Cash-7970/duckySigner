@@ -7,7 +7,7 @@
 
 ## Context and Problem Statement
 
-Which Go web framework should be used to create the local wallet connection server? The server should not receive a large number of requests and would need to be able to handle a connection that lasts for several minutes (while waiting for user to respond).
+Which Go web framework should be used to create the local dApp connect server? The server should not receive a large number of requests and would need to be able to handle a connection that lasts for several minutes (while waiting for user to respond).
 
 ## Decision Drivers
 
