@@ -11,24 +11,14 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    # Service containers to run with `runner-job`
-    services:
-      # Label used to access the service container
-      swagger-editor:
-        # Docker Hub image
-        image: swaggerapi/swagger-editor
-        ports:
-          # Maps port 8080 on service container to the host 80
-          - 80:8080
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Validate OpenAPI definition
-        uses: swaggerexpert/swagger-editor-validate@v1
+        uses: swaggerexpert/apidom-validate@v1
         with:
-          swagger-editor-url: http://localhost/
           definition-file: docs/dapp-connect-api/openapi.yml
-          default-timeout: 20000
+          fails-on: 2
       - name: Build Swagger UI
         uses: Legion2/swagger-ui-action@v1
         with:
