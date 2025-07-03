@@ -22,6 +22,7 @@ jobs:
       - name: Build Swagger UI
         uses: Legion2/swagger-ui-action@v1
         with:
+          version: '^5.0.0'
           output: swagger-ui
           spec-file: docs/dapp-connect-api/openapi.yml
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
