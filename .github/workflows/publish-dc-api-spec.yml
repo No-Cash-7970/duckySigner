@@ -1,0 +1,43 @@
+name: Publish DApp Connect API Specification
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - docs/dapp-connect-api/**
+      - .github/workflows/**
+permissions:
+  contents: write
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    # Service containers to run with `runner-job`
+    services:
+      # Label used to access the service container
+      swagger-editor:
+        # Docker Hub image
+        image: swaggerapi/swagger-editor
+        ports:
+          # Maps port 8080 on service container to the host 80
+          - 80:8080
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate OpenAPI definition
+        uses: swaggerexpert/swagger-editor-validate@v1
+        with:
+          swagger-editor-url: http://localhost/
+          definition-file: docs/dapp-connect-api/openapi.yml
+          default-timeout: 20000
+      - name: Build Swagger UI
+        uses: Legion2/swagger-ui-action@v1
+        with:
+          output: swagger-ui
+          spec-file: docs/dapp-connect-api/openapi.yml
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: swagger-ui
+          target-folder: dapp-connect-api
