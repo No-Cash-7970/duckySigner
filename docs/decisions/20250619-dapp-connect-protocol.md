@@ -11,7 +11,7 @@ For the user to be able to interact with a dApp using the desktop wallet, the dA
 
 ## Decision Drivers
 
-- Includes the decision drivers for the [decision to use Hawk](20240821-use-hawk-for-dapp-connection-authentication-and-authorization.md)
+- Includes the decision drivers for the [decision to use Hawk](20240821-use-hawk-for-dapp-connect-authentication-and-authorization.md)
 - **DApp connect session management:** The dApp connect protocol needs to be able to (1) establish a session between a dApp and the desktop wallet, (2) let dApps end their sessions, (3) let the server end any session, and (4) let the server receive and store information about connected dApps
 - **Known related threats:** [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server), [THREAT-010](../threat-model/01-threats.md#threat-010-dapp-connect-server-overwhelmed-by-too-many-requests-or-requests-that-are-too-large), [THREAT-012](../threat-model/01-threats.md#threat-012-modifying-security-settings-in-configuration-files), [THREAT-013](../threat-model/01-threats.md#threat-013-wallet-password-is-written-down-and-stored-in-insecure-location), [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id)
 - **User experience (UX):** Asking the user to enter their password too frequently degrades UX. Also, the user needs to be presented with relevant information for making an informed decision when approving a session and when ending a session.
@@ -19,7 +19,7 @@ For the user to be able to interact with a dApp using the desktop wallet, the dA
 
 ## Considered Options
 
-- Iteration 4: Mitigate [THREAT-009](./threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-wallet-connection-server) by requiring a "confirmation code", revert use of approvals and session tokens, remove session renewal
+- Iteration 4: Mitigate [THREAT-009](./threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server) by requiring a "confirmation code", revert use of approvals and session tokens, remove session renewal
 - Iteration 3: Authentication using short sessions with long "approval"
 - Iteration 2: Mitigate [THREAT-022](../threat-model/01-threats.md#threat-022-multiple-dapps-establishing-connect-sessions-with-the-same-dapp-id), allow session to end if server is offline, add session "ping"
 - Iteration 1: Simplest iteration
@@ -356,7 +356,7 @@ Result: The expiration of the session has been extended and the dApp can continu
 - Relates to [Vocabulary for DApp Connect](20250621-vocab-for-dapp-connect.md)
 - Relates to [Use \"DApp Connect\" Term for Wallet-DApp Connection](20250608-use-dapp-connect-term-for-wallet-dapp-connection.md)
 - Relates to [Use ECDH for Establishing session shared Secret Key](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
-- Relates to [Use Hawk for DApp Connection Authentication and Authorization](20240821-use-hawk-for-dapp-connection-authentication-and-authorization.md)
+- Relates to [Use Hawk for DApp Connect Authentication and Authorization](20240821-use-hawk-for-dapp-connect-authentication-and-authorization.md)
 - Relates to [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps.md)
 - [List of threats for this project](../threat-model/01-threats.md)
 - [Hawk API](https://github.com/mozilla/hawk/blob/main/API.md)

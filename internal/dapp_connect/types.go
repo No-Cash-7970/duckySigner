@@ -56,11 +56,11 @@ type DappConnectSession struct {
 	// change every time the dApp attempts to initialize a new connection
 	// session.
 	DappId *ecdh.PublicKey
-	// ECDH public key that is unique to the connection server. Every connection
-	// session has a unique session ID.
+	// ECDH public key that is unique to the connect server. Every session has
+	// a unique session ID.
 	SessionID *ecdh.PublicKey
-	// ECDH private key used to derive the dApp connection shared key. This key
-	// is secret and should be known only by the connection server.
+	// ECDH private key used to derive the dApp connect shared key. This key
+	// is secret and should be known only by the connect server.
 	// TODO: Rename to SessionKey
 	ServerKey *memguard.Enclave
 	// ECDH derived shared key used to verify dApp authentication. The dApp also

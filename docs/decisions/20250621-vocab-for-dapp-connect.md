@@ -57,5 +57,5 @@ Chose to establish the following terms for the parts of DApp Connect:
 - Relates to [Use \"DApp\" in Prose and \"Dapp\" in Code](20250608-use-dapp-in-prose-and-dapp-in-code.md)
 - Relates to [DApp Connect Protocol](20250619-dapp-connect-protocol.md)
 - Relates to [Use ECDH for Establishing DApp Connect Shared Secret Key](20250611-use-ecdh-for-establishing-dapp-connect-shared-key.md)
-- Relates to [Use Hawk for DApp Connection Authentication and Authorization](20240821-use-hawk-for-dapp-connection-authentication-and-authorization.md)
+- Relates to [Use Hawk for DApp Connect Authentication and Authorization](20240821-use-hawk-for-dapp-connect-authentication-and-authorization.md)
 - Relates to [Use Local Server to Connect to DApps](20240102-use-local-server-to-connect-to-dapps.md)

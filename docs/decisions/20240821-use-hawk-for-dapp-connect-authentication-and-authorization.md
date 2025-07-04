@@ -1,20 +1,20 @@
-# Use Hawk for DApp Connection Authentication and Authorization
+# Use Hawk for DApp Connect Authentication and Authorization
 
 - Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2024-09-30
-- Tags: wallet-connection, security, backend
+- Tags: dapp-connect, security, backend
 
 ## Context and Problem Statement
 
-For the [dApp connection server](20240102-use-local-server-to-connect-to-dapps.md), which authentication or authorization scheme should be used?
+For the [dApp connect server](20240102-use-local-server-to-connect-to-dapps.md), which authentication or authorization scheme should be used?
 
 ## Decision Drivers
 
 - **Security:** The authentication/authorization solution should mitigate security threats [THREAT-001](../threat-model/01-threats.md#threat-001-impersonation-of-a-trustworthy-dapp-or-platform) and [THREAT-009](../threat-model/01-threats.md#threat-009-interception-of-http-communication-between-dapp-and-dapp-connect-server).
 - **Ability to be used for localhost:** Localhost does not behave exactly like a normal web server connection. One of the most notable differences is the efficacy of using SSL/TLS. Using SSL/TLS on localhost is largely useless.
 - **DApp developer experience:** DApps come in a variety of shapes and sizes, and not all of them may be web-based in a web browser. The goal is to maintain a satisfying developer experience for dApps of all kinds when using this desktop wallet. This means making the integration of the desktop wallet as simple and easy as possible for as many platforms as possible.
-- **Flexibility:** Allow for software other than a browser to connect to and use the wallet. Also allow for the dApp connection server to separated from local user's computer and placed into a global web server.
+- **Flexibility:** Allow for software other than a browser to connect to and use the wallet. Also allow for the dApp connect server to separated from local user's computer and placed into a global web server.
 
 ## Considered Options
 
@@ -69,7 +69,7 @@ Using a cookie to store dApp connect session data. The data is stored on the ser
 
 ### Nothing
 
-No authentication or authorization scheme is used. The connection between the dApp and the dApp connection server is completely unsecured.
+No authentication or authorization scheme is used. The connection between the dApp and the dApp connect server is completely unsecured.
 
 - Pro: Extremely easy to implement and maintain
 - Con: Provides no reliable way of restricting dApps in any way (e.g. permissions, length of time allowed to connect to wallet)

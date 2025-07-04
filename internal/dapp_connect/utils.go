@@ -11,16 +11,16 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// The default address for the dApp connection server
+// The default address for the dApp connect server
 // Default: localhost:1323
 const DefaultServerAddr string = ":1323"
 
 // The name for the event for triggering the UI to prompt the user to approve
-// the dApp connection session initialization request
+// the dApp connect session initialization request
 const DCSessionInitUIPromptEventName string = "session_init_prompt"
 
 // The name for the event that the UI uses to forward the user's response to the
-// dApp connection session initialization request
+// dApp connect session initialization request
 const DCSessionInitUIRespEventName string = "session_init_response"
 
 // CreateDCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
@@ -110,7 +110,7 @@ func PromptUI(
 ) (uiResp chan []string, err error) {
 	// Check if Wails app is properly initialized
 	if wailsApp == nil {
-		err = errors.New("Missing Wails app instance. The dApp connection service was improperly initialized.")
+		err = errors.New("Missing Wails app instance. The dApp connect service was improperly initialized.")
 		return
 	}
 
@@ -142,7 +142,7 @@ func PromptUI(
 	return
 }
 
-// StoreDCSessionData stores the dApp connection data to a database file
+// StoreDCSessionData stores the dApp connect data to a database file
 func StoreDCSessionData(dcSession *DappConnectSession, curve ECDHCurve, logger echo.Logger) (err error) {
 	// Retrieve and decrypt session key from enclave
 	skBuf, err := dcSession.ServerKey.Open()
@@ -157,7 +157,7 @@ func StoreDCSessionData(dcSession *DappConnectSession, curve ECDHCurve, logger e
 	// TODO: Remove the logs below. It is only here to avoid Go's unused variable error
 	logger.Debug("Created dApp connect session for dApp with ID:", dcSession.DappId)
 
-	// TODO: Store connection session data into an encrypted (or password protected?) db file
+	// TODO: Store session data into an encrypted (or password protected?) db file
 	// TODO: Also store DApp info into the db file
 
 	return

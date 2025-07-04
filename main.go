@@ -50,12 +50,12 @@ func main() {
 	// main function
 	defer kmdService.CleanUp()
 
-	// Create dApp connection service
+	// Create dApp connect service
 	dcService := &services.DappConnectService{
 		HideServerBanner:    true,
 		UserResponseTimeout: 5 * time.Minute,
 	}
-	// Clean up dApp connection service when application terminates and we're
+	// Clean up dApp connect service when application terminates and we're
 	// returning from this main function
 	defer dcService.CleanUp()
 

@@ -32,7 +32,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		go func() {
 			defer GinkgoRecover()
 
-			By("Making a request to connection server with valid dApp data")
+			By("Making a request to server with valid dApp data")
 			resp, err := http.Post(
 				"http://localhost:"+sessionInitPostPort+"/session/init",
 				"application/json",
@@ -40,7 +40,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Processing response from connection server")
+			By("Processing response from server")
 			body, err := getResponseBody(resp)
 			Expect(err).NotTo(HaveOccurred())
 			// Signal that request has completed
@@ -67,7 +67,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		// Wait for request to complete before trying to parse & check the response
 		respBody := <-respSignal
 
-		By("Checking if connection server responds with new set of Hawk credentials")
+		By("Checking if server responds with new set of Hawk credentials")
 		expectedResp, _ := json.Marshal(HawkCredentials{
 			Algorithm: "sha256",
 			ID:        dAppId,
@@ -113,7 +113,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		// Wait for request to complete before trying to check the response
 		respBody := <-respSignal
 
-		By("Checking if connection server responds with error")
+		By("Checking if server responds with error")
 		expected, _ := json.Marshal(ApiError{
 			Name:    "invalid_dapp_id_b64",
 			Message: "DApp ID is not a valid Base64 string",
@@ -128,7 +128,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		go func() {
 			defer GinkgoRecover()
 
-			By("Making a request to connection server with a dApp ID that is not valid ECDH public key")
+			By("Making a request to server with a dApp ID that is not valid ECDH public key")
 			resp, err := http.Post(
 				"http://localhost:"+sessionInitPostPort+"/session/init",
 				"application/json",
@@ -136,7 +136,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Processing response from connection server")
+			By("Processing response from server")
 			body, err := getResponseBody(resp)
 			Expect(err).NotTo(HaveOccurred())
 			// Signal that request has completed
@@ -156,7 +156,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		// Wait for request to complete before trying to check the response
 		respBody := <-respSignal
 
-		By("Checking if connection server responds with error")
+		By("Checking if server responds with error")
 		expected, _ := json.Marshal(ApiError{
 			Name:    "invalid_dapp_id_pk",
 			Message: "DApp ID is invalid",
@@ -177,7 +177,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		go func() {
 			defer GinkgoRecover()
 
-			By("Making a request to connection server with valid dApp data")
+			By("Making a request to server with valid dApp data")
 			resp, err := http.Post(
 				"http://localhost:"+sessionInitPostPort+"/session/init",
 				"application/json",
@@ -185,7 +185,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Processing response from connection server")
+			By("Processing response from server")
 			body, err := getResponseBody(resp)
 			Expect(err).NotTo(HaveOccurred())
 			// Signal that request has completed
@@ -211,7 +211,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		// Wait for request to complete before trying to check the response
 		respBody := <-respSignal
 
-		By("Checking if connection server responds with error")
+		By("Checking if server responds with error")
 		expected, _ := json.Marshal(ApiError{
 			Name:    "session_no_response",
 			Message: "User did not respond",
@@ -226,7 +226,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		go func() {
 			defer GinkgoRecover()
 
-			By("Making a request to connection server with valid dApp data")
+			By("Making a request to server with valid dApp data")
 			resp, err := http.Post(
 				"http://localhost:"+sessionInitPostPort+"/session/init",
 				"application/json",
@@ -234,7 +234,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Processing response from connection server")
+			By("Processing response from server")
 			body, err := getResponseBody(resp)
 			Expect(err).NotTo(HaveOccurred())
 			// Signal that request has completed
@@ -261,7 +261,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		// Wait for request to complete before trying to check the response
 		respBody := <-respSignal
 
-		By("Checking if connection server responds with error")
+		By("Checking if server responds with error")
 		expected, _ := json.Marshal(ApiError{
 			Name:    "session_rejected",
 			Message: "Session was rejected",

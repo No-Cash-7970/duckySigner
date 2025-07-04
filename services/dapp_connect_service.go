@@ -19,7 +19,7 @@ import (
 )
 
 // DappConnectService as a Wails binding allows for a Wails frontend to interact
-// with and manage the dApp connection server
+// with and manage the dApp connect server
 type DappConnectService struct {
 	// The address the server should serve at. When only the port is given
 	// (e.g. ":1323"), the server will be served at localhost.
@@ -43,7 +43,7 @@ type DappConnectService struct {
 	// approving a session)
 	UserResponseTimeout time.Duration
 	// Instance of the an ECDH curve to be used for generating the wallet
-	// connection session key pair. Typically used to set a mock curve when
+	// session key pair. Typically used to set a mock curve when
 	// testing.
 	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
 	ECDHCurve ECDHCurve

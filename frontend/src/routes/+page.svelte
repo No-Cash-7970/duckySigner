@@ -22,9 +22,9 @@
   <a class="btn btn-secondary mb-2" href="/wallets/import">Import wallet</a>
   <a class="btn btn-primary mb-2" href="/wallets/create">Create wallet</a>
   {#if dappConnectOn}
-    <button class="btn" on:click={stopServer}>⏹️ Turn off dApp connection server</button>
+    <button class="btn" on:click={stopServer}>⏹️ Turn off dApp connect server</button>
   {:else}
-    <button class="btn" on:click={startServer}>▶️ Turn on dApp connection server</button>
+    <button class="btn" on:click={startServer}>▶️ Turn on dApp connect server</button>
   {/if}
 
   {#await walletsList then wallets}
