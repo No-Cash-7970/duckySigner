@@ -335,8 +335,9 @@ Not an exhaustive list of threats.
 - **Threat type:** Tampering, information disclosure
 - **Potential mitigations:**
   1. Review the changes of every dependency when upgrading
-  2. Refrain from using software dependencies as much as reasonably possible
-  3. Use a vulnerability scanner that scans for compromised software dependencies
+  2. [Vendor](https://stackoverflow.com/questions/26217488/what-is-vendoring) the dependencies, where all dependencies are downloaded into the project folder and committed into the project's Git repository. This allows for a trusted version of each dependency to always be available.
+  3. Refrain from using software dependencies as much as reasonably possible
+  4. Use a vulnerability scanner that scans for compromised software dependencies
 
 [Back to top ↑](#table-of-contents)
 
