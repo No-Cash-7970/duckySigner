@@ -1,6 +1,6 @@
 # Use SQLite Database to Store Keys
 
-- Status: accepted
+- Status: superseded by [20250716-use-duckdb-and-parquet-files-for-data-storage](20250716-use-duckdb-and-parquet-files-for-data-storage.md)
 - Deciders: No-Cash-7970
 - Date: 2024-01-04
 - Tags: backend, kmd
@@ -23,6 +23,7 @@ Chose SQLite because it is a portable option that is easy to use and can be secu
 
 ## Links
 
+- Superseded by [Use DuckDB & Parquet Files for Data Storage](20250716-use-duckdb-and-parquet-files-for-data-storage.md)
 - Relates to [Build Algorand Desktop Wallet From Scratch](20231231-build-algorand-desktop-wallet-from-scratch.md)
 - [KMD code](https://github.com/algorand/go-algorand/tree/eceed7c0d3df0f412ede27c1aa2b68e0fa21ccab/daemon/kmd)
 - [KMD code for managing keys with SQLite](https://github.com/algorand/go-algorand/blob/master/daemon/kmd/wallet/driver/sqlite.go)
