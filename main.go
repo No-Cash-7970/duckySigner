@@ -87,7 +87,7 @@ func main() {
 	// 'Mac' options tailor the window when running on macOS.
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
-	app.NewWebviewWindowWithOptions(application.WebviewWindowOptions{
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title: "Ducky Signer",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
@@ -106,12 +106,12 @@ func main() {
 	go func() {
 		for {
 			now := time.Now().Format(time.RFC1123)
-			app.EmitEvent("time", now)
+			app.Event.Emit("time", now)
 			time.Sleep(time.Second)
 		}
 	}()
 
-	app.OnEvent("saveFile", func(e *application.CustomEvent) {
+	app.Event.On("saveFile", func(e *application.CustomEvent) {
 		dataBytes, _ := base64.StdEncoding.DecodeString(e.Data.(string))
 		fileLoc, _ := application.SaveFileDialog().
 			AddFilter("Algorand Transaction", "*.txn.msgpack").

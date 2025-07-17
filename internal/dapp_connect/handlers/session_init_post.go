@@ -52,7 +52,7 @@ func SessionInitPostHandler(
 		// Remove listener for UI response event when the server request ends,
 		// which is definitely after the UI response event data is received from
 		// the channel
-		defer wailsApp.OffEvent(DCSessionInitUIRespEventName)
+		defer wailsApp.Event.Off(DCSessionInitUIRespEventName)
 
 		// TODO: Handle error from prompting UI *after* setting up the removal of the UI response event listener
 

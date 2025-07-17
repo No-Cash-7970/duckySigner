@@ -119,7 +119,7 @@ func PromptUI(
 
 	// Set up listener for event that will contain UI's response
 	logger.Debug("Listening for", respEvent, "event from UI")
-	wailsApp.OnEvent(respEvent, func(e *application.CustomEvent) {
+	wailsApp.Event.On(respEvent, func(e *application.CustomEvent) {
 		logger.Debug("Event from UI:", respEvent, "\nEvent data:", e.Data)
 		// NOTE: For some reason, the actual event data is always within a slice
 		uiResp <- e.Data.([]interface{})[0].([]string)
@@ -137,7 +137,7 @@ func PromptUI(
 	// response. The server misses the UI's only response, which can be a
 	// problem when unit testing.
 	logger.Debug("Emitted", promptEvent, "event to UI")
-	wailsApp.EmitEvent(promptEvent, dappInfo)
+	wailsApp.Event.Emit(promptEvent, dappInfo)
 
 	return
 }

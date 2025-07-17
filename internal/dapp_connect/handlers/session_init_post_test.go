@@ -49,7 +49,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		}()
 
 		// Mock UI/user response to prompt event emitted from server
-		dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+		dcService.WailsApp.Event.On("session_init_prompt", func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 
 			By("UI: Prompting user to approve session connection")
@@ -58,10 +58,10 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_id":"` + dAppId + `"}]`))
 
 			By("Wallet user: Approving session connection")
-			dcService.WailsApp.EmitEvent("session_init_response", []string{"account 1", "account 2"})
+			dcService.WailsApp.Event.Emit("session_init_response", []string{"account 1", "account 2"})
 		})
 		DeferCleanup(func() {
-			dcService.WailsApp.OffEvent("session_init_prompt")
+			dcService.WailsApp.Event.Off("session_init_prompt")
 		})
 
 		// Wait for request to complete before trying to parse & check the response
@@ -102,12 +102,12 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		}()
 
 		// Mock UI/user response to prompt event emitted from server
-		dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+		dcService.WailsApp.Event.On("session_init_prompt", func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			Fail("Connection server should not have emitted event for prompting UI/user")
 		})
 		DeferCleanup(func() {
-			dcService.WailsApp.OffEvent("session_init_prompt")
+			dcService.WailsApp.Event.Off("session_init_prompt")
 		})
 
 		// Wait for request to complete before trying to check the response
@@ -145,12 +145,12 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		}()
 
 		// Mock UI/user response to prompt event emitted from server
-		dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+		dcService.WailsApp.Event.On("session_init_prompt", func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			Fail("Connection server should not have emitted event for prompting UI/user")
 		})
 		DeferCleanup(func() {
-			dcService.WailsApp.OffEvent("session_init_prompt")
+			dcService.WailsApp.Event.Off("session_init_prompt")
 		})
 
 		// Wait for request to complete before trying to check the response
@@ -194,7 +194,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		}()
 
 		// Mock UI/user response to prompt event emitted from server
-		dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+		dcService.WailsApp.Event.On("session_init_prompt", func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 
 			By("UI: Prompting user to approve session connection")
@@ -205,7 +205,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			By("Wallet user: Not responding...")
 		})
 		DeferCleanup(func() {
-			dcService.WailsApp.OffEvent("session_init_prompt")
+			dcService.WailsApp.Event.Off("session_init_prompt")
 		})
 
 		// Wait for request to complete before trying to check the response
@@ -243,7 +243,7 @@ var _ = Describe("POST /session/init", Ordered, func() {
 		}()
 
 		// Mock UI/user response to prompt event emitted from server
-		dcService.WailsApp.OnEvent("session_init_prompt", func(e *application.CustomEvent) {
+		dcService.WailsApp.Event.On("session_init_prompt", func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 
 			By("UI: Prompting user to approve session connection")
@@ -252,10 +252,10 @@ var _ = Describe("POST /session/init", Ordered, func() {
 			Expect(string(eventData)).To(Equal(`[{"name":"foo","dapp_id":"` + dAppId + `"}]`))
 
 			By("Wallet user: Rejecting session connection")
-			dcService.WailsApp.EmitEvent("session_init_response", []string{})
+			dcService.WailsApp.Event.Emit("session_init_response", []string{})
 		})
 		DeferCleanup(func() {
-			dcService.WailsApp.OffEvent("session_init_prompt")
+			dcService.WailsApp.Event.Off("session_init_prompt")
 		})
 
 		// Wait for request to complete before trying to check the response
