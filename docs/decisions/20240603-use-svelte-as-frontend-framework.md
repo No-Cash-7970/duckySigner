@@ -24,7 +24,9 @@ A JavaScript/TypeScript framework is typically used to make building a user inte
 
 Chose Svelte after trying Next.js and Svelte. Despite the developer's familiarity with Next.js, it did not work well with Wails and is simply not the right tool for the job when it comes to this project. Fortunately, Svelte is fairly easy to learn. It is one of the most recommended JavaScript/TypeScript frameworks in the Wails community.
 
-**Confidence:** Medium. The developer for this project (No-Cash-7970) has never used Svelte for a sizable project before. However, there are many in the Wails community who have claimed to have used Svelte and have gotten desirable results.
+**Confidence:** (2025-07-16) High. Using Svelte 4 has yielded desirable results. Unit testing the fronted with Svelte has also worked well. There are no plans to upgrade to Svelte 5, which is supposed to have a number of improvements over Svelte 4.
+
+~~**Confidence:** Medium. The developer for this project (No-Cash-7970) has never used Svelte for a sizable project before. However, there are many in the Wails community who have claimed to have used Svelte and have gotten desirable results.~~
 
 ## Pros and Cons of the Options
 

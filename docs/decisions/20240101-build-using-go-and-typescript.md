@@ -29,7 +29,9 @@ Which programming language(s) should be used to implement the Algorand wallet fo
 
 Chose to use Go with TypeScript/JavaScript. Go is an easy-to-learn language that can be easily compiled for the multiple operating systems. With [Wails](https://wails.io/), the flexibility of JavaScript and TypeScript can be utilized to build a user interface (UI) for a backend built in Go.
 
-**Confidence**: Medium. It is not clear if the Go and TypeScript/JavaScript combination will allow for the desired results.
+**Confidence**: (2025-07-16) High. Using TypeScript/JavaScript for the frontend and Go for the backend has proved to be a good combination that yields good results.
+
+~~**Confidence**: Medium. It is not clear if the Go and TypeScript/JavaScript combination will allow for the desired results.~~
 
 ## Pros and Cons of the Options
 

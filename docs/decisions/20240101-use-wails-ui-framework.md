@@ -31,7 +31,9 @@ What framework(s) should be used to build the desktop wallet app's graphical use
 
 Chose Wails because it utilizes Go's performance and cross-platform ability while also utilizing the flexibility of TypeScript/JavaScript and its availability of a massive number of libraries and tools. Despite the less-than-stellar documentation, the community in the Wails Discord server should be able to assist with issues that may arise. In addition to Wails, Next.js will be used as the TypeScript/JavaScript because the developer is familiar with the framework.
 
-**Confidence**: Medium. It is not clear if using Wails will help produce the desired results within a reasonable amount of time.
+**Confidence**: (2025-07-16) High. Using Wails v3-alpha has produced the desired results and has surpassed expectations so far.
+
+~~**Confidence**: Medium. It is not clear if using Wails will help produce the desired results within a reasonable amount of time.~~
 
 ## Pros and Cons of the Options
 

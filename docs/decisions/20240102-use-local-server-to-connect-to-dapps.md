@@ -29,7 +29,9 @@ The Algorand desktop wallet needs a way to interact with DApps (**D**ecentralize
 
 Chose to use a local server REST API because it should not consume much of the user's computing resources while providing a stable and private connection to DApps. Additional well-known protection and security measures, such as SSL/TLS, _may_ be used.
 
-**Confidence**: Low. A local server may not be able to be secure enough. May also be an issue for users with machines that have a strict firewall.
+**Confidence**: (2025-07-16) Medium. A local server seems to be secure enough if the right protections are put in place. As for issues concerning strict firewall, there are no know issues yet.
+
+~~**Confidence**: Low. A local server may not be able to be secure enough. May also be an issue for users with machines that have a strict firewall.~~
 
 ## Pros and Cons of the Options
 

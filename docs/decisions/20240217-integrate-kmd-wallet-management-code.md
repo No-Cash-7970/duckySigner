@@ -20,7 +20,9 @@ Properly managing keys is difficult, tricky, and requires a significant amount c
 
 Chose to integrate the key management parts of Key Management Daemon (KMD) without the session management parts after reviewing the KMD code in the [go-algorand GitHub repository](https://github.com/algorand/go-algorand). KMD's key management code should need very little modification, while the session management code is insufficient for a desktop wallet for end-users in a nondevelopment environment.
 
-**Confidence**: Medium. Because Go will be use to build the desktop wallet, integrating KMD code should be as easy as importing the KMD's Go packages. However, complications caused by importing KMD in parts are possible.
+**Confidence**: (2025-07-16) High. KMD has integrated smoothly into the project code base after modifying it. It looks like it is possible to expand KMD and implement features like supporting multiple accounts from a Ledger device.
+
+~~**Confidence**: Medium. Because Go will be use to build the desktop wallet, integrating KMD code should be as easy as importing the KMD's Go packages. However, complications caused by importing KMD in parts are possible.~~
 
 ### Positive Consequences
 
