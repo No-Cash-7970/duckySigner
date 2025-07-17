@@ -1,4 +1,4 @@
-package dappconnect
+package dapp_connect
 
 import (
 	"crypto/ecdh"

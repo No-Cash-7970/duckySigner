@@ -1,9 +1,6 @@
 package services
 
 import (
-	"duckysigner/kmd/config"
-	"duckysigner/kmd/wallet"
-	"duckysigner/kmd/wallet/driver"
 	"sync"
 	"time"
 
@@ -11,6 +8,11 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/awnumar/memguard"
 	logging "github.com/sirupsen/logrus"
+
+	. "duckysigner/internal/wallet_session"
+	"duckysigner/kmd/config"
+	"duckysigner/kmd/wallet"
+	"duckysigner/kmd/wallet/driver"
 )
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
@@ -52,10 +54,12 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 
 	service.sessionMutex.Lock()
 	service.session = &WalletSession{
-		wallet:     &fetchedWallet,
-		password:   memguard.NewEnclave([]byte(password)),
-		expiration: time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second),
+		Wallet:   &fetchedWallet,
+		Password: memguard.NewEnclave([]byte(password)),
 	}
+	service.session.SetExpiration(
+		time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second),
+	)
 	service.sessionMutex.Unlock()
 
 	return
@@ -104,7 +108,9 @@ func (service *KMDService) RenewSession() error {
 		return err
 	}
 
-	service.session.expiration = time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second)
+	service.session.SetExpiration(
+		time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second),
+	)
 
 	return nil
 }

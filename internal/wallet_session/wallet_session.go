@@ -1,4 +1,4 @@
-package services
+package wallet_session
 
 import (
 	"crypto/ed25519"
@@ -15,10 +15,10 @@ import (
 
 // WalletSession contains data about a session for an open wallet
 type WalletSession struct {
-	// The open and active wallet for this session
-	wallet *wallet.Wallet
-	// The wallet's password (securely stored in a memory enclave)
-	password *memguard.Enclave
+	// The open and active Wallet for this session
+	Wallet *wallet.Wallet
+	// The wallet's Password (securely stored in a memory enclave)
+	Password *memguard.Enclave
 	// The date-time when this wallet session expires
 	expiration time.Time
 }
@@ -37,13 +37,18 @@ func (session *WalletSession) Expiration() time.Time {
 	return session.expiration
 }
 
+// SetExpiration sets the date-time when the session expires
+func (session *WalletSession) SetExpiration(exp time.Time) {
+	session.expiration = exp
+}
+
 // GetWalletInfo returns the information of the session wallet
 func (session *WalletSession) GetWalletInfo() (wallet.Metadata, error) {
 	if err := session.Check(); err != nil {
 		return wallet.Metadata{}, err
 	}
 
-	return (*session.wallet).Metadata()
+	return (*session.Wallet).Metadata()
 }
 
 // ExportWallet exports the session wallet by returning its 25-word mnemonic.
@@ -53,7 +58,7 @@ func (session *WalletSession) ExportWallet(password string) (string, error) {
 		return "", err
 	}
 
-	mdk, err := (*session.wallet).ExportMasterDerivationKey([]byte(password))
+	mdk, err := (*session.Wallet).ExportMasterDerivationKey([]byte(password))
 	if err != nil {
 		return "", err
 	}
@@ -68,7 +73,7 @@ func (session *WalletSession) ListAccounts() (acctAddrs []string, err error) {
 	}
 
 	// Get the public keys of accounts stored in wallet
-	pks, err := (*session.wallet).ListKeys()
+	pks, err := (*session.Wallet).ListKeys()
 
 	// Convert the list of public keys to a list of addresses
 	for _, pk := range pks {
@@ -86,7 +91,7 @@ func (session *WalletSession) GenerateAccount() (string, error) {
 	}
 
 	// Generate new public key using wallet MDK
-	pk, err := (*session.wallet).GenerateKey(false)
+	pk, err := (*session.Wallet).GenerateKey(false)
 	if err != nil {
 		return "", err
 	}
@@ -109,7 +114,7 @@ func (session *WalletSession) ImportAccount(acctMnemonic string) (string, error)
 	}
 
 	// Import key into wallet
-	pk, err := (*session.wallet).ImportKey(sk)
+	pk, err := (*session.Wallet).ImportKey(sk)
 	if err != nil {
 		return "", err
 	}
@@ -131,7 +136,7 @@ func (session *WalletSession) ExportAccount(acctAddr, password string) (string, 
 		return "", err
 	}
 
-	sk, err := (*session.wallet).ExportKey(types.Digest(decodedAcctAddr), []byte(password))
+	sk, err := (*session.Wallet).ExportKey(types.Digest(decodedAcctAddr), []byte(password))
 	if err != nil {
 		return "", err
 	}
@@ -150,10 +155,10 @@ func (session *WalletSession) RemoveAccount(acctAddr string) (err error) {
 	decodedAcctAddr, err := types.DecodeAddress(acctAddr)
 
 	// Retrieve password from memory enclave
-	pwBuf, err := session.password.Open()
+	pwBuf, err := session.Password.Open()
 	defer pwBuf.Destroy()
 
-	return (*session.wallet).DeleteKey(types.Digest(decodedAcctAddr), pwBuf.Bytes())
+	return (*session.Wallet).DeleteKey(types.Digest(decodedAcctAddr), pwBuf.Bytes())
 }
 
 // SignTransaction signs the given Base64-encoded transaction. If specified, the
@@ -191,13 +196,13 @@ func (session *WalletSession) SignTransaction(txB64, acctAddr string) (stxB64 st
 	}
 
 	// Retrieve password from memory enclave
-	pwBuf, err := session.password.Open()
+	pwBuf, err := session.Password.Open()
 	if err != nil {
 		return
 	}
 	defer pwBuf.Destroy()
 
-	stxBytes, err := (*session.wallet).SignTransaction(tx, acctPk, pwBuf.Bytes())
+	stxBytes, err := (*session.Wallet).SignTransaction(tx, acctPk, pwBuf.Bytes())
 	if err != nil {
 		return
 	}
