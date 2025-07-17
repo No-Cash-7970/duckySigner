@@ -5,12 +5,15 @@ workspace {
         wallet = softwareSystem "Ducky Signer" "Algorand wallet software for desktop computers" {
             walletUI = container "User Interface"
             connectServer = container "DApp Connect Server" "Allows dApp to connect to the wallet"
+            kmd = container "Key Management Daemon (KMD)" "Manages the private keys for the user's Algorand accounts"
             acctKeyStore = container "Account Key Store" "Encrypted storage of the private keys for the user's Algorand accounts" {
                 tags Database
             }
-            sessionStore = container "Connect Session Store" "Storage for connect session key pairs and data" {
+            sessionManager = container "Session Manager" "Manages the dApp connect sessions & the session store"
+            sessionStore = container "DApp Connect Session Store" "Storage for connect session key pairs and data" {
                 tags Database
             }
+            settingsManager = container "Settings Manager" "Manages the user's wallet settings & the settings store"
             settingsStore = container "Settings Store" "Storage for the user's wallet settings" {
                 tags Database
             }
@@ -61,13 +64,23 @@ workspace {
         walletUI -> connectServer "Send user response to" "Event"
         connectServer -> walletUI "Request action from user through" "Event"
 
-        walletUI -> acctKeyStore "Temporarily retrieves key from" "With password from user"
-        walletUI -> settingsStore "Stores & retrieves user preferences from" "With password from user"
-        walletUI -> ledgerDevice "Sends signing request to"
+        walletUI -> kmd "Manages user's Algorand accounts using"
+        kmd -> connectServer "Provides data about user's Algorand accounts to"
+        kmd -> walletUI "Provides data about user's Algorand accounts to"
+        kmd -> acctKeyStore "Stores private keys into & retrieves the from" "With password from user"
+        kmd -> ledgerDevice "Sends signing request to"
+        ledgerDevice -> kmd "Sends signed data to"
 
-        connectServer -> settingsStore "Stores & retrieves user preferences from" "With password from user"
-        connectServer -> sessionStore "Stores & retrieves session keys and data from" "With password from user"
+        walletUI -> settingsManager "Manages user preferences using"
+        settingsManager -> walletUI "Provides data about user's preferences to"
+        connectServer -> settingsManager "Accesses user preferences through"
+        settingsManager -> settingsStore "Stores & retrieves user preferences from" "With password from user"
 
+        walletUI -> sessionManager "Manages dApp connect sessions using"
+        sessionManager -> walletUI "Provides data about dApp connect sessions to"
+        connectServer -> sessionManager "Manages dApp connect sessions through"
+        sessionManager -> connectServer "Provides data about dApp connect sessions to"
+        sessionManager -> sessionStore "Stores & retrieves session keys and data from" "With password from user"
     }
 
     views {
@@ -91,17 +104,21 @@ workspace {
             # Initialization
             user -> dapp1 "Needs to connect to wallet within"
             dapp1 -> connectServer "Sends request to initialize session to"
-            connectServer -> sessionStore "Generates confirmation key pair & add them to"
-            connectServer -> dapp1 "Responds with confirmation token, code & data to"
+            connectServer -> sessionManager "Generates confirmation key pair using"
+            sessionManager -> sessionStore "Stores generated key pair into"
+            connectServer -> dapp1 "Responds with confirmation token, code and data to"
             # Confirmation
             dapp1 -> user "Displays confirmation code to"
             dapp1 -> connectServer "Sends request to confirm session to"
-            connectServer -> sessionStore "Retrieves confirmation key from"
-            connectServer -> walletUI "Forwards request for user approval to"
-            walletUI -> user "Ask for approval from"
-            user -> walletUI "Approves connection by entering wallet password & confirmation code"
+            connectServer -> sessionManager "Attempts to get confirmation key using"
+            sessionManager -> sessionStore "Retrieves confirmation key from"
+            sessionManager -> connectServer "Returns with confirmation key to"
+            connectServer -> walletUI "Request for user approval through"
+            walletUI -> user "Asks for approval from"
+            user -> walletUI "Approves connection by entering wallet password & confirmation code into"
             walletUI -> connectServer "Forwards user approval to"
-            connectServer -> sessionStore "Extract session key pair from confirmation token & add them to"
+            connectServer -> sessionManager "Extracts session key pair from confirmation token using"
+            sessionManager -> sessionStore "Stores generated key pair into"
             connectServer -> dapp1 "Responds with session ID & data to"
             dapp1 -> user "Shows it is connected to wallet to"
         }
@@ -110,7 +127,8 @@ workspace {
             autoLayout
             user -> dapp1 "Initiates session termination within"
             dapp1 -> connectServer "Sends request to terminate session to"
-            connectServer -> sessionStore "Removes session data for dApp from"
+            connectServer -> sessionManager "Removes session data for dApp using"
+            sessionManager -> sessionStore "Delete session data from"
             connectServer -> dapp1 "Responds with success message to"
             dapp1 -> user "Deletes its session data & shows it is disconnected from wallet to"
         }
@@ -125,7 +143,8 @@ workspace {
             autoLayout
             user -> walletUI "Initiates termination of session with dApp within"
             walletUI -> connectServer "Forwards request to terminate dApp's session to"
-            connectServer -> sessionStore "Removes session data for dApp within"
+            connectServer -> sessionManager "Removes session data for dApp using"
+            sessionManager -> sessionStore "Delete session data from"
             connectServer -> walletUI "Responds with success message to"
             walletUI -> user "Shows it is disconnected from dApp to"
         }
@@ -137,8 +156,10 @@ workspace {
             connectServer -> walletUI "Forwards request to sign transaction to"
             walletUI -> user "Asks for approval to sign transaction from"
             user -> walletUI "Approves signing transaction using"
-            walletUI -> acctKeyStore "Retrieves key for signing from"
-            walletUI -> connectServer "Creates signed transaction data & forwards it to"
+            walletUI -> kmd "Attempt to sign transaction using"
+            kmd -> acctKeyStore "Retrieves key for signing from"
+            kmd -> walletUI "Signs transaction & returns signed transaction data to"
+            walletUI -> connectServer "Forwards signed transaction data to"
             connectServer -> dapp1 "Responds with signed transaction data to"
             dapp1 -> algoNode "Sends signed transaction using"
         }
@@ -148,10 +169,12 @@ workspace {
             user -> dapp1 "Needs to sign a transaction within"
             dapp1 -> connectServer "Sends request to sign transaction to"
             connectServer -> walletUI "Forwards request to sign transaction to"
-            walletUI -> ledgerDevice "Sends unsigned transaction data to"
+            walletUI -> kmd "Sends unsigned transaction data to"
+            kmd -> ledgerDevice "Forward unsigned transaction data to"
             walletUI -> user "Asks for approval to sign transaction from"
             user -> ledgerDevice "Signs transaction using"
-            ledgerDevice -> walletUI "Sends signed transaction data to"
+            ledgerDevice -> kmd "Sends signed transaction data to"
+            kmd -> walletUI "Forwards signed transaction data to"
             walletUI -> connectServer "Forwards signed transaction data to"
             connectServer -> dapp1 "Responds with signed transaction data to"
             dapp1 -> algoNode "Sends signed transaction using"
