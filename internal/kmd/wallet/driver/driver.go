@@ -21,8 +21,8 @@ package driver
 import (
 	"fmt"
 
-	"duckysigner/kmd/config"
-	"duckysigner/kmd/wallet"
+	"duckysigner/internal/kmd/config"
+	"duckysigner/internal/kmd/wallet"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	logging "github.com/sirupsen/logrus"

@@ -31,7 +31,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/stretchr/testify/require"
 
-	. "duckysigner/kmd/codecs"
+	. "duckysigner/internal/kmd/codecs"
 )
 
 type testValue struct {

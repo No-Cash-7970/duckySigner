@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import type { Metadata } from '$lib/wails-bindings/duckysigner/kmd/wallet';
+  import type { Metadata } from '$lib/wails-bindings/duckysigner/internal/kmd/wallet';
   import { KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
   import { onMount } from 'svelte';

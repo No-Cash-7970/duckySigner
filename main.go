@@ -10,7 +10,7 @@ import (
 	"github.com/awnumar/memguard"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"duckysigner/kmd/config"
+	"duckysigner/internal/kmd/config"
 	"duckysigner/services"
 )
 

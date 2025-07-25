@@ -2,7 +2,7 @@ package wallet_session
 
 import (
 	"crypto/ed25519"
-	"duckysigner/kmd/wallet"
+	"duckysigner/internal/kmd/wallet"
 	"encoding/base64"
 	"errors"
 	"time"

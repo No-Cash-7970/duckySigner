@@ -28,9 +28,9 @@ import (
 	"regexp"
 	"slices"
 
-	"duckysigner/kmd/config"
-	kmdCrypto "duckysigner/kmd/crypto"
-	"duckysigner/kmd/wallet"
+	"duckysigner/internal/kmd/config"
+	kmdCrypto "duckysigner/internal/kmd/crypto"
+	"duckysigner/internal/kmd/wallet"
 
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/types"

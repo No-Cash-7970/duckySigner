@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"io"
 
-	"duckysigner/kmd/config"
-	"duckysigner/kmd/crypto"
+	"duckysigner/internal/kmd/config"
+	"duckysigner/internal/kmd/crypto"
 
 	"golang.org/x/crypto/hkdf"
 	"golang.org/x/crypto/nacl/secretbox"

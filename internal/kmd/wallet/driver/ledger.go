@@ -29,8 +29,8 @@ import (
 	"sort"
 	"strings"
 
-	"duckysigner/kmd/config"
-	"duckysigner/kmd/wallet"
+	"duckysigner/internal/kmd/config"
+	"duckysigner/internal/kmd/wallet"
 
 	"github.com/algorand/go-algorand-sdk/v2/encoding/msgpack"
 	"github.com/algorand/go-algorand-sdk/v2/types"

@@ -1,7 +1,7 @@
 package services_test
 
 import (
-	"duckysigner/kmd/config"
+	"duckysigner/internal/kmd/config"
 	. "duckysigner/services"
 	"encoding/base64"
 	"os"

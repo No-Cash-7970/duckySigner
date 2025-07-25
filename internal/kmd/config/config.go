@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"duckysigner/kmd/codecs"
+	"duckysigner/internal/kmd/codecs"
 )
 
 const (

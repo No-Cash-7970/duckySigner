@@ -9,10 +9,10 @@ import (
 	"github.com/awnumar/memguard"
 	logging "github.com/sirupsen/logrus"
 
+	"duckysigner/internal/kmd/config"
+	"duckysigner/internal/kmd/wallet"
+	"duckysigner/internal/kmd/wallet/driver"
 	. "duckysigner/internal/wallet_session"
-	"duckysigner/kmd/config"
-	"duckysigner/kmd/wallet"
-	"duckysigner/kmd/wallet/driver"
 )
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
