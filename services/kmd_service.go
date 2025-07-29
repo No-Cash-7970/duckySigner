@@ -12,7 +12,7 @@ import (
 	"duckysigner/internal/kmd/config"
 	"duckysigner/internal/kmd/wallet"
 	"duckysigner/internal/kmd/wallet/driver"
-	. "duckysigner/internal/wallet_session"
+	ws "duckysigner/internal/wallet_session"
 )
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
@@ -28,7 +28,7 @@ type KMDService struct {
 	kmdInitialized bool
 	// A singleton within a KMD service instance for the session for the wallet
 	// that is currently open
-	session *WalletSession
+	session *ws.WalletSession
 	// Prevents possible data races when starting, ending or reading the same
 	// session in different processes.
 	sessionMutex sync.RWMutex
@@ -53,7 +53,7 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 	err = fetchedWallet.Init([]byte(password))
 
 	service.sessionMutex.Lock()
-	service.session = &WalletSession{
+	service.session = &ws.WalletSession{
 		Wallet:   &fetchedWallet,
 		Password: memguard.NewEnclave([]byte(password)),
 	}
@@ -68,9 +68,9 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 // Session is a getter that gets the current wallet session
 //
 // FOR THE BACKEND ONLY
-func (service *KMDService) Session() (ws *WalletSession) {
+func (service *KMDService) Session() (wSession *ws.WalletSession) {
 	service.sessionMutex.RLock()
-	ws = service.session
+	wSession = service.session
 	service.sessionMutex.RUnlock()
 
 	return

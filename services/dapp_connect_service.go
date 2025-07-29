@@ -14,8 +14,8 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	. "duckysigner/internal/dapp_connect"
-	. "duckysigner/internal/dapp_connect/handlers"
+	dc "duckysigner/internal/dapp_connect"
+	"duckysigner/internal/dapp_connect/handlers"
 )
 
 // DappConnectService is a Wails binding allows for a Wails frontend to interact
@@ -46,7 +46,7 @@ type DappConnectService struct {
 	// session key pair. Typically used to set a mock curve when
 	// testing.
 	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
-	ECDHCurve ECDHCurve
+	ECDHCurve dc.ECDHCurve
 
 	// Current Echo instance used to control the server
 	echo *echo.Echo
@@ -57,7 +57,7 @@ type DappConnectService struct {
 // Start sets up the server and starts it with the given address it if it has
 // not been started. It does nothing if the server is running. Returns whether
 // the server is currently running.
-func (dc *DappConnectService) Start() bool {
+func (dcs *DappConnectService) Start() bool {
 	/*
 	 * Resources about using Context to create a graceful server start/stop functionality
 	 * - https://medium.com/@jamal.kaksouri/the-complete-guide-to-context-in-golang-efficient-concurrency-management-43d722f6eaea
@@ -66,48 +66,48 @@ func (dc *DappConnectService) Start() bool {
 	 */
 
 	// Do nothing if the server is already running
-	if dc.serverRunning {
-		dc.echo.Logger.Warn("Attempted to start a server is already running")
-		return dc.serverRunning
+	if dcs.serverRunning {
+		dcs.echo.Logger.Warn("Attempted to start a server is already running")
+		return dcs.serverRunning
 	}
 
 	// Set server log level to default if none was specified
-	if dc.LogLevel == 0 {
-		dc.LogLevel = log.INFO
+	if dcs.LogLevel == 0 {
+		dcs.LogLevel = log.INFO
 	}
 
 	// Setup
-	dc.echo = echo.New()
-	dc.echo.Logger.SetLevel(dc.LogLevel)
-	dc.echo.HideBanner = dc.HideServerBanner
-	dc.echo.HidePort = dc.HideServerPort
+	dcs.echo = echo.New()
+	dcs.echo.Logger.SetLevel(dcs.LogLevel)
+	dcs.echo.HideBanner = dcs.HideServerBanner
+	dcs.echo.HidePort = dcs.HideServerPort
 	// Set ECDH curve if it is not set
-	if dc.ECDHCurve == nil {
-		dc.ECDHCurve = ecdh.X25519()
+	if dcs.ECDHCurve == nil {
+		dcs.ECDHCurve = ecdh.X25519()
 	}
-	dc.setupServerRoutes(dc.echo)
+	dcs.setupServerRoutes(dcs.echo)
 
 	// Allow for the server to be gracefully stop if there was an interrupt
 	// (e.g. Ctrl+C)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	dc.serverRunning = true
+	dcs.serverRunning = true
 
 	// Start server
 	go func(ctx context.Context) {
 		select {
 		case <-ctx.Done():
-			dc.Stop()
+			dcs.Stop()
 		default:
 			// Set server address to default if none was specified
-			if dc.ServerAddr == "" {
-				dc.ServerAddr = DefaultServerAddr
+			if dcs.ServerAddr == "" {
+				dcs.ServerAddr = dc.DefaultServerAddr
 			}
 
 			// NOTE: echo.Start() function does not end until the process running it is killed
-			if err := dc.echo.Start(dc.ServerAddr); err != nil && err != http.ErrServerClosed {
-				dc.serverRunning = false
-				dc.echo.Logger.Error(err)
-				dc.echo.Logger.Fatal("Unexpected error occurred in starting the server")
+			if err := dcs.echo.Start(dcs.ServerAddr); err != nil && err != http.ErrServerClosed {
+				dcs.serverRunning = false
+				dcs.echo.Logger.Error(err)
+				dcs.echo.Logger.Fatal("Unexpected error occurred in starting the server")
 			}
 
 			stop()
@@ -119,54 +119,54 @@ func (dc *DappConnectService) Start() bool {
 
 // Stop gracefully stops the server if it is running. It does nothing if the
 // server is not running. Returns whether the server is currently running.
-func (dc *DappConnectService) Stop() bool {
-	if !dc.serverRunning {
-		dc.echo.Logger.Warn("Attempted to shut down a server that is not running")
-		return dc.serverRunning
+func (dcs *DappConnectService) Stop() bool {
+	if !dcs.serverRunning {
+		dcs.echo.Logger.Warn("Attempted to shut down a server that is not running")
+		return dcs.serverRunning
 	}
 
-	dc.echo.Logger.Info("Shutting down server...")
+	dcs.echo.Logger.Info("Shutting down server...")
 	//gracefully shutdown the server with a timeout of 10 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if err := dc.echo.Shutdown(ctx); err != nil {
-		dc.echo.Logger.Fatal(err)
-		return dc.serverRunning
+	if err := dcs.echo.Shutdown(ctx); err != nil {
+		dcs.echo.Logger.Fatal(err)
+		return dcs.serverRunning
 	}
 
-	dc.echo.Logger.Info("Server has been shut down")
-	dc.serverRunning = false
+	dcs.echo.Logger.Info("Server has been shut down")
+	dcs.serverRunning = false
 
-	return dc.serverRunning
+	return dcs.serverRunning
 }
 
 // IsOn gives whether or not the server is on and running
-func (dc *DappConnectService) IsOn() bool {
-	return dc.serverRunning
+func (dcs *DappConnectService) IsOn() bool {
+	return dcs.serverRunning
 }
 
 // CleanUp end memory enclave sessions and release resources used by this dApp
 // connection service
 //
 // FOR THE BACKEND ONLY
-func (dc *DappConnectService) CleanUp() {
+func (dcs *DappConnectService) CleanUp() {
 	// Purge the MemGuard session
 	defer memguard.Purge()
 	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
 }
 
 // setupServerRoutes declares the server routes
-func (dc *DappConnectService) setupServerRoutes(e *echo.Echo) {
+func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	// Set up CORS
 	e.Use(middleware.CORS())
 
-	e.GET("/", RootGetHandler(dc.WailsApp))
+	e.GET("/", handlers.RootGet(dcs.WailsApp))
 
-	e.POST("/session/init", SessionInitPostHandler(
-		dc.echo,
-		dc.WailsApp,
-		dc.UserResponseTimeout,
-		dc.ECDHCurve,
+	e.POST("/session/init", handlers.SessionInitPost(
+		dcs.echo,
+		dcs.WailsApp,
+		dcs.UserResponseTimeout,
+		dcs.ECDHCurve,
 	))
 }

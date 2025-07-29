@@ -11,8 +11,8 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 )
 
-// SessionInitPostHandler is the route handler for `POST /session/init`
-func SessionInitPostHandler(
+// SessionInitPost is the route handler for `POST /session/init`
+func SessionInitPost(
 	echoInstance *echo.Echo,
 	wailsApp *application.App,
 	userResponseTimeout time.Duration,
