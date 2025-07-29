@@ -4,7 +4,7 @@ import (
 	"crypto/ecdh"
 	"crypto/rand"
 
-	. "duckysigner/internal/dapp_connect"
+	dc "duckysigner/internal/dapp_connect"
 )
 
 // Manager is the dApp connect session manager
@@ -14,7 +14,7 @@ type Manager struct {
 
 // GenerateSession creates a new session by generating a new session key pair
 // for the dApp with the given ID with the given dApp data
-func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *DappData, curve ECDHCurve) (session *Session, err error) {
+func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData, curve dc.ECDHCurve) (session *Session, err error) {
 	// Generate session key pair
 	sessionKey, err := curve.GenerateKey(rand.Reader)
 	if err != nil {

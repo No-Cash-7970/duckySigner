@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	. "duckysigner/internal/dapp_connect"
+	dc "duckysigner/internal/dapp_connect"
 )
 
 // SessionInitPostHandler is the route handler for `POST /session/init`
@@ -16,13 +16,13 @@ func SessionInitPostHandler(
 	echoInstance *echo.Echo,
 	wailsApp *application.App,
 	userResponseTimeout time.Duration,
-	ecdhCurve ECDHCurve,
+	ecdhCurve dc.ECDHCurve,
 ) func(echo.Context) error {
 	return func(c echo.Context) error {
 		// Read request data
-		dappInfo := new(DAppInfo)
+		dappInfo := new(dc.DAppInfo)
 		if err := c.Bind(dappInfo); err != nil {
-			return c.JSON(http.StatusBadRequest, ApiError{
+			return c.JSON(http.StatusBadRequest, dc.ApiError{
 				Name:    "bad_request",
 				Message: err.Error(),
 			})
@@ -31,7 +31,7 @@ func SessionInitPostHandler(
 		echoInstance.Logger.Debug("Incoming request:", dappInfo)
 
 		// Validate dApp ID before doing anything else
-		dappIdPk, dappIdApiErr, err := ValidateDappID(dappInfo.DappId, ecdhCurve)
+		dappIdPk, dappIdApiErr, err := dc.ValidateDappID(dappInfo.DappId, ecdhCurve)
 		if err != nil {
 			echoInstance.Logger.Error(err)
 			return c.JSON(http.StatusBadRequest, dappIdApiErr)
@@ -42,17 +42,17 @@ func SessionInitPostHandler(
 		// - Ask user if they want new session with dApp with ID?
 
 		// Prompt user to approve dApp connect session
-		userResp, err := PromptUI(
+		userResp, err := dc.PromptUI(
 			dappInfo,
-			DCSessionInitUIPromptEventName,
-			DCSessionInitUIRespEventName,
+			dc.DCSessionInitUIPromptEventName,
+			dc.DCSessionInitUIRespEventName,
 			wailsApp,
 			echoInstance.Logger,
 		)
 		// Remove listener for UI response event when the server request ends,
 		// which is definitely after the UI response event data is received from
 		// the channel
-		defer wailsApp.Event.Off(DCSessionInitUIRespEventName)
+		defer wailsApp.Event.Off(dc.DCSessionInitUIRespEventName)
 
 		// TODO: Handle error from prompting UI *after* setting up the removal of the UI response event listener
 
@@ -62,40 +62,40 @@ func SessionInitPostHandler(
 			echoInstance.Logger.Info("Ran out of time waiting for user response")
 			return c.JSON(
 				http.StatusRequestTimeout,
-				ApiError{Name: "session_no_response", Message: "User did not respond"},
+				dc.ApiError{Name: "session_no_response", Message: "User did not respond"},
 			)
 		case accounts := <-userResp: // Got user's response
 			// If no accounts were approved, that means the user rejected
 			if len(accounts) == 0 {
 				return c.JSON(
 					http.StatusForbidden,
-					ApiError{Name: "session_rejected", Message: "Session was rejected"},
+					dc.ApiError{Name: "session_rejected", Message: "Session was rejected"},
 				)
 			}
 
 			// It's now safe to start creating a new connect session
-			dcSession := DappConnectSession{DappId: dappIdPk}
+			dcSession := dc.DappConnectSession{DappId: dappIdPk}
 
 			// Create session key pair and add it into the connect session
-			if err := CreateDCSessionKeyPair(&dcSession, ecdhCurve); err != nil {
+			if err := dc.CreateDCSessionKeyPair(&dcSession, ecdhCurve); err != nil {
 				echoInstance.Logger.Error(err)
-				return c.JSON(http.StatusInternalServerError, ApiError{
+				return c.JSON(http.StatusInternalServerError, dc.ApiError{
 					Name:    "session_create_fail",
 					Message: "Failed to create server session",
 				})
 			}
 
 			// Store connect session data for use in other server requests later on
-			if err := StoreDCSessionData(&dcSession, ecdhCurve, echoInstance.Logger); err != nil {
+			if err := dc.StoreDCSessionData(&dcSession, ecdhCurve, echoInstance.Logger); err != nil {
 				echoInstance.Logger.Error(err)
-				return c.JSON(http.StatusInternalServerError, ApiError{
+				return c.JSON(http.StatusInternalServerError, dc.ApiError{
 					Name:    "session_create_fail",
 					Message: "Failed to create server session",
 				})
 			}
 
 			// Create and respond with Hawk credentials
-			return c.JSON(http.StatusOK, HawkCredentials{
+			return c.JSON(http.StatusOK, dc.HawkCredentials{
 				Algorithm: "sha256",
 				// TODO: Create token (e.g. JWT) to use as ID (Maybe?)
 				ID: dappInfo.DappId,

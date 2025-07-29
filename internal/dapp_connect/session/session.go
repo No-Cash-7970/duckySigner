@@ -4,7 +4,7 @@ import (
 	"crypto/ecdh"
 	"time"
 
-	. "duckysigner/internal/dapp_connect"
+	dc "duckysigner/internal/dapp_connect"
 )
 
 // Session contains data about an established dApp connect session
@@ -18,7 +18,7 @@ type Session struct {
 	// DApp ID for the dApp the session is for
 	dappId *ecdh.PublicKey
 	// Data about the dApp the session is for
-	dappData *DappData
+	dappData *dc.DappData
 }
 
 // New creates a new Session using the given session secret key, session
@@ -27,7 +27,7 @@ func New(
 	key *ecdh.PrivateKey,
 	exp time.Time,
 	dappId *ecdh.PublicKey,
-	dappData *DappData,
+	dappData *dc.DappData,
 ) Session {
 	return Session{
 		key:      key,
@@ -58,7 +58,7 @@ func (session *Session) DappId() *ecdh.PublicKey {
 }
 
 // DappData returns the data of the dApp the session is for
-func (session *Session) DappData() *DappData {
+func (session *Session) DappData() *dc.DappData {
 	return session.dappData
 }
 

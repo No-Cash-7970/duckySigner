@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	. "duckysigner/internal/dapp_connect"
+	dc "duckysigner/internal/dapp_connect"
 	"duckysigner/internal/dapp_connect/session"
 )
 
@@ -67,7 +67,7 @@ var _ = Describe("DApp Connect Session", func() {
 		It("returns the dApp data", func() {
 			By("Creating some dApp data")
 			dAppIconUri := "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3cpath d='M22 38V51L32 32l19-19v12C44 26 43 10 38 0 52 15 49 39 22 38z'/%3e%3c/svg%3e"
-			dappData := DappData{
+			dappData := dc.DappData{
 				Name:        "Foo Bar",
 				Url:         "https://example.com",
 				Description: "This is an example",
