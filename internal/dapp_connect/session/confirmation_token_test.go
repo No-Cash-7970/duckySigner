@@ -3,8 +3,10 @@ package session_test
 import (
 	"crypto/ecdh"
 	"crypto/rand"
+	"encoding/base64"
 	"time"
 
+	"aidanwoods.dev/go-paseto"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -83,31 +85,185 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 		})
 	})
 
-	PDescribe("ToEncryptedString()", func() {
+	Describe("GenerateTokenString()", func() {
+
 		It("returns token string", func() {
-			// TODO: Complete this
+			curve := ecdh.X25519()
+			// Create dApp ID
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			// Create session key
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create confirmation key
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := "123456"
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Using GenerateTokenString() to create a confirmation encrypted token string")
+			confirmToken := session.NewConfirmationToken(dappId, sessionKey, confirmKey, confirmCode, exp)
+			confirmTokenString, err := confirmToken.GenerateTokenString()
+			GinkgoWriter.Println(confirmTokenString)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Decrypting token string")
+			pasetoKey, err := paseto.V4SymmetricKeyFromBytes(confirmKey.Bytes())
+			Expect(err).ToNot(HaveOccurred())
+			parser := paseto.NewParser()
+			parsedToken, err := parser.ParseV4Local(pasetoKey, confirmTokenString, nil)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking 'claims' in decrypted token")
+			// Expiration
+			parsedExp, err := parsedToken.GetExpiration()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(parsedExp).To(BeTemporally("~", exp, time.Second), "Decrypted token contains expiry")
+			// DApp ID
+			parsedDappId, err := parsedToken.GetString("dapp")
+			Expect(err).ToNot(HaveOccurred())
+			dappIdB64 := base64.StdEncoding.EncodeToString(dappId.Bytes())
+			Expect(parsedDappId).To(Equal(dappIdB64), "Decrypted token contains dApp ID")
+			// Confirmation code
+			parsedCode, err := parsedToken.GetString("code")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(parsedCode).To(Equal(confirmCode), "Decrypted token contains confirmation code")
+			// Session key
+			parsedSKey, err := parsedToken.GetString("skey")
+			Expect(err).ToNot(HaveOccurred())
+			sessionKeyB64 := base64.StdEncoding.EncodeToString(sessionKey.Bytes())
+			Expect(parsedSKey).To(Equal(sessionKeyB64), "Decrypted token contains session key")
 		})
 
 		It("fails when dApp ID is missing", func() {
-			// TODO: Complete this
+			curve := ecdh.X25519()
+			// Create session key
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create confirmation key
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := "123456"
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
+			confirmToken := session.NewConfirmationToken(nil, sessionKey, confirmKey, confirmCode, exp)
+			confirmTokenString, err := confirmToken.GenerateTokenString()
+			GinkgoWriter.Println(confirmTokenString)
+			Expect(err).To(MatchError(session.MissingConfirmTokenDappIdErrMsg))
 		})
 
 		It("fails when session key is missing", func() {
-			// TODO: Complete this
-		})
+			curve := ecdh.X25519()
+			// Create dApp ID
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			// Create confirmation key
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := "123456"
+			exp := time.Now().Add(5 * time.Minute)
 
-		It("fails when confirmation key is missing", func() {
-			// TODO: Complete this
+			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
+			confirmToken := session.NewConfirmationToken(dappId, nil, confirmKey, confirmCode, exp)
+			confirmTokenString, err := confirmToken.GenerateTokenString()
+			GinkgoWriter.Println(confirmTokenString)
+			Expect(err).To(MatchError(session.MissingConfirmTokenSessionKeyErrMsg))
 		})
 
 		It("fails when confirmation code is missing", func() {
-			// TODO: Complete this
+			curve := ecdh.X25519()
+			// Create dApp ID
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			// Create session key
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create confirmation key
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := ""
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
+			confirmToken := session.NewConfirmationToken(dappId, sessionKey, confirmKey, confirmCode, exp)
+			confirmTokenString, err := confirmToken.GenerateTokenString()
+			GinkgoWriter.Println(confirmTokenString)
+			Expect(err).To(MatchError(session.MissingConfirmTokenCodeErrMsg))
+		})
+
+		It("fails when confirmation key is missing", func() {
+			curve := ecdh.X25519()
+			// Create dApp ID
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			// Create session key
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := "123456"
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
+			confirmToken := session.NewConfirmationToken(dappId, sessionKey, nil, confirmCode, exp)
+			confirmTokenString, err := confirmToken.GenerateTokenString()
+			GinkgoWriter.Println(confirmTokenString)
+			Expect(err).To(MatchError(session.MissingConfirmTokenConfirmKeyErrMsg))
 		})
 	})
 
-	PDescribe("DecryptConfirmationToken()", func() {
+	Describe("DecryptConfirmationToken()", func() {
 		It("decrypts given confirmation token string", func() {
-			// TODO: Complete this
+			curve := ecdh.X25519()
+			// Create dApp ID
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			// Create session key
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create confirmation key
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			// Create other confirmation token data
+			confirmCode := "123456"
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Creating a confirmation encrypted token string")
+			token := paseto.NewToken()
+			token.SetExpiration(exp)
+			token.SetString(session.DappIdClaimName, base64.StdEncoding.EncodeToString(dappId.Bytes()))
+			token.SetString(session.ConfirmCodeClaimName, confirmCode)
+			token.SetString(session.SessionKeyClaimName, base64.StdEncoding.EncodeToString(sessionKey.Bytes()))
+			pasetoKey, err := paseto.V4SymmetricKeyFromBytes(confirmKey.Bytes())
+			Expect(err).ToNot(HaveOccurred())
+			encryptedTokenString := token.V4Encrypt(pasetoKey, nil)
+
+			By("Using DecryptConfirmationToken() to decrypt an encrypted confirmation token")
+			decryptedToken, err := session.DecryptConfirmationToken(encryptedTokenString, confirmKey, curve)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking 'claims' in decrypted token")
+			// Expiration
+			tokenExp := decryptedToken.Expiration()
+			Expect(tokenExp).To(BeTemporally("~", exp, time.Second), "Decrypted token contains expiry")
+			// DApp ID
+			tokenDappId := decryptedToken.DappId()
+			Expect(tokenDappId).To(Equal(dappId), "Decrypted token contains dApp ID")
+			// Confirmation code
+			tokenCode := decryptedToken.Code()
+			Expect(tokenCode).To(Equal(confirmCode), "Decrypted token contains confirmation code")
+			// Session key
+			tokenSKey := decryptedToken.SessionKey()
+			Expect(tokenSKey).To(Equal(sessionKey), "Decrypted token contains session key")
 		})
 	})
 })

@@ -2,8 +2,42 @@ package session
 
 import (
 	"crypto/ecdh"
+	"encoding/base64"
+	"errors"
 	"time"
+
+	"aidanwoods.dev/go-paseto"
+
+	dc "duckysigner/internal/dapp_connect"
 )
+
+// DappIdClaimName is the name for the "claim" that contains the dApp ID within
+// a PASETO for a confirmation token
+const DappIdClaimName = "dapp"
+
+// SessionKeyClaimName is the name for the "claim" that contains the session key
+// within a PASETO for a confirmation token
+const SessionKeyClaimName = "skey"
+
+// ConfirmCodeClaimName is the name for the "claim" that contains the
+// confirmation code within a PASETO for a confirmation token
+const ConfirmCodeClaimName = "code"
+
+// MissingConfirmTokenDappIdErrMsg is the error message for when the dApp ID is
+// missing within the confirmation token
+const MissingConfirmTokenDappIdErrMsg = "missing dApp ID in confirmation token"
+
+// MissingConfirmTokenSessionKeyErrMsg is the error message for when the session
+// key is missing within the confirmation token
+const MissingConfirmTokenSessionKeyErrMsg = "missing session key in confirmation token"
+
+// MissingConfirmTokenConfirmKeyErrMsg is the error message for when the
+// confirmation key is missing within the confirmation token
+const MissingConfirmTokenConfirmKeyErrMsg = "missing confirmation key in confirmation token"
+
+// MissingConfirmTokenCodeErrMsg is the error message for when the confirmation
+// code is missing within the confirmation token
+const MissingConfirmTokenCodeErrMsg = "missing confirmation code in confirmation token"
 
 // ConfirmationToken contains the data needed to create a confirmation token.
 // The confirmation token is used to "confirm" an initialized dApp connect
@@ -73,18 +107,103 @@ func (token *ConfirmationToken) Expiration() time.Time {
 	return token.confirmExp
 }
 
-// ToTokenString uses the confirmation token data to create an encrypted
+// GenerateTokenString uses the confirmation token data to create an encrypted
 // confirmation token string. This string is given to the dApp for it to confirm
 // its initialized session.
-func (token *ConfirmationToken) ToTokenString() (string, error) {
-	// TODO: Complete this
-	return "", nil
+func (token *ConfirmationToken) GenerateTokenString() (string, error) {
+	if token.confirmKey == nil {
+		return "", errors.New(MissingConfirmTokenConfirmKeyErrMsg)
+	}
+
+	if token.dappId == nil {
+		return "", errors.New(MissingConfirmTokenDappIdErrMsg)
+	}
+
+	if token.confirmCode == "" {
+		return "", errors.New(MissingConfirmTokenCodeErrMsg)
+	}
+
+	if token.sessionKey == nil {
+		return "", errors.New(MissingConfirmTokenSessionKeyErrMsg)
+	}
+
+	// NOTE: Refer to the following links for explanations of "claims", a term
+	// that PASETO borrowed from JWT.
+	// - <https://github.com/paseto-standard/paseto-spec/blob/master/docs/02-Implementation-Guide/04-Claims.md>
+	// - <https://medium.com/@dmosyan/json-web-token-claims-explained-e78a708ec43c>
+
+	// Add "claims" to be included and encrypted in the PASETO
+	confirmPaseto := paseto.NewToken()
+	confirmPaseto.SetExpiration(token.confirmExp)
+	confirmPaseto.SetString(DappIdClaimName, base64.StdEncoding.EncodeToString(token.dappId.Bytes()))
+	confirmPaseto.SetString(ConfirmCodeClaimName, token.confirmCode)
+	confirmPaseto.Set(SessionKeyClaimName, base64.StdEncoding.EncodeToString(token.sessionKey.Bytes()))
+	// Use confirmation key to encrypt the PASETO
+	pasetoKey, err := paseto.V4SymmetricKeyFromBytes(token.confirmKey.Bytes())
+	if err != nil {
+		return "", err
+	}
+
+	return confirmPaseto.V4Encrypt(pasetoKey, nil), nil
 }
 
 // DecryptConfirmationToken attempts to decrypt the given confirmation token
-// using the given confirmation key and extract the contents of the token into
-// a ConfirmationToken
-func DecryptConfirmationToken(confirmToken string, confirmKey *ecdh.PrivateKey) (*ConfirmationToken, error) {
-	// TODO: Complete this
-	return nil, nil
+// using the given confirmation key and extracts the contents of the token into
+// a ConfirmationToken. The given curve is used to parse ECDH public and private
+// key strings within the token. The same curve used to generate the ECDH keys
+// must be used here.
+func DecryptConfirmationToken(confirmToken string, confirmKey *ecdh.PrivateKey, curve dc.ECDHCurve) (*ConfirmationToken, error) {
+	pasetoKey, err := paseto.V4SymmetricKeyFromBytes(confirmKey.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt PASETO
+	parser := paseto.NewParserWithoutExpiryCheck() // Expiry check is expected to be done elsewhere
+	parsedToken, err := parser.ParseV4Local(pasetoKey, confirmToken, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract dApp ID
+	dappIdB64, err := parsedToken.GetString(DappIdClaimName)
+	if err != nil {
+		return nil, err
+	}
+	dappIdBytes, err := base64.StdEncoding.DecodeString(dappIdB64)
+	if err != nil {
+		return nil, err
+	}
+	dappId, err := curve.NewPublicKey(dappIdBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract session key
+	sessionKeyB64, err := parsedToken.GetString(SessionKeyClaimName)
+	if err != nil {
+		return nil, err
+	}
+	sessionKeyBytes, err := base64.StdEncoding.DecodeString(sessionKeyB64)
+	if err != nil {
+		return nil, err
+	}
+	sessionKey, err := curve.NewPrivateKey(sessionKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract confirmation code
+	code, err := parsedToken.GetString(ConfirmCodeClaimName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract expiration
+	exp, err := parsedToken.GetExpiration()
+	if err != nil {
+		return nil, err
+	}
+
+	return NewConfirmationToken(dappId, sessionKey, confirmKey, code, exp), nil
 }
