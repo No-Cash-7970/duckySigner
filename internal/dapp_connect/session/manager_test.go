@@ -32,6 +32,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			By("Running NewSession()")
 			sessionManager := Manager{}
 			newSession, err := sessionManager.GenerateSession(dappId, &DappData{}, mockCurve)
+			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking the newly created session")
 			Expect(newSession.ID()).To(Equal(mockSk.PublicKey()))
