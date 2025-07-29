@@ -18,7 +18,7 @@ import (
 	. "duckysigner/internal/dapp_connect/handlers"
 )
 
-// DappConnectService as a Wails binding allows for a Wails frontend to interact
+// DappConnectService is a Wails binding allows for a Wails frontend to interact
 // with and manage the dApp connect server
 type DappConnectService struct {
 	// The address the server should serve at. When only the port is given

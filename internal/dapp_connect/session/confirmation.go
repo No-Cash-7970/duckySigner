@@ -14,7 +14,8 @@ type Confirmation struct {
 	key *ecdh.PrivateKey
 }
 
-// New creates a new Confirmation using the given confirmation secret key
+// NewConfirmation creates a new Confirmation using the given confirmation
+// secret key
 func NewConfirmation(key *ecdh.PrivateKey) Confirmation {
 	return Confirmation{
 		key: key,

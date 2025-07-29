@@ -11,16 +11,18 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
-// The default address for the dApp connect server
+// DefaultServerAddr is the default address for the dApp connect server
 // Default: localhost:1323
 const DefaultServerAddr string = ":1323"
 
-// The name for the event for triggering the UI to prompt the user to approve
-// the dApp connect session initialization request
+// DCSessionInitUIPromptEventName is the name for the event for triggering the
+// UI to prompt the user to approve the dApp connect session initialization
+// request
 const DCSessionInitUIPromptEventName string = "session_init_prompt"
 
-// The name for the event that the UI uses to forward the user's response to the
-// dApp connect session initialization request
+// DCSessionInitUIRespEventName is the name for the event that the UI uses to
+// forward the user's response to the dApp connect session initialization
+// request
 const DCSessionInitUIRespEventName string = "session_init_response"
 
 // CreateDCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
