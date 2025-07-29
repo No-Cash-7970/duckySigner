@@ -112,7 +112,7 @@ func PromptUI(
 ) (uiResp chan []string, err error) {
 	// Check if Wails app is properly initialized
 	if wailsApp == nil {
-		err = errors.New("Missing Wails app instance. The dApp connect service was improperly initialized.")
+		err = errors.New("missing Wails app instance, dApp connect service not properly initialized")
 		return
 	}
 
