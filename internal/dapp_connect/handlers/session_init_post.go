@@ -49,6 +49,10 @@ func SessionInitPostHandler(
 			wailsApp,
 			echoInstance.Logger,
 		)
+		if err != nil {
+			echoInstance.Logger.Error(err)
+			return c.JSON(http.StatusBadRequest, err)
+		}
 		// Remove listener for UI response event when the server request ends,
 		// which is definitely after the UI response event data is received from
 		// the channel
