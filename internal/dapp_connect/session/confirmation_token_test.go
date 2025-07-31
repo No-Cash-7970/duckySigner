@@ -106,7 +106,6 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 			By("Using GenerateTokenString() to create a confirmation encrypted token string")
 			confirmToken := session.NewConfirmationToken(dappId, sessionKey, confirmKey, confirmCode, exp)
 			confirmTokenString, err := confirmToken.GenerateTokenString()
-			GinkgoWriter.Println(confirmTokenString)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Decrypting token string")
@@ -151,8 +150,7 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 
 			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
 			confirmToken := session.NewConfirmationToken(nil, sessionKey, confirmKey, confirmCode, exp)
-			confirmTokenString, err := confirmToken.GenerateTokenString()
-			GinkgoWriter.Println(confirmTokenString)
+			_, err = confirmToken.GenerateTokenString()
 			Expect(err).To(MatchError(session.MissingConfirmTokenDappIdErrMsg))
 		})
 
@@ -171,8 +169,7 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 
 			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
 			confirmToken := session.NewConfirmationToken(dappId, nil, confirmKey, confirmCode, exp)
-			confirmTokenString, err := confirmToken.GenerateTokenString()
-			GinkgoWriter.Println(confirmTokenString)
+			_, err = confirmToken.GenerateTokenString()
 			Expect(err).To(MatchError(session.MissingConfirmTokenSessionKeyErrMsg))
 		})
 
@@ -194,8 +191,7 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 
 			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
 			confirmToken := session.NewConfirmationToken(dappId, sessionKey, confirmKey, confirmCode, exp)
-			confirmTokenString, err := confirmToken.GenerateTokenString()
-			GinkgoWriter.Println(confirmTokenString)
+			_, err = confirmToken.GenerateTokenString()
 			Expect(err).To(MatchError(session.MissingConfirmTokenCodeErrMsg))
 		})
 
@@ -214,8 +210,7 @@ var _ = Describe("DApp Connect Confirmation Token", func() {
 
 			By("Attempting to use GenerateTokenString() to create a confirmation encrypted token string")
 			confirmToken := session.NewConfirmationToken(dappId, sessionKey, nil, confirmCode, exp)
-			confirmTokenString, err := confirmToken.GenerateTokenString()
-			GinkgoWriter.Println(confirmTokenString)
+			_, err = confirmToken.GenerateTokenString()
 			Expect(err).To(MatchError(session.MissingConfirmTokenConfirmKeyErrMsg))
 		})
 	})
