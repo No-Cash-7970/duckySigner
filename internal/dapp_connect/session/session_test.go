@@ -22,7 +22,7 @@ var _ = Describe("DApp Connect Session", func() {
 			sessionId := sessionKey.PublicKey()
 
 			By("Creating a session using generated session key pair")
-			session := session.New(sessionKey, time.Time{}, nil, nil)
+			session := session.New(sessionKey, nil, time.Time{}, time.Time{}, nil)
 
 			Expect(session.ID()).To(Equal(sessionId))
 		})
@@ -35,17 +35,9 @@ var _ = Describe("DApp Connect Session", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Creating a session using session key")
-			session := session.New(sessionKey, time.Time{}, nil, nil)
+			session := session.New(sessionKey, nil, time.Time{}, time.Time{}, nil)
 
 			Expect(session.Key()).To(Equal(sessionKey))
-		})
-	})
-
-	Describe("Expiration()", func() {
-		It("returns the expiration date-time", func() {
-			testTime := time.Now()
-			session := session.New(nil, testTime, nil, nil)
-			Expect(session.Expiration()).To(Equal(testTime))
 		})
 	})
 
@@ -57,9 +49,25 @@ var _ = Describe("DApp Connect Session", func() {
 			dappId := dappKey.PublicKey()
 
 			By("Creating a session using generated dApp ID")
-			session := session.New(nil, time.Time{}, dappId, nil)
+			session := session.New(nil, dappId, time.Time{}, time.Time{}, nil)
 
 			Expect(session.DappId()).To(Equal(dappId))
+		})
+	})
+
+	Describe("Expiration()", func() {
+		It("returns the expiration date-time", func() {
+			testTime := time.Now()
+			session := session.New(nil, nil, testTime, time.Time{}, nil)
+			Expect(session.Expiration()).To(Equal(testTime))
+		})
+	})
+
+	Describe("EstablishedAt()", func() {
+		It("returns the establishment date-time", func() {
+			testTime := time.Now()
+			session := session.New(nil, nil, time.Time{}, testTime, nil)
+			Expect(session.EstablishedAt()).To(Equal(testTime))
 		})
 	})
 
@@ -75,7 +83,7 @@ var _ = Describe("DApp Connect Session", func() {
 			}
 
 			By("Creating a session using dApp data")
-			session := session.New(nil, time.Time{}, nil, &dappData)
+			session := session.New(nil, nil, time.Time{}, time.Time{}, &dappData)
 
 			By("Checking dApp data within session")
 			Expect(session.DappData().Name).To(Equal("Foo Bar"))
@@ -98,7 +106,7 @@ var _ = Describe("DApp Connect Session", func() {
 			dappId := dappKey.PublicKey()
 
 			By("Creating a session using generated session key pair and dApp ID")
-			session := session.New(sessionKey, time.Time{}, dappId, nil)
+			session := session.New(sessionKey, dappId, time.Time{}, time.Time{}, nil)
 
 			By("Deriving shared key using dApp key and session ID")
 			sharedKey, err := dappKey.ECDH(sessionId)

@@ -7,33 +7,36 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 )
 
-// Session contains data about an established dApp connect session
+// Session contains data about a dApp connect session
 // NOTE: None of the struct fields are exported to make them read-only after the
 // struct is created
 type Session struct {
 	// Session secret key
 	key *ecdh.PrivateKey
-	// Session expiration date-time
-	exp time.Time
 	// DApp ID for the dApp the session is for
 	dappId *ecdh.PublicKey
 	// Data about the dApp the session is for
 	dappData *dc.DappData
+	// Session expiration date-time, if the session has been established
+	exp time.Time
+	// The date-time the session was established, if it has been established
+	establishedAt time.Time
 }
 
-// New creates a new Session using the given session secret key, session
-// expiration date-time, dApp ID and dApp data
+// New creates a new Session using the given session data
 func New(
 	key *ecdh.PrivateKey,
-	exp time.Time,
 	dappId *ecdh.PublicKey,
+	exp time.Time,
+	establishedAt time.Time,
 	dappData *dc.DappData,
 ) Session {
 	return Session{
-		key:      key,
-		exp:      exp,
-		dappId:   dappId,
-		dappData: dappData,
+		key:           key,
+		dappId:        dappId,
+		exp:           exp,
+		establishedAt: establishedAt,
+		dappData:      dappData,
 	}
 }
 
@@ -47,14 +50,25 @@ func (session *Session) Key() *ecdh.PrivateKey {
 	return session.key
 }
 
-// Expiration returns the date-time when the session expires
+// DappId returns the ID of the dApp the session is for
+func (session *Session) DappId() *ecdh.PublicKey {
+	return session.dappId
+}
+
+// Expiration returns the date-time when the session expires. Returns a
+// 0 date-time value if the expiration was not set.
 func (session *Session) Expiration() time.Time {
 	return session.exp
 }
 
-// DappId returns the ID of the dApp the session is for
-func (session *Session) DappId() *ecdh.PublicKey {
-	return session.dappId
+// EstablishedAt returns the date-time when the session was established, if it
+// has been established. Returns a 0 date-time value if the establishment
+// date-time was not set because the session has not been established yet. A
+// session is established when the dApp has gone through both the session
+// initialization and confirmation processes. If the session has not been
+// established, a 0 date-time value is returned.
+func (session *Session) EstablishedAt() time.Time {
+	return session.establishedAt
 }
 
 // DappData returns the data of the dApp the session is for
