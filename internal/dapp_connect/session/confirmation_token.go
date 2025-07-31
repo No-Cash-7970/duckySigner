@@ -11,33 +11,31 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 )
 
-// DappIdClaimName is the name for the "claim" that contains the dApp ID within
-// a PASETO for a confirmation token
-const DappIdClaimName = "dapp"
-
-// SessionKeyClaimName is the name for the "claim" that contains the session key
-// within a PASETO for a confirmation token
-const SessionKeyClaimName = "skey"
-
-// ConfirmCodeClaimName is the name for the "claim" that contains the
-// confirmation code within a PASETO for a confirmation token
-const ConfirmCodeClaimName = "code"
-
-// MissingConfirmTokenDappIdErrMsg is the error message for when the dApp ID is
-// missing within the confirmation token
-const MissingConfirmTokenDappIdErrMsg = "missing dApp ID in confirmation token"
-
-// MissingConfirmTokenSessionKeyErrMsg is the error message for when the session
-// key is missing within the confirmation token
-const MissingConfirmTokenSessionKeyErrMsg = "missing session key in confirmation token"
-
-// MissingConfirmTokenConfirmKeyErrMsg is the error message for when the
-// confirmation key is missing within the confirmation token
-const MissingConfirmTokenConfirmKeyErrMsg = "missing confirmation key in confirmation token"
-
-// MissingConfirmTokenCodeErrMsg is the error message for when the confirmation
-// code is missing within the confirmation token
-const MissingConfirmTokenCodeErrMsg = "missing confirmation code in confirmation token"
+const (
+	// DappIdClaimName is the name for the "claim" that contains the dApp ID
+	// within a PASETO for a confirmation token
+	DappIdClaimName = "dapp"
+	// SessionKeyClaimName is the name for the "claim" that contains the session
+	// key within a PASETO for a confirmation token
+	SessionKeyClaimName = "skey"
+	// ConfirmCodeClaimName is the name for the "claim" that contains the
+	// confirmation code within a PASETO for a confirmation token
+	ConfirmCodeClaimName = "code"
+)
+const (
+	// MissingConfirmTokenDappIdErrMsg is the error message for when the dApp ID
+	// is missing within the confirmation token
+	MissingConfirmTokenDappIdErrMsg = "missing dApp ID in confirmation token"
+	// MissingConfirmTokenSessionKeyErrMsg is the error message for when the
+	// session key is missing within the confirmation token
+	MissingConfirmTokenSessionKeyErrMsg = "missing session key in confirmation token"
+	// MissingConfirmTokenConfirmKeyErrMsg is the error message for when the
+	// confirmation key is missing within the confirmation token
+	MissingConfirmTokenConfirmKeyErrMsg = "missing confirmation key in confirmation token"
+	// MissingConfirmTokenCodeErrMsg is the error message for when the
+	// confirmation code is missing within the confirmation token
+	MissingConfirmTokenCodeErrMsg = "missing confirmation code in confirmation token"
+)
 
 // ConfirmationToken contains the data needed to create a confirmation token.
 // The confirmation token is used to "confirm" an initialized dApp connect
