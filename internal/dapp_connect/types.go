@@ -38,7 +38,7 @@ type DappData struct {
 	// Name of the application connecting to wallet
 	Name string `json:"name"`
 	// URL for the app connecting to the wallet
-	Url string `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 	// Description of the app
 	Description string `json:"desc,omitempty"`
 	// Icon for the app connecting to wallet as a Base64 encoded JPEG, PNG or
