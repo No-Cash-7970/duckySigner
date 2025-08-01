@@ -48,6 +48,7 @@ type ConfirmationToken struct {
 	confirmKey  *ecdh.PrivateKey
 	confirmCode string
 	confirmExp  time.Time
+	// TODO: confirmIssuedAt date?
 }
 
 // NewConfirmationToken creates a new ConfirmationToken with the given dApp ID,
