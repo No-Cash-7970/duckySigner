@@ -338,9 +338,9 @@ func createKmdService(walletDirName string) KMDService {
 	}
 }
 
-// createKmdServiceCleanup is a helper function that creates function that
-// cleans up the directory with specified by walletDirName, which was created
-// for an instance of the KMDService
+// createKmdServiceCleanup is a helper function that cleans up the directory
+// with specified by walletDirName, which was created for an instance of the
+// KMDService
 func createKmdServiceCleanup(walletDirName string) {
 	// Remove test wallet directory
 	err := os.RemoveAll(walletDirName)
