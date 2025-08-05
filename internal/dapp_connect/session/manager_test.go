@@ -93,7 +93,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	FDescribe("StoreSession()", func() {
+	Describe("StoreSession()", func() {
 		It("stores a valid and unexpired session (when database does not exist)", func() {
 			dataDirName := ".test_dc_store_session"
 			curve := ecdh.X25519()
@@ -275,27 +275,218 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(storedDappURL).To(Equal(testSession2.DappData().URL))
 			Expect(storedDappDesc).To(Equal(testSession2.DappData().Description))
 			Expect(base64.StdEncoding.EncodeToString(storedDappIcon)).To(Equal(testSession2.DappData().Icon))
-
 		})
 
-		PIt("stores an expired session (when database does not exist)", func() {
-			// TODO: Complete this
+		It("stores an expired session", func() {
+			dataDirName := ".test_dc_store_session_expired"
+			curve := ecdh.X25519()
+			sessionManager := session.NewManager(curve, &session.SessionConfig{
+				DataDir: dataDirName,
+			})
+
+			DeferCleanup(func() {
+				RemoveErr := os.RemoveAll(dataDirName)
+				if !os.IsNotExist(RemoveErr) { // If no "directory does not exist" error
+					Expect(RemoveErr).NotTo(HaveOccurred())
+				}
+			})
+
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionId := sessionKey.PublicKey()
+			est := time.Now().Add(-10 * time.Minute)
+			exp := time.Now().Add(-5 * time.Minute)
+
+			By("Creating a session")
+			testSession := session.New(sessionKey, dappId, exp, est, &dc.DappData{
+				Name:        "My DApp",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			})
+
+			By("Attempting to store session")
+			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if session is stored")
+			// Manually open parquet file and test that session info is in there
+			db, err := sql.Open("duckdb", "")
+			Expect(err).ToNot(HaveOccurred())
+			defer db.Close()
+
+			var (
+				storedSessionId  string
+				storedSessionKey string
+				storedExp        time.Time
+				storedEst        time.Time
+				storedDappId     string
+				storedDappName   string
+				storedDappURL    string
+				storedDappDesc   string
+				storedDappIcon   []byte
+			)
+			storedSessionRow := db.QueryRow(fmt.Sprintf(
+				"PRAGMA add_parquet_key('key', '%s'); FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
+				base64.StdEncoding.EncodeToString(fileEncryptKey.Bytes()),
+				dataDirName+"/"+sessionManager.SessionsFile,
+			))
+			storedSessionRow.Scan(
+				&storedSessionId,
+				&storedSessionKey,
+				&storedExp,
+				&storedEst,
+				&storedDappId,
+				&storedDappName,
+				&storedDappURL,
+				&storedDappDesc,
+				&storedDappIcon,
+			)
+
+			Expect(storedSessionId).To(Equal(base64.StdEncoding.EncodeToString(sessionId.Bytes())))
+			Expect(storedSessionKey).To(Equal(base64.StdEncoding.EncodeToString(sessionKey.Bytes())))
+			Expect(storedExp).To(BeTemporally("~", exp, time.Second))
+			Expect(storedEst).To(BeTemporally("~", est, time.Second))
+			Expect(storedDappId).To(Equal(base64.StdEncoding.EncodeToString(dappId.Bytes())))
+			Expect(storedDappName).To(Equal(testSession.DappData().Name))
+			Expect(storedDappURL).To(Equal(testSession.DappData().URL))
+			Expect(storedDappDesc).To(Equal(testSession.DappData().Description))
+			Expect(base64.StdEncoding.EncodeToString(storedDappIcon)).To(Equal(testSession.DappData().Icon))
 		})
 
-		PIt("fails to store a session without a session ID", func() {
-			// TODO: Complete this
+		It("fails when no session is given", func() {
+			dataDirName := ".test_dc_store_no_session_fail"
+			curve := ecdh.X25519()
+			sessionManager := session.NewManager(curve, &session.SessionConfig{
+				DataDir: dataDirName,
+			})
+
+			DeferCleanup(func() {
+				RemoveErr := os.RemoveAll(dataDirName)
+				if !os.IsNotExist(RemoveErr) { // If no "directory does not exist" error
+					Expect(RemoveErr).NotTo(HaveOccurred())
+				}
+			})
+
+			By("Attempting to store (non)session")
+			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreSession(nil, fileEncryptKey.Bytes())
+			Expect(err).To(MatchError(session.NoSessionGivenErrMsg))
 		})
 
-		PIt("fails to store a session with an ID that is already stored", func() {
-			// TODO: Complete this
+		It("fails to store a session without a session key", func() {
+			dataDirName := ".test_dc_store_session_key_fail"
+			curve := ecdh.X25519()
+			sessionManager := session.NewManager(curve, &session.SessionConfig{
+				DataDir: dataDirName,
+			})
+
+			DeferCleanup(func() {
+				RemoveErr := os.RemoveAll(dataDirName)
+				if !os.IsNotExist(RemoveErr) { // If no "directory does not exist" error
+					Expect(RemoveErr).NotTo(HaveOccurred())
+				}
+			})
+
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+			est := time.Now()
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Creating a session")
+			testSession := session.New(nil, dappId, exp, est, &dc.DappData{
+				Name:        "My DApp",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			})
+
+			By("Attempting to store session")
+			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			Expect(err).To(MatchError(session.NoSessionKeyGivenErrMsg))
 		})
 
-		PIt("fails to store a session without a session key", func() {
-			// TODO: Complete this
+		It("fails to store a session with an ID that is already stored", func() {
+			dataDirName := ".test_dc_store_session_again_fail"
+			curve := ecdh.X25519()
+			sessionManager := session.NewManager(curve, &session.SessionConfig{
+				DataDir: dataDirName,
+			})
+
+			DeferCleanup(func() {
+				RemoveErr := os.RemoveAll(dataDirName)
+				if !os.IsNotExist(RemoveErr) { // If no "directory does not exist" error
+					Expect(RemoveErr).NotTo(HaveOccurred())
+				}
+			})
+
+			By("Creating a session")
+			dappKey1, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId1 := dappKey1.PublicKey()
+			sessionKey1, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			est1 := time.Now()
+			exp1 := time.Now().Add(5 * time.Minute)
+			testSession1 := session.New(sessionKey1, dappId1, exp1, est1, &dc.DappData{
+				Name:        "My DApp 1",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			})
+
+			By("Storing the session")
+			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreSession(&testSession1, fileEncryptKey.Bytes())
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempt to store the session again")
+			err = sessionManager.StoreSession(&testSession1, fileEncryptKey.Bytes())
+			Expect(err).To(MatchError(session.SessionExistsErrMsg))
 		})
 
-		PIt("fails to store a session without a dApp ID", func() {
-			// TODO: Complete this
+		It("fails to store a session without a dApp ID", func() {
+			dataDirName := ".test_dc_store_session_dapp_id_fail"
+			curve := ecdh.X25519()
+			sessionManager := session.NewManager(curve, &session.SessionConfig{
+				DataDir: dataDirName,
+			})
+
+			DeferCleanup(func() {
+				RemoveErr := os.RemoveAll(dataDirName)
+				if !os.IsNotExist(RemoveErr) { // If no "directory does not exist" error
+					Expect(RemoveErr).NotTo(HaveOccurred())
+				}
+			})
+
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			est := time.Now()
+			exp := time.Now().Add(5 * time.Minute)
+
+			By("Creating a session")
+			testSession := session.New(sessionKey, nil, exp, est, &dc.DappData{
+				Name:        "My DApp",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			})
+
+			By("Attempting to store session")
+			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			Expect(err).To(MatchError(session.NoDappIdGivenErrMsg))
 		})
 	})
 
