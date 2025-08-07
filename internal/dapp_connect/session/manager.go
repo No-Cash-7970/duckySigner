@@ -198,7 +198,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		return errors.New(NoDappIdGivenErrMsg)
 	}
 
-	db, err := sm.openDb(fileEncKey)
+	db, err := sm.OpenSessionsDb(fileEncKey)
 	if err != nil {
 		return err
 	}
@@ -312,11 +312,13 @@ func (sm *Manager) PurgeAllConfirmations() (int, error) {
 	return 0, nil
 }
 
-// openDb opens the database connection and sets the file encryption key that
-// will be used to encrypt and decrypt database file(s). Does NOT check if the
-// file encryption key is correct. Returns a database handle if there are no
-// errors.
-func (sm *Manager) openDb(fileEncKey []byte) (db *sql.DB, err error) {
+// OpenSessionsDb is a helper function that opens the database connection for
+// the sessions database and sets the file encryption key that will be used to
+// encrypt and decrypt database file(s). This function usually does not need to
+// be called directly outside of testing. The file encryption key is only set
+// within the database connection. The key is NOT checked if it is correct.
+// Returns a database handle if there are no errors.
+func (sm *Manager) OpenSessionsDb(fileEncKey []byte) (db *sql.DB, err error) {
 	// Open DuckDB in in-memory mode
 	db, err = sql.Open("duckdb", "")
 	if err != nil {
