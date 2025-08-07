@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	// "database/sql"
 	_ "github.com/marcboeker/go-duckdb"
 
 	dc "duckysigner/internal/dapp_connect"
@@ -75,18 +74,18 @@ type SessionConfig struct {
 // Manager is the dApp connect session manager
 type Manager struct {
 	// The ECDH curve to use for generating a keys or processing stored keys
-	Curve dc.ECDHCurve
+	curve dc.ECDHCurve
 	// File name of the database file where the established sessions are stored
-	SessionsFile string
+	sessionsFile string
 	// File name of the database file where the pending confirmations are stored
-	ConfirmsFile string
+	confirmsFile string
 	// Name of the directory where the data files (e.g. database files) are
 	// stored
-	DataDir string
+	dataDir string
 	// Amount of time a session lasts
-	SessionLifetime time.Duration
+	sessionLifetime time.Duration
 	// Amount of time an outstanding confirmation can last
-	ConfirmLifetime time.Duration
+	confirmLifetime time.Duration
 }
 
 // sessionsCreateTblSQL is the SQL statement for created the `sessions` database
@@ -191,27 +190,55 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 	}
 
 	return &Manager{
-		Curve:           curve,
-		SessionLifetime: sessionLife,
-		ConfirmLifetime: confirmLife,
+		curve:           curve,
+		sessionLifetime: sessionLife,
+		confirmLifetime: confirmLife,
 		// URL encode directory and files names to prevent SQL injection. Leave
 		// "/" unescaped in data directory name.
-		DataDir:      strings.Join(strings.Split(url.QueryEscape(dataDir), "%2F"), "/"),
-		SessionsFile: url.QueryEscape(sessionsFile),
-		ConfirmsFile: url.QueryEscape(confirmsFile),
+		dataDir:      strings.Join(strings.Split(url.QueryEscape(dataDir), "%2F"), "/"),
+		sessionsFile: url.QueryEscape(sessionsFile),
+		confirmsFile: url.QueryEscape(confirmsFile),
 	}
+}
+
+// SessionsFile returns the file name of the database file for storing
+// established sessions
+func (sm *Manager) SessionsFile() string {
+	return sm.sessionsFile
+}
+
+// ConfirmationsFile returns the file name of the database file for storing
+// pending confirmations
+func (sm *Manager) ConfirmationsFile() string {
+	return sm.confirmsFile
+}
+
+// DataDir returns the data directory used for storing the database files
+func (sm *Manager) DataDir() string {
+	return sm.dataDir
+}
+
+// SessionLifetime returns the amount of time a session lasts
+func (sm *Manager) SessionLifetime() time.Duration {
+	return sm.sessionLifetime
+}
+
+// ConfirmLifetime returns the amount of time an outstanding confirmation can
+// last
+func (sm *Manager) ConfirmLifetime() time.Duration {
+	return sm.confirmLifetime
 }
 
 // GenerateSession creates a new session by generating a new session key pair
 // for the dApp with the given ID with the given dApp data
 func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData) (session *Session, err error) {
 	// Generate session key pair
-	sessionKey, err := sm.Curve.GenerateKey(rand.Reader)
+	sessionKey, err := sm.curve.GenerateKey(rand.Reader)
 	if err != nil {
 		return
 	}
 
-	exp := time.Now().Add(sm.SessionLifetime)
+	exp := time.Now().Add(sm.SessionLifetime())
 	session = &Session{
 		key:      sessionKey,
 		exp:      exp,
@@ -393,10 +420,10 @@ func (sm *Manager) OpenSessionsDb(fileEncKey []byte) (db *sql.DB, err error) {
 // checks if the file exists. If the file does not exist, an os.ErrNotExist is
 // returned as the error.
 func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
-	filePath = sm.DataDir + "/" + sm.SessionsFile
+	filePath = sm.DataDir() + "/" + sm.SessionsFile()
 
 	// Ensure data directory exists
-	err = os.Mkdir(sm.DataDir, dataDirPermissions)
+	err = os.Mkdir(sm.DataDir(), dataDirPermissions)
 	if err != nil && !os.IsExist(err) {
 		return
 	}

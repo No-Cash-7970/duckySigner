@@ -24,19 +24,19 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 	Describe("NewManager()", func() {
 		It("creates a new session manager with given configuration", func() {
 			sessionManager := session.NewManager(curve, &session.SessionConfig{"", "", "somewhere/dc", 42, 8})
-			Expect(sessionManager.DataDir).To(Equal("somewhere/dc"), "Has correct data directory")
-			Expect(sessionManager.SessionLifetime).To(Equal(42*time.Second),
+			Expect(sessionManager.DataDir()).To(Equal("somewhere/dc"), "Has correct data directory")
+			Expect(sessionManager.SessionLifetime()).To(Equal(42*time.Second),
 				"Has correct session lifetime")
-			Expect(sessionManager.ConfirmLifetime).To(Equal(8*time.Second),
+			Expect(sessionManager.ConfirmLifetime()).To(Equal(8*time.Second),
 				"Has correct confirmation lifetime")
 		})
 
 		It("creates a new session manager with default configuration when no configuration is given", func() {
 			sessionManager := session.NewManager(curve, nil)
-			Expect(sessionManager.DataDir).To(Equal(session.DefaultDataDir), "Has correct data directory")
-			Expect(sessionManager.SessionLifetime).To(Equal(session.DefaultSessionLifetime),
+			Expect(sessionManager.DataDir()).To(Equal(session.DefaultDataDir), "Has correct data directory")
+			Expect(sessionManager.SessionLifetime()).To(Equal(session.DefaultSessionLifetime),
 				"Has correct session lifetime")
-			Expect(sessionManager.ConfirmLifetime).To(Equal(session.DefaultConfirmLifetime),
+			Expect(sessionManager.ConfirmLifetime()).To(Equal(session.DefaultConfirmLifetime),
 				"Has correct confirmation lifetime")
 		})
 	})
@@ -140,7 +140,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
 				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.SessionsFile,
+				dirName+"/"+sessionManager.SessionsFile(),
 			))
 			storedSessionRow.Scan(
 				&storedSessionId, &storedSessionKey,
@@ -236,7 +236,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			storedSessionRow := db.QueryRow(
 				fmt.Sprintf(
 					"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE id = ?;",
-					dirName+"/"+sessionManager.SessionsFile,
+					dirName+"/"+sessionManager.SessionsFile(),
 				),
 				sessionId2B64,
 			)
@@ -313,7 +313,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
 				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.SessionsFile,
+				dirName+"/"+sessionManager.SessionsFile(),
 			))
 			storedSessionRow.Scan(
 				&storedSessionId, &storedSessionKey,
