@@ -117,13 +117,15 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			testSession := session.New(sessionKey, dappId, exp, est, &testDappData)
 
 			By("Attempting to store session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey.Bytes())
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -190,9 +192,11 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			})
 
 			By("Storing the first session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession1, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession1, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Creating another session")
@@ -214,11 +218,11 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			testSession2 := session.New(sessionKey2, dappId2, exp2, est2, &testDappData)
 
 			By("Attempting to store the second session")
-			err = sessionManager.StoreSession(&testSession2, fileEncryptKey.Bytes())
+			err = sessionManager.StoreSession(&testSession2, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if second session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey.Bytes())
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -290,13 +294,15 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			testSession := session.New(sessionKey, dappId, exp, est, &testDappData)
 
 			By("Attempting to store session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey.Bytes())
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -348,9 +354,11 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 
 			By("Attempting to store (non)session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(nil, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err := sessionManager.StoreSession(nil, fileEncryptKey[:])
 			Expect(err).To(MatchError(session.NoSessionGivenErrMsg))
 		})
 
@@ -373,9 +381,11 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			})
 
 			By("Attempting to store session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey[:])
 			Expect(err).To(MatchError(session.NoSessionKeyGivenErrMsg))
 		})
 
@@ -400,13 +410,15 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			})
 
 			By("Storing the session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession1, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession1, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Attempt to store the session again")
-			err = sessionManager.StoreSession(&testSession1, fileEncryptKey.Bytes())
+			err = sessionManager.StoreSession(&testSession1, fileEncryptKey[:])
 			Expect(err).To(MatchError(session.SessionExistsErrMsg))
 		})
 
@@ -428,9 +440,11 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			})
 
 			By("Attempting to store session")
-			fileEncryptKey, err := curve.GenerateKey(rand.Reader) // Random array of 32 bytes would be fine too
-			Expect(err).ToNot(HaveOccurred())
-			err = sessionManager.StoreSession(&testSession, fileEncryptKey.Bytes())
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreSession(&testSession, fileEncryptKey[:])
 			Expect(err).To(MatchError(session.NoDappIdGivenErrMsg))
 		})
 	})
