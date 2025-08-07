@@ -18,44 +18,79 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 )
 
-// TODO: Add documentation
 const (
-	DefaultConfigFile      = "session_config.json" // TODO: Encrypt this file to ensure privacy and prevent tampering
-	DefaultSessionsFile    = "sessions.parquet"
-	DefaultConfirmsFile    = "confirms.parquet"
-	DefaultDataDir         = "./dapp_connect"
+	// DefaultConfigFile is the default file name for the session configuration
+	// file
+	DefaultConfigFile = "session_config.json" // TODO: Encrypt this file to ensure privacy and prevent tampering
+	// DefaultSessionsFile is the default file name for the database file where
+	// established sessions are stored
+	DefaultSessionsFile = "sessions.parquet"
+	// DefaultConfirmsFile is the default file name for the database file where
+	// pending confirmations are stored
+	DefaultConfirmsFile = "confirms.parquet"
+	// DefaultDataDir is the name of the directory where data files, such as the
+	// sessions database file and the confirmations database file, are stored
+	DefaultDataDir = "./dapp_connect"
+	// DefaultSessionLifetime is the default amount of time a session lasts
+	// before expiring
 	DefaultSessionLifetime = 7 * 24 * time.Hour // 1 week
+	// DefaultConfirmLifetime is the default amount of time an outstanding
+	// confirmation can last before expiring
 	DefaultConfirmLifetime = 10 * time.Minute
 
-	SessionExistsErrMsg     = "session already exists"
-	NoSessionGivenErrMsg    = "no session was given"
-	NoSessionKeyGivenErrMsg = "no session key was given"
-	NoDappIdGivenErrMsg     = "no dApp ID was given"
-
+	// dataDirPermission is the OS file permissions used for the data directory
+	// when it is created
 	dataDirPermissions = 0700
+
+	// SessionExistsErrMsg is the error message text for when a session already
+	// exists
+	SessionExistsErrMsg = "session already exists"
+	// NoSessionGivenErrMsg is the error message text for when no session is
+	// provided
+	NoSessionGivenErrMsg = "no session was given"
+	// NoSessionKeyGivenErrMsg is the error message text for when no session key
+	// is given
+	NoSessionKeyGivenErrMsg = "no session key was given"
+	// NoDappIdGivenErrMsg is the error message text for when no dApp ID is
+	// given
+	NoDappIdGivenErrMsg = "no dApp ID was given"
 )
 
-// TODO: Add documentation
+// SessionConfig is used to configure the session manager when creating a new
+// session manager
 type SessionConfig struct {
-	SessionsFile        string `json:"sessions_file,omitempty"`
-	ConfirmsFile        string `json:"confirms_file,omitempty"`
-	DataDir             string `json:"data_dir,omitempty"`
+	// File name of the database file where the established sessions are stored
+	SessionsFile string `json:"sessions_file,omitempty"`
+	// File name of the database file where the pending confirmations are stored
+	ConfirmsFile string `json:"confirms_file,omitempty"`
+	// Name of the directory where the data files (e.g. database files) are
+	// stored
+	DataDir string `json:"data_dir,omitempty"`
+	// Amount of time a session lasts
 	SessionLifetimeSecs uint64 `json:"session_lifetime_secs"`
+	// Amount of time an outstanding confirmation can last
 	ConfirmLifetimeSecs uint64 `json:"confirm_lifetime_secs"`
 }
 
 // Manager is the dApp connect session manager
 type Manager struct {
-	// TODO: Add documentation
-	Curve           dc.ECDHCurve
-	SessionsFile    string
-	ConfirmsFile    string
-	DataDir         string
+	// The ECDH curve to use for generating a keys or processing stored keys
+	Curve dc.ECDHCurve
+	// File name of the database file where the established sessions are stored
+	SessionsFile string
+	// File name of the database file where the pending confirmations are stored
+	ConfirmsFile string
+	// Name of the directory where the data files (e.g. database files) are
+	// stored
+	DataDir string
+	// Amount of time a session lasts
 	SessionLifetime time.Duration
+	// Amount of time an outstanding confirmation can last
 	ConfirmLifetime time.Duration
 }
 
-// SQL statement for created the `sessions` database table
+// sessionsCreateTblSQL is the SQL statement for created the `sessions` database
+// table
 const sessionsCreateTblSQL = `
 CREATE TABLE sessions (
     id VARCHAR PRIMARY KEY,
@@ -69,10 +104,23 @@ CREATE TABLE sessions (
     dapp_icon BLOB
 );
 `
+
+// addParquetKeySQL is the SQL statement for setting the Parquet file encryption
+// key within DuckDB. The file encryption key is used for encrypting and
+// decrypting all the Parquet files that are used as the database files.
 const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
+
+// sessionsWriteToDbFileSQL is the SQL statement for directing DuckDB to write
+// the temporary sessions table to a new file (or overwrite the file if it
+// exists)
 const sessionsWriteToDbFileSQL = "COPY sessions TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});"
+
+// sessionsSimpleInsertSQL is the SQL statement for inserting a session into the
+// temporary sessions table
 const sessionsSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
+// sessionsOverwriteDbFileSQL is the SQL statement for adding sessions from the
+// temporary sessions table to the sessions database file.
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
 // to compression algorithm?)
 const sessionsOverwriteDbFileSQL = `
@@ -83,6 +131,9 @@ COPY (
 )
 TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});
 `
+
+// findSessionByIdSQL is the SQL statement for finding a session within the
+// sessions database file by ID
 const findSessionByIdSQL = `
 SELECT id FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
 WHERE id = ?
