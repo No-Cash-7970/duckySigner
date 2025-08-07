@@ -119,11 +119,11 @@ const sessionsWriteToDbFileSQL = "COPY sessions TO '%s' (ENCRYPTION_CONFIG {foot
 // temporary sessions table
 const sessionsSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-// sessionsOverwriteDbFileSQL is the SQL statement for adding sessions from the
+// sessionsAddToDbFileSQL is the SQL statement for adding sessions from the
 // temporary sessions table to the sessions database file.
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
 // to compression algorithm?)
-const sessionsOverwriteDbFileSQL = `
+const sessionsAddToDbFileSQL = `
 COPY (
     (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
     UNION
@@ -315,7 +315,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 
 		// Writing a new session into an existing Parquet file is a little more
 		// complex than writing a session to a new Parquet file
-		_, err = db.Exec(fmt.Sprintf(sessionsOverwriteDbFileSQL, sessionsFilePath, sessionsFilePath))
+		_, err = db.Exec(fmt.Sprintf(sessionsAddToDbFileSQL, sessionsFilePath, sessionsFilePath))
 		if err != nil {
 			return
 		}
