@@ -134,9 +134,12 @@ TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});
 // findSessionByIdSQL is the SQL statement for finding a session within the
 // sessions database file by ID
 const findSessionByIdSQL = `
-SELECT id FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
 WHERE id = ?
 `
+
+// allSessionsSQL is the SQL statement for getting all stored sessions
+const allSessionsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
 
 // NewManager creates a new session manager using the given configuration for
 // creating sessions. The given ECDH curve will be used by this new session
@@ -249,16 +252,93 @@ func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData
 	return
 }
 
-// GetSession attempt to retrieve the stored session with the given ID
-func (sm *Manager) GetSession(sessionId string) (*Session, error) {
-	// TODO: Complete this
-	return &Session{}, nil
+// GetSession attempt to retrieve the stored session with the given ID (in
+// base64) using the given file encryption key to decrypt the sessions database
+// file. Returns nil without an error if no session with the given ID is found.
+func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, error) {
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	sessionsFilePath, err := sm.getSessionsFilePath()
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Run SQL query for finding session by ID
+	var (
+		retrievedSessionId       string
+		retrievedSessionKeyBytes []byte
+		retrievedExp             time.Time
+		retrievedEst             time.Time
+		retrievedDappIdB64       string
+		retrievedDappName        string
+		retrievedDappURL         string
+		retrievedDappDesc        string
+		retrievedDappIcon        []byte
+	)
+	sessionRow := db.QueryRow(
+		fmt.Sprintf(findSessionByIdSQL, sessionsFilePath),
+		sessionId,
+	)
+	err = sessionRow.Scan(
+		&retrievedSessionId,
+		&retrievedSessionKeyBytes,
+		&retrievedExp,
+		&retrievedEst,
+		&retrievedDappIdB64,
+		&retrievedDappName,
+		&retrievedDappURL,
+		&retrievedDappDesc,
+		&retrievedDappIcon,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		// An unexpected error occurred
+		return nil, err
+	}
+
+	// Convert session key bytes to an ECDH private key
+	retrievedSessionKey, err := sm.curve.NewPrivateKey(retrievedSessionKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert dApp ID base64-encoded bytes to an ECDH public key
+	retrievedDappIdBytes, err := base64.StdEncoding.DecodeString(retrievedDappIdB64)
+	if err != nil {
+		return nil, err
+	}
+	retrievedDappId, err := sm.curve.NewPublicKey(retrievedDappIdBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Session{
+		key:           retrievedSessionKey,
+		exp:           retrievedExp,
+		establishedAt: retrievedEst,
+		dappId:        retrievedDappId,
+		dappData: &dc.DappData{
+			Name:        retrievedDappName,
+			URL:         retrievedDappURL,
+			Description: retrievedDappDesc,
+			Icon:        base64.StdEncoding.EncodeToString(retrievedDappIcon),
+		},
+	}, nil
 }
 
 // GetAllSessions attempts to retrieve all stored sessions
-func (sm *Manager) GetAllSessions() ([]*Session, error) {
+func (sm *Manager) GetAllSessions() []*Session {
 	// TODO: Complete this
-	return []*Session{}, nil
+	return []*Session{}
 }
 
 // StoreSession attempts to store the given session using the given file

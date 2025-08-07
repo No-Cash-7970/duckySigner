@@ -72,13 +72,86 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetSession()", func() {
-		It("gets the session with the given ID if it exists", func() {
-			// TODO: Complete this
+	Describe("GetSession()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			dirName := ".test_dc_get_session"
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("fails when attempting to get a session that does not exist", func() {
-			// TODO: Complete this
+		It("returns nil when attempting to get a session and there is no sessions file", func() {
+			// Generate a new session ID
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			// Check that no session is returned
+			retrievedSession, err := sessionManager.GetSession(sessionId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedSession).To(BeNil())
+		})
+
+		It("gets the session with the given ID if it exists", func() {
+			By("Creating a session")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			testDappData := dc.DappData{
+				Name:        "My DApp 1",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			}
+			testSession := session.New(
+				sessionKey,
+				dappKey.PublicKey(),
+				time.Now().Add(5*time.Minute),
+				time.Now(),
+				&testDappData,
+			)
+			sessionManager.StoreSession(&testSession, fileEncryptKey[:])
+
+			By("Attempting to retrieve created session")
+			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			retrievedSession, err := sessionManager.GetSession(sessionId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if session has been retrieved")
+			Expect(retrievedSession.Key()).To(Equal(testSession.Key()),
+				"Retrieved session has correct key")
+			Expect(retrievedSession.Expiration()).To(BeTemporally("~", testSession.Expiration(), time.Second),
+				"Retrieved session has correct expiry")
+			Expect(retrievedSession.EstablishedAt()).To(BeTemporally("~", testSession.EstablishedAt(), time.Second),
+				"Retrieved session has correct establishment date")
+			Expect(retrievedSession.DappId()).To(Equal(testSession.DappId()),
+				"Retrieved session has correct dApp ID")
+
+			retrievedSessionDappData := retrievedSession.DappData()
+			Expect(retrievedSessionDappData.Name).To(Equal(testDappData.Name),
+				"Retrieved session has correct dApp name")
+			Expect(retrievedSessionDappData.URL).To(Equal(testDappData.URL),
+				"Retrieved session has correct dApp URL")
+			Expect(retrievedSessionDappData.Description).To(Equal(testDappData.Description),
+				"Retrieved session has correct dApp description")
+			Expect(retrievedSessionDappData.Icon).To(Equal(testDappData.Icon),
+				"Retrieved session has correct dApp icon")
+		})
+
+		It("returns nil when attempting to get a session that does not exist", func() {
+			// Generate a new session ID
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			// Check that no session is returned
+			retrievedSession, err := sessionManager.GetSession(sessionId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedSession).To(BeNil())
 		})
 	})
 
