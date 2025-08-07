@@ -59,7 +59,7 @@ type Manager struct {
 const sessionsCreateTblSQL = `
 CREATE TABLE sessions (
     id VARCHAR PRIMARY KEY,
-    key VARCHAR NOT NULL,
+    key BLOB NOT NULL,
     expiry TIMESTAMP_S NOT NULL,
     est TIMESTAMP_S NOT NULL,
     dapp_id VARCHAR NOT NULL,
@@ -208,7 +208,6 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	b64Encoder := base64.StdEncoding
 	sessionKey := session.Key()
 	sessionIdB64 := b64Encoder.EncodeToString(sessionKey.PublicKey().Bytes())
-	sessionKeyB64 := b64Encoder.EncodeToString(sessionKey.Bytes())
 	dappIdB64 := b64Encoder.EncodeToString(session.DappId().Bytes())
 	// Ensure dApp data is not nil
 	var dappData *dc.DappData
@@ -217,7 +216,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	} else {
 		dappData = session.dappData
 	}
-	// The dApp icon needs to be stored as bytes
+	// The dApp icon needs to be stored as bytes, so decode the base64
 	dappIconB64, decodeErr := b64Encoder.DecodeString(dappData.Icon)
 	if decodeErr != nil {
 		return decodeErr
@@ -232,7 +231,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	// Insert session into temporary table
 	_, err = db.Exec(sessionsSimpleInsertSQL,
 		sessionIdB64,
-		sessionKeyB64,
+		sessionKey.Bytes(),
 		// DuckDB uses ISO8601 format for timestamps
 		// Source: <https://duckdb.org/docs/stable/sql/data_types/timestamp>
 		session.Expiration().UTC().Format(time.DateTime),
