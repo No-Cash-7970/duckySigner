@@ -21,8 +21,7 @@ const (
 	// ConfirmCodeClaimName is the name for the "claim" that contains the
 	// confirmation code within a PASETO for a confirmation token
 	ConfirmCodeClaimName = "code"
-)
-const (
+
 	// MissingConfirmTokenDappIdErrMsg is the error message for when the dApp ID
 	// is missing within the confirmation token
 	MissingConfirmTokenDappIdErrMsg = "missing dApp ID in confirmation token"
