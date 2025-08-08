@@ -88,6 +88,14 @@ type Manager struct {
 	confirmLifetime time.Duration
 }
 
+// sessionsTblName is the name of the in-memory table used to temporarily store
+// new sessions
+const sessionsTblName = "sessions"
+
+// confirmsTblName is the name of the in-memory table used to temporarily store
+// new confirmations
+const confirmsTblName = "confirmations"
+
 // sessionsCreateTblSQL is the SQL statement for created the `sessions` database
 // table
 const sessionsCreateTblSQL = `
@@ -107,39 +115,42 @@ CREATE TABLE sessions (
 // addParquetKeySQL is the SQL statement for setting the Parquet file encryption
 // key within DuckDB. The file encryption key is used for encrypting and
 // decrypting all the Parquet files that are used as the database files.
+// Requires the file encryption key in Base64.
 const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
 
-// sessionsWriteToDbFileSQL is the SQL statement for directing DuckDB to write
-// the temporary sessions table to a new file (or overwrite the file if it
-// exists)
-const sessionsWriteToDbFileSQL = "COPY sessions TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});"
+// itemsWriteToDbFileSQL is the SQL statement for directing DuckDB to write
+// a in-memory table to a new file (or overwrite the file if it exists).
+// Requires the in-memory table name and the name of the new file.
+const itemsWriteToDbFileSQL = "COPY %s TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});"
 
-// sessionsSimpleInsertSQL is the SQL statement for inserting a session into the
-// temporary sessions table
-const sessionsSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+// itemSimpleInsertSQL is the SQL statement for inserting an item (e.g. session)
+// into a in-memory table. Requires the name of the in-memory table.
+const itemSimpleInsertSQL = "INSERT INTO %s VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-// sessionsAddToDbFileSQL is the SQL statement for adding sessions from the
-// temporary sessions table to the sessions database file.
+// itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
+// confirmations) from a in-memory table to a database file.
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
-// to compression algorithm?)
-const sessionsAddToDbFileSQL = `
+// to compression algorithm?). Requires the database file name, the name of the
+// in-memory table and database file name (again).
+const itemsAddToDbFileSQL = `
 COPY (
     (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
     UNION
-    FROM sessions)
+    FROM %s)
 )
 TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
-// findSessionByIdSQL is the SQL statement for finding a session within the
-// sessions database file by ID
-const findSessionByIdSQL = `
+// findItemByIdSQL is the SQL statement for finding an item (e.g. session)
+// within a database file by ID. Requires the database file name.
+const findItemByIdSQL = `
 FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
 WHERE id = ?
 `
 
-// allSessionsSQL is the SQL statement for getting all stored sessions
-const allSessionsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
+// allItemsSQL is the SQL statement for getting all stored items (eg. sessions,
+// confirmations). Requires the database file name.
+const allItemsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
 
 /*******************************************************************************
  * Manager
@@ -291,7 +302,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappIcon        []byte
 	)
 	sessionRow := db.QueryRow(
-		fmt.Sprintf(findSessionByIdSQL, sessionsFilePath),
+		fmt.Sprintf(findItemByIdSQL, sessionsFilePath),
 		sessionId,
 	)
 	err = sessionRow.Scan(
@@ -342,7 +353,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 		return []*Session{}, err
 	}
 
-	sessionsRows, err := db.Query(fmt.Sprintf(allSessionsSQL, sessionsFilePath))
+	sessionsRows, err := db.Query(fmt.Sprintf(allItemsSQL, sessionsFilePath))
 	if err != nil {
 		return []*Session{}, err
 	}
@@ -447,7 +458,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	}
 
 	// Insert session into temporary table
-	_, err = db.Exec(sessionsSimpleInsertSQL,
+	_, err = db.Exec(fmt.Sprintf(itemSimpleInsertSQL, sessionsTblName),
 		sessionIdB64,
 		sessionKey.Bytes(),
 		// DuckDB uses ISO8601 format for timestamps
@@ -473,7 +484,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	if !os.IsNotExist(err) { // If session file exists
 		// Check if session is already stored in the file
 		sessionRow := db.QueryRow(
-			fmt.Sprintf(findSessionByIdSQL, sessionsFilePath),
+			fmt.Sprintf(findItemByIdSQL, sessionsFilePath),
 			sessionIdB64,
 		)
 		if sessionRow.Scan() != sql.ErrNoRows {
@@ -482,13 +493,15 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 
 		// Writing a new session into an existing Parquet file is a little more
 		// complex than writing a session to a new Parquet file
-		_, err = db.Exec(fmt.Sprintf(sessionsAddToDbFileSQL, sessionsFilePath, sessionsFilePath))
+		_, err = db.Exec(
+			fmt.Sprintf(itemsAddToDbFileSQL, sessionsFilePath, sessionsTblName, sessionsFilePath),
+		)
 		if err != nil {
 			return
 		}
 	} else { // Session file does not exist
 		// Create a new file and write the session data into it
-		_, err = db.Exec(fmt.Sprintf(sessionsWriteToDbFileSQL, sessionsFilePath))
+		_, err = db.Exec(fmt.Sprintf(itemsWriteToDbFileSQL, sessionsTblName, sessionsFilePath))
 		if err != nil {
 			return
 		}
