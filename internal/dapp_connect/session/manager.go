@@ -141,6 +141,10 @@ WHERE id = ?
 // allSessionsSQL is the SQL statement for getting all stored sessions
 const allSessionsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
 
+/*******************************************************************************
+ * Manager
+ ******************************************************************************/
+
 // NewManager creates a new session manager using the given configuration for
 // creating sessions. The given ECDH curve will be used by this new session
 // manager to generate session keys.
@@ -232,6 +236,10 @@ func (sm *Manager) ConfirmLifetime() time.Duration {
 	return sm.confirmLifetime
 }
 
+/*******************************************************************************
+ * Managing sessions
+ ******************************************************************************/
+
 // GenerateSession creates a new session by generating a new session key pair
 // for the dApp with the given ID with the given dApp data
 func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData) (session *Session, err error) {
@@ -252,7 +260,7 @@ func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData
 	return
 }
 
-// GetSession attempt to retrieve the stored session with the given ID (in
+// GetSession attempts to retrieve the stored session with the given ID (in
 // base64) using the given file encryption key to decrypt the sessions database
 // file. Returns nil without an error if no session with the given ID is found.
 func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, error) {
@@ -509,8 +517,42 @@ func (sm *Manager) PurgeInvalidSessions() (int, error) {
 	return 0, nil
 }
 
-// StoreConfirmation attempts to store the given confirmation
+/*******************************************************************************
+ * Managing confirmations
+ ******************************************************************************/
+
+// GenerateConfirmation creates a new confirmation by generating a new
+// confirmation key pair for the dApp with the given ID with the given dApp data
+func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey, dappData *dc.DappData) (confirm *Confirmation, err error) {
+	return
+}
+
+// GetConfirmation attempts to retrieve the stored confirmation with the given
+// ID (in base64) using the given file encryption key to decrypt the
+// confirmations database file. Returns nil without an error if no confirmation
+// with the given ID is found.
+func (sm *Manager) GetConfirmation(confirmId string, fileEncKey []byte) (*Confirmation, error) {
+	// TODO: Complete this
+	return nil, nil
+}
+
+// GetAllConfirmations attempts to retrieve all stored confirmations using the
+// given file encryption key to decrypt the confirmations database file.
+func (sm *Manager) GetAllConfirmations(fileEncKey []byte) ([]*Confirmation, error) {
+	// TODO: Complete this
+	return []*Confirmation{}, nil
+}
+
+// StoreConfirmation attempts to store the given confirmation using the given
+// file encryption key to access the sessions database file
 func (sm *Manager) StoreConfirmation(confirm *Confirmation) error {
+	// TODO: Complete this
+	return nil
+}
+
+// RemoveConfirmation attempts to remove the stored confirmation with the given
+// ID
+func (sm *Manager) RemoveConfirmation(sessionId string) error {
 	// TODO: Complete this
 	return nil
 }
@@ -521,6 +563,17 @@ func (sm *Manager) PurgeAllConfirmations() (int, error) {
 	// TODO: Complete this
 	return 0, nil
 }
+
+// PurgeInvalidConfirmations attempts to delete all expired or invalid stored
+// confirmations. It returns the number of confirmations that were deleted.
+func (sm *Manager) PurgeInvalidConfirmations() (int, error) {
+	// TODO: Complete this
+	return 0, nil
+}
+
+/*******************************************************************************
+ * Helpers
+ ******************************************************************************/
 
 // OpenSessionsDb is a helper function that opens the database connection for
 // the sessions database and sets the file encryption key that will be used to

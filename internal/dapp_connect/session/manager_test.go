@@ -585,6 +585,36 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
+	PDescribe("GenerateConfirmation()", func() {
+		It("generates a new confirmation", func() {
+			// TODO: Complete this
+		})
+	})
+
+	PDescribe("GetConfirmation()", Ordered, func() {
+		It("returns nil when attempting to get a confirmation and there is no confirmations file", func() {
+			// TODO: Complete this
+		})
+
+		It("gets the confirmation with the given ID if it exists", func() {
+			// TODO: Complete this
+		})
+
+		It("returns nil when attempting to get a confirmation that does not exist", func() {
+			// TODO: Complete this
+		})
+	})
+
+	PDescribe("GetAllConfirmations()", Ordered, func() {
+		It("returns an empty slice if there is no confirmations file", func() {
+			// TODO: Complete this
+		})
+
+		It("gets all confirmations if there are one or more stored confirmations", func() {
+			// TODO: Complete this
+		})
+	})
+
 	PDescribe("StoreConfirmation()", func() {
 		It("stores a valid and unexpired confirmation", func() {
 			// TODO: Complete this
@@ -603,12 +633,36 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
+	PDescribe("RemoveConfirmation()", func() {
+		It("removes the confirmation with the given ID if it exists", func() {
+			// TODO: Complete this
+		})
+
+		It("fails when attempting to remove a confirmation that does not exist", func() {
+			// TODO: Complete this
+		})
+	})
+
 	PDescribe("PurgeAllConfirmations()", func() {
 		It("removes all confirmations if there are one or more stored confirmations", func() {
 			// TODO: Complete this
 		})
 
 		It("does not fail when attempting to purge all confirmations and there are no stored confirmations", func() {
+			// TODO: Complete this
+		})
+	})
+
+	PDescribe("PurgeInvalidConfirmations()", func() {
+		It("removes all invalid stored confirmations", func() {
+			// TODO: Complete this
+		})
+
+		It("does not fail when attempting to purge invalid confirmations and there are no invalid stored confirmations", func() {
+			// TODO: Complete this
+		})
+
+		It("does not fail when attempting to purge invalid confirmations and there are no stored confirmations", func() {
 			// TODO: Complete this
 		})
 	})
