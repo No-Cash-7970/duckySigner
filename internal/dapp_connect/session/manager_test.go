@@ -98,27 +98,16 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 
 		It("gets the session with the given ID if it exists", func() {
 			By("Creating a session")
-			dappKey, err := curve.GenerateKey(rand.Reader)
-			Expect(err).ToNot(HaveOccurred())
-			sessionKey, err := curve.GenerateKey(rand.Reader)
-			Expect(err).ToNot(HaveOccurred())
 			testDappData := dc.DappData{
 				Name:        "My DApp 1",
 				URL:         "https://example.com",
 				Description: "This is a test.",
 				Icon:        "",
 			}
-			testSession := session.New(
-				sessionKey,
-				dappKey.PublicKey(),
-				time.Now().Add(5*time.Minute),
-				time.Now(),
-				&testDappData,
-			)
-			sessionManager.StoreSession(&testSession, fileEncryptKey[:])
+			testSession := generateAndStoreSession(sessionManager, fileEncryptKey[:], &testDappData)
 
 			By("Attempting to retrieve created session")
-			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			sessionId := b64encoder.EncodeToString(testSession.Key().PublicKey().Bytes())
 			retrievedSession, err := sessionManager.GetSession(sessionId, fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 
@@ -155,13 +144,53 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetAllSessions()", func() {
-		It("gets all sessions if there are one or more stored sessions", func() {
-			// TODO: Complete this
+	Describe("GetAllSessions()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			dirName := ".test_dc_get_all_sessions"
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns an empty slice if there are no stored sessions", func() {
-			// TODO: Complete this
+		It("returns an empty slice if there is no sessions file", func() {
+			By("Attempting to retrieve all stored sessions")
+			retrievedSessions, err := sessionManager.GetAllSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedSessions).To(HaveLen(0))
+		})
+
+		It("gets all sessions if there are one or more stored sessions", func() {
+			By("Creating session #1")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 1",
+				URL:         "https://example.com",
+				Description: "This is the first test.",
+				Icon:        "",
+			})
+			By("Creating session #2")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 2",
+				URL:         "https://example2.com",
+				Description: "This is the second test.",
+				Icon:        "",
+			})
+			By("Creating session #3")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 3",
+				URL:         "https://example3.com",
+				Description: "This is the third test.",
+				Icon:        "",
+			})
+
+			By("Attempting to retrieve all stored sessions")
+			retrievedSessions, err := sessionManager.GetAllSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedSessions).To(HaveLen(3))
 		})
 	})
 
@@ -596,4 +625,28 @@ func sessionManagerCleanup(dataDirName string) func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}
+}
+
+// generateAndStoreSession generates a session, sets its dApp data to the given
+// dApp data, and stores it using the given session manager and file encryption
+// key
+func generateAndStoreSession(
+	sessionManager *session.Manager,
+	fileEncryptKey []byte,
+	dappData *dc.DappData,
+) *session.Session {
+	dappKey, err := curve.GenerateKey(rand.Reader)
+	Expect(err).ToNot(HaveOccurred())
+	sessionKey, err := curve.GenerateKey(rand.Reader)
+	Expect(err).ToNot(HaveOccurred())
+	testSession := session.New(
+		sessionKey,
+		dappKey.PublicKey(),
+		time.Now().Add(5*time.Minute),
+		time.Now(),
+		dappData,
+	)
+	sessionManager.StoreSession(&testSession, fileEncryptKey)
+
+	return &testSession
 }

@@ -305,40 +305,92 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		return nil, err
 	}
 
-	// Convert session key bytes to an ECDH private key
-	retrievedSessionKey, err := sm.curve.NewPrivateKey(retrievedSessionKeyBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert dApp ID base64-encoded bytes to an ECDH public key
-	retrievedDappIdBytes, err := base64.StdEncoding.DecodeString(retrievedDappIdB64)
-	if err != nil {
-		return nil, err
-	}
-	retrievedDappId, err := sm.curve.NewPublicKey(retrievedDappIdBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Session{
-		key:           retrievedSessionKey,
-		exp:           retrievedExp,
-		establishedAt: retrievedEst,
-		dappId:        retrievedDappId,
-		dappData: &dc.DappData{
-			Name:        retrievedDappName,
-			URL:         retrievedDappURL,
-			Description: retrievedDappDesc,
-			Icon:        base64.StdEncoding.EncodeToString(retrievedDappIcon),
-		},
-	}, nil
+	return sm.rowToSession(
+		retrievedSessionKeyBytes,
+		retrievedExp,
+		retrievedEst,
+		retrievedDappIdB64,
+		retrievedDappName,
+		retrievedDappURL,
+		retrievedDappDesc,
+		retrievedDappIcon,
+	)
 }
 
-// GetAllSessions attempts to retrieve all stored sessions
-func (sm *Manager) GetAllSessions() []*Session {
-	// TODO: Complete this
-	return []*Session{}
+// GetAllSessions attempts to retrieve all stored sessions using the given file
+// encryption key to decrypt the sessions database file.
+func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return []*Session{}, err
+	}
+	defer db.Close()
+
+	sessionsFilePath, err := sm.getSessionsFilePath()
+	if os.IsNotExist(err) {
+		return []*Session{}, nil
+	}
+	if err != nil {
+		return []*Session{}, err
+	}
+
+	sessionsRows, err := db.Query(fmt.Sprintf(allSessionsSQL, sessionsFilePath))
+	if err != nil {
+		return []*Session{}, err
+	}
+
+	var retrievedSessions []*Session
+
+	// Convert each row into a Session
+	for sessionsRows.Next() {
+		var (
+			retrievedSessionId       string
+			retrievedSessionKeyBytes []byte
+			retrievedExp             time.Time
+			retrievedEst             time.Time
+			retrievedDappIdB64       string
+			retrievedDappName        string
+			retrievedDappURL         string
+			retrievedDappDesc        string
+			retrievedDappIcon        []byte
+		)
+
+		err := sessionsRows.Scan(
+			&retrievedSessionId,
+			&retrievedSessionKeyBytes,
+			&retrievedExp,
+			&retrievedEst,
+			&retrievedDappIdB64,
+			&retrievedDappName,
+			&retrievedDappURL,
+			&retrievedDappDesc,
+			&retrievedDappIcon,
+		)
+		if err != nil {
+			// An unexpected error occurred
+			// Return the incomplete set along with the error
+			return retrievedSessions, err
+		}
+
+		session, err := sm.rowToSession(
+			retrievedSessionKeyBytes,
+			retrievedExp,
+			retrievedEst,
+			retrievedDappIdB64,
+			retrievedDappName,
+			retrievedDappURL,
+			retrievedDappDesc,
+			retrievedDappIcon,
+		)
+		if err != nil {
+			// Return the incomplete set along with the error
+			return retrievedSessions, err
+		}
+
+		retrievedSessions = append(retrievedSessions, session)
+	}
+
+	return retrievedSessions, nil
 }
 
 // StoreSession attempts to store the given session using the given file
@@ -517,4 +569,46 @@ func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 	}
 
 	return
+}
+
+// rowToSession converts the given data of a sessions database row into a
+// Session
+func (sm *Manager) rowToSession(
+	sessionKeyBytes []byte,
+	exp time.Time,
+	est time.Time,
+	dappIdB64 string,
+	dappName string,
+	dappURL string,
+	dappDesc string,
+	dappIcon []byte,
+) (*Session, error) {
+	// Convert session key bytes to an ECDH private key
+	retrievedSessionKey, err := sm.curve.NewPrivateKey(sessionKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert dApp ID base64-encoded bytes to an ECDH public key
+	retrievedDappIdBytes, err := base64.StdEncoding.DecodeString(dappIdB64)
+	if err != nil {
+		return nil, err
+	}
+	retrievedDappId, err := sm.curve.NewPublicKey(retrievedDappIdBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Session{
+		key:           retrievedSessionKey,
+		exp:           exp,
+		establishedAt: est,
+		dappId:        retrievedDappId,
+		dappData: &dc.DappData{
+			Name:        dappName,
+			URL:         dappURL,
+			Description: dappDesc,
+			Icon:        base64.StdEncoding.EncodeToString(dappIcon),
+		},
+	}, nil
 }
