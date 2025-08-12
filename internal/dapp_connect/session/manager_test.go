@@ -87,6 +87,9 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 
 		It("returns nil when attempting to get a session and there is no sessions file", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+
 			// Generate a new session ID
 			sessionKey, err := curve.GenerateKey(rand.Reader)
 			Expect(err).ToNot(HaveOccurred())
@@ -159,6 +162,8 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 
 		It("returns an empty slice if there is no sessions file", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
 			By("Attempting to retrieve all stored sessions")
 			retrievedSessions, err := sessionManager.GetAllSessions(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
