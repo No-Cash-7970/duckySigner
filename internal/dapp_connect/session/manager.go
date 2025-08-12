@@ -305,12 +305,6 @@ func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData
 // base64) using the given file encryption key to decrypt the sessions database
 // file. Returns nil without an error if no session with the given ID is found.
 func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, error) {
-	db, err := sm.OpenSessionsDb(fileEncKey)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
 	sessionsFilePath, err := sm.getSessionsFilePath()
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -318,6 +312,12 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 	if err != nil {
 		return nil, err
 	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
 
 	// Run SQL query for finding session by ID
 	var (
@@ -369,12 +369,6 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 // GetAllSessions attempts to retrieve all stored sessions using the given file
 // encryption key to decrypt the sessions database file.
 func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
-	db, err := sm.OpenSessionsDb(fileEncKey)
-	if err != nil {
-		return []*Session{}, err
-	}
-	defer db.Close()
-
 	sessionsFilePath, err := sm.getSessionsFilePath()
 	if os.IsNotExist(err) {
 		return []*Session{}, nil
@@ -382,6 +376,12 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 	if err != nil {
 		return []*Session{}, err
 	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return []*Session{}, err
+	}
+	defer db.Close()
 
 	sessionsRows, err := db.Query(fmt.Sprintf(allItemsSQL, sessionsFilePath))
 	if err != nil {
@@ -542,12 +542,6 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 
 // RemoveSession attempts to remove the stored session with the given ID
 func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
-	db, err := sm.OpenSessionsDb(fileEncKey)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
 	sessionsFilePath, err := sm.getSessionsFilePath()
 	if os.IsNotExist(err) {
 		return errors.New(RemoveSessionNotStoredErrMsg)
@@ -556,13 +550,18 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 		return err
 	}
 
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
 	// Remove session
 	_, err = db.Exec(fmt.Sprintf(removeItemSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix), sessionId)
 	if err != nil {
 		return err
 	}
 
-	// Remove temporary file
 	err = sm.removeTempFile(sessionsFilePath)
 	if err != nil {
 		return err
