@@ -103,8 +103,8 @@ const sessionsTblName = "sessions"
 // new confirmations
 const confirmsTblName = "confirmations"
 
-// sessionsCreateTblSQL is the SQL statement for created the `sessions` database
-// table
+// sessionsCreateTblSQL is the SQL statement for created the `sessions`
+// in-memory database table
 const sessionsCreateTblSQL = `
 CREATE TABLE sessions (
     id VARCHAR PRIMARY KEY,
@@ -135,7 +135,10 @@ const itemsWriteToDbFileSQL = "COPY %s TO '%s' (ENCRYPTION_CONFIG {footer_key: '
 const itemSimpleInsertSQL = "INSERT INTO %s VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 // itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
-// confirmations) from a in-memory table to a database file.
+// confirmations) from a in-memory table to a database file. Adding an item to a
+// database file is done by combining the in-memory table and the items already
+// stored in the file, and then writing that combination to a new file (or
+// overwriting the existing file).
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
 // to compression algorithm?). Requires the database file name, the name of the
 // in-memory table and database file name (again).
