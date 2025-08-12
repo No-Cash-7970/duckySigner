@@ -143,7 +143,8 @@ const itemSimpleInsertSQL = "INSERT INTO %s VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 // overwriting the existing file).
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
 // to compression algorithm?). Requires the database file name, the name of the
-// in-memory table and database file name (again).
+// in-memory table and the new database (if overwriting the database file, use
+// the name of the old file).
 const itemsAddToDbFileSQL = `
 COPY (
     (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
@@ -168,7 +169,8 @@ const allItemsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'k
 // confirmation) from a database file. Removing an item is done by copying all
 // items except for the item to be removed to a new file (or overwriting the
 // existing file). Requires the database file name, the ID of the item to
-// remove, and the database file name (again).
+// remove, and the file name of the new database (if overwriting the database
+// file, use the name of the old file).
 const removeItemSQL = `
 COPY (
     FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
@@ -180,6 +182,19 @@ COPY (
 // a database file.
 const countItemsSQL = `
 SELECT count(id) FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+`
+
+// removeExpiredItemsSQL is the SQL statement for removing all expired items
+// (e.g. sessions, confirmations) from a database file. Removing all expired
+// items is done by copying all items except the invalid items to a new file (or
+// overwriting the existing file). Requires the database file name, the current
+// date-time, and the file name of the new database (if overwriting the database
+// file, use the name of the old file).
+const removeExpiredItemsSQL = `
+COPY (
+    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+    WHERE expiry > ?
+) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
 /*******************************************************************************
@@ -572,7 +587,7 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 
 // PurgeAllSessions attempts to completely delete all stored sessions. It
 // returns the number of sessions that were deleted.
-func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged int, err error) {
+func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged uint, err error) {
 	sessionsFilePath, err := sm.getSessionsFilePath()
 	if err != nil {
 		return 0, nil
@@ -587,6 +602,9 @@ func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged int, err error
 	// Count number of sessions in the file
 	row := db.QueryRow(fmt.Sprintf(countItemsSQL, sessionsFilePath))
 	row.Scan(&numPurged)
+	if err != nil {
+		return 0, err
+	}
 
 	// Remove the file
 	err = os.Remove(sessionsFilePath)
@@ -597,11 +615,42 @@ func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged int, err error
 	return
 }
 
-// PurgeInvalidSessions attempts to delete all expired or invalid stored
-// sessions. It returns the number of sessions that were deleted.
-func (sm *Manager) PurgeInvalidSessions() (int, error) {
-	// TODO: Complete this
-	return 0, nil
+// PurgeExpiredSessions attempts to delete all expired stored sessions. It
+// returns the number of sessions that were deleted.
+func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
+	sessionsFilePath, err := sm.getSessionsFilePath()
+	if err != nil {
+		return 0, nil
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	// Count number of sessions in the file before removing anything
+	row := db.QueryRow(fmt.Sprintf(countItemsSQL, sessionsFilePath))
+	var totalSessions uint
+	err = row.Scan(&totalSessions)
+	if err != nil {
+		return 0, err
+	}
+
+	// Remove expired sessions by exclusion
+	row = db.QueryRow(
+		fmt.Sprintf(removeExpiredItemsSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix),
+		time.Now().UTC(),
+	)
+	var numValid uint
+	row.Scan(&numValid)
+
+	err = sm.removeTempFile(sessionsFilePath)
+	if err != nil {
+		return 0, err
+	}
+
+	return (totalSessions - numValid), nil
 }
 
 /*******************************************************************************
@@ -703,8 +752,6 @@ func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 	// Check if session file exists
 	_, err = os.Stat(filePath)
 	if err != nil {
-		// Could not access file some reason other than that it does not exist
-		// (e.g. permissions, drive failure)
 		return
 	}
 
@@ -756,8 +803,19 @@ func (sm *Manager) rowToSession(
 // removeTempFile attempts to remove the temporary file used when modifying the
 // file with the given file name.
 func (sm *Manager) removeTempFile(originalFilename string) error {
+	// Check if temporary file exists
+	_, err := os.Stat(originalFilename + tempFileSuffix)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		// Could not access file some reason other than that it does not exist
+		// (e.g. permissions, drive failure)
+		return err
+	}
+
 	// Remove the original file
-	err := os.Remove(originalFilename)
+	err = os.Remove(originalFilename)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}

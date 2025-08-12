@@ -609,7 +609,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			))
 			err = storedSessionRow.Scan()
 
-			Expect(err).To(MatchError(sql.ErrNoRows), "Session is not not in the database file anymore")
+			Expect(err).To(MatchError(sql.ErrNoRows), "Session is not in the database file anymore")
 		})
 
 		It("returns nil when attempting to remove a session that is not stored (and sessions file exists)", func() {
@@ -636,13 +636,13 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns nil when attempting to remove all sessions and there are no stored sessions", func() {
+		It("does not fail when attempting to remove all sessions and there are no stored sessions", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 			By("Attempting to remove all stored sessions")
 			numRemoved, err := sessionManager.PurgeAllSessions(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
-			Expect(numRemoved).To(Equal(0))
+			Expect(numRemoved).To(Equal(uint(0)), "No sessions were removed")
 		})
 
 		It("removes all sessions if there are one or more stored sessions", func() {
@@ -671,21 +671,90 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			By("Attempting to remove all stored sessions")
 			numRemoved, err := sessionManager.PurgeAllSessions(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
-			Expect(numRemoved).To(Equal(3))
+			Expect(numRemoved).To(Equal(uint(3)), "All sessions were removed")
 		})
 	})
 
-	PDescribe("PurgeInvalidSessions()", func() {
-		It("removes all invalid stored sessions", func() {
-			// TODO: Complete this
-		})
+	Describe("PurgeExpiredSessions()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+		var dirName = ".test_dc_purge_invalid_sessions"
 
-		It("does not fail when attempting to purge invalid sessions and there are no invalid stored sessions", func() {
-			// TODO: Complete this
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
 		It("does not fail when attempting to purge invalid sessions and there are no stored sessions", func() {
-			// TODO: Complete this
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+			By("Attempting to remove all stored sessions")
+			numRemoved, err := sessionManager.PurgeExpiredSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numRemoved).To(Equal(uint(0)))
+		})
+
+		It("removes all expired stored sessions", func() {
+			By("Creating session #1 (expired session)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			testSession := session.New(
+				sessionKey,
+				dappKey.PublicKey(),
+				time.Now().Add(-5*time.Minute).UTC(),
+				time.Now(),
+				&dc.DappData{
+					Name:        "My DApp 1",
+					URL:         "https://example.com",
+					Description: "This is the first test.",
+					Icon:        "",
+				},
+			)
+			sessionManager.StoreSession(&testSession, fileEncryptKey[:])
+			By("Creating session #2 (valid session)")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 2",
+				URL:         "https://example2.com",
+				Description: "This is the second test.",
+				Icon:        "",
+			})
+			By("Creating session #3 (valid session)")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 3",
+				URL:         "https://example3.com",
+				Description: "This is the third test.",
+				Icon:        "",
+			})
+
+			By("Attempting to remove all expired stored sessions")
+			numRemoved, err := sessionManager.PurgeExpiredSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numRemoved).To(Equal(uint(1)), "Expired session was removed")
+
+			By("Checking the expired sessions is removed")
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			defer db.Close()
+
+			removedSessionRow := db.QueryRow(fmt.Sprintf(
+				"SELECT id FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE id = ?;",
+				dirName+"/"+sessionManager.SessionsFile(),
+			), b64encoder.EncodeToString(sessionKey.PublicKey().Bytes()))
+			var retrievedSessionId string
+			err = removedSessionRow.Scan(&retrievedSessionId)
+			Expect(err).To(MatchError(sql.ErrNoRows), "Expired session is not in the database file anymore")
+		})
+
+		It("does not fail when attempting to purge invalid sessions and there are no invalid stored sessions", func() {
+			By("Attempting to remove all stored sessions")
+			numRemoved, err := sessionManager.PurgeExpiredSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numRemoved).To(Equal(uint(0)))
 		})
 	})
 
