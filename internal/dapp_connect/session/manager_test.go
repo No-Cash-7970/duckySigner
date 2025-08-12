@@ -3,6 +3,7 @@ package session_test
 import (
 	"crypto/ecdh"
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"fmt"
 	"os"
@@ -551,13 +552,69 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("RemoveSession()", func() {
-		It("removes the session with the given ID if it exists", func() {
-			// TODO: Complete this
+	Describe("RemoveSession()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+		var dirName = ".test_dc_remove_session"
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("fails when attempting to remove a session that does not exist", func() {
-			// TODO: Complete this
+		It("fails when attempting to remove a session when sessions file does not exist", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+
+			// Generate a new session ID
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			// Check that removing the session failed
+			err = sessionManager.RemoveSession(sessionId, fileEncryptKey[:])
+			Expect(err).To(MatchError(session.RemoveSessionNotStoredErrMsg))
+		})
+
+		It("removes the session with the given ID if it is stored", func() {
+			By("Creating a session")
+			testDappData := dc.DappData{
+				Name:        "My DApp 1",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			}
+			testSession := generateAndStoreSession(sessionManager, fileEncryptKey[:], &testDappData)
+
+			By("Attempting to remove created session")
+			sessionId := b64encoder.EncodeToString(testSession.Key().PublicKey().Bytes())
+			err := sessionManager.RemoveSession(sessionId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if session has been removed")
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			defer db.Close()
+
+			storedSessionRow := db.QueryRow(fmt.Sprintf(
+				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
+				dirName+"/"+sessionManager.SessionsFile(),
+			))
+			err = storedSessionRow.Scan()
+
+			Expect(err).To(MatchError(sql.ErrNoRows), "Session is not not in the database file anymore")
+		})
+
+		It("returns nil when attempting to remove a session that is not stored (and sessions file exists)", func() {
+			// Generate a new session ID
+			sessionKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
+			// Check that removing the session failed
+			err = sessionManager.RemoveSession(sessionId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 

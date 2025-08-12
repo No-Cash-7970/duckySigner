@@ -53,6 +53,9 @@ const (
 	// NoDappIdGivenErrMsg is the error message text for when no dApp ID is
 	// given
 	NoDappIdGivenErrMsg = "no dApp ID was given"
+	// RemoveSessionNotExistErrMsg is the error message text for when there is
+	// an attempt to remove a session that is not stored
+	RemoveSessionNotStoredErrMsg = "cannot remove session that is not stored"
 )
 
 // SessionConfig is used to configure the session manager when creating a new
@@ -87,6 +90,10 @@ type Manager struct {
 	// Amount of time an outstanding confirmation can last
 	confirmLifetime time.Duration
 }
+
+// tempFileSuffix is the suffix used to create a temporary file. The temporary
+// file name is the original file name + this suffix.
+const tempFileSuffix = ".new"
 
 // sessionsTblName is the name of the in-memory table used to temporarily store
 // new sessions
@@ -151,6 +158,18 @@ WHERE id = ?
 // allItemsSQL is the SQL statement for getting all stored items (eg. sessions,
 // confirmations). Requires the database file name.
 const allItemsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
+
+// removeItemSQL is the SQL statement for removing an item (e.g. session,
+// confirmation) from a database file. Removing an item is done by copying all
+// items except for the item to be removed to a new file (or overwriting the
+// existing file). Requires the database file name, the ID of the item to
+// remove, and the database file name (again).
+const removeItemSQL = `
+COPY (
+    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+    WHERE id != ?
+) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+`
 
 /*******************************************************************************
  * Manager
@@ -511,8 +530,33 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 }
 
 // RemoveSession attempts to remove the stored session with the given ID
-func (sm *Manager) RemoveSession(sessionId string) error {
-	// TODO: Complete this
+func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	sessionsFilePath, err := sm.getSessionsFilePath()
+	if os.IsNotExist(err) {
+		return errors.New(RemoveSessionNotStoredErrMsg)
+	}
+	if err != nil {
+		return err
+	}
+
+	// Remove session
+	_, err = db.Exec(fmt.Sprintf(removeItemSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix), sessionId)
+	if err != nil {
+		return err
+	}
+
+	// Remove temporary file
+	err = sm.removeTempFile(sessionsFilePath)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -677,4 +721,22 @@ func (sm *Manager) rowToSession(
 			Icon:        base64.StdEncoding.EncodeToString(dappIcon),
 		},
 	}, nil
+}
+
+// removeTempFile attempts to remove the temporary file used when modifying the
+// file with the given file name.
+func (sm *Manager) removeTempFile(originalFilename string) error {
+	// Remove the original file
+	err := os.Remove(originalFilename)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Rename the temporary file
+	err = os.Rename(originalFilename+tempFileSuffix, originalFilename)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
