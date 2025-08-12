@@ -128,7 +128,9 @@ const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
 // itemsWriteToDbFileSQL is the SQL statement for directing DuckDB to write
 // a in-memory table to a new file (or overwrite the file if it exists).
 // Requires the in-memory table name and the name of the new file.
-const itemsWriteToDbFileSQL = "COPY %s TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});"
+const itemsWriteToDbFileSQL = `
+COPY %s TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+`
 
 // itemSimpleInsertSQL is the SQL statement for inserting an item (e.g. session)
 // into a in-memory table. Requires the name of the in-memory table.
@@ -148,7 +150,7 @@ COPY (
     UNION
     FROM %s)
 )
-TO '%s' (ENCRYPTION_CONFIG {footer_key: 'key'});
+TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
 // findItemByIdSQL is the SQL statement for finding an item (e.g. session)
