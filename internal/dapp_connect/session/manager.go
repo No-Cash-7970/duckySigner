@@ -176,6 +176,12 @@ COPY (
 ) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
+// countItemsSQL is the SQL statement for counting the number of items stored in
+// a database file.
+const countItemsSQL = `
+SELECT count(id) FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+`
+
 /*******************************************************************************
  * Manager
  ******************************************************************************/
@@ -567,9 +573,29 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 
 // PurgeAllSessions attempts to completely delete all stored sessions. It
 // returns the number of sessions that were deleted.
-func (sm *Manager) PurgeAllSessions() (int, error) {
-	// TODO: Complete this
-	return 0, nil
+func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged int, err error) {
+	sessionsFilePath, err := sm.getSessionsFilePath()
+	if err != nil {
+		return 0, nil
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	// Count number of sessions in the file
+	row := db.QueryRow(fmt.Sprintf(countItemsSQL, sessionsFilePath))
+	row.Scan(&numPurged)
+
+	// Remove the file
+	err = os.Remove(sessionsFilePath)
+	if err != nil && !os.IsNotExist(err) {
+		return 0, err
+	}
+
+	return
 }
 
 // PurgeInvalidSessions attempts to delete all expired or invalid stored

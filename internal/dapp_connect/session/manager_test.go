@@ -623,13 +623,55 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("PurgeAllSessions()", func() {
-		It("removes all sessions if there are one or more stored sessions", func() {
-			// TODO: Complete this
+	Describe("PurgeAllSessions()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			dirName := ".test_dc_purge_all_sessions"
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("does not fail when attempting to purge all sessions and there are no stored sessions", func() {
-			// TODO: Complete this
+		It("returns nil when attempting to remove all sessions and there are no stored sessions", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+			By("Attempting to remove all stored sessions")
+			numRemoved, err := sessionManager.PurgeAllSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numRemoved).To(Equal(0))
+		})
+
+		It("removes all sessions if there are one or more stored sessions", func() {
+			By("Creating session #1")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 1",
+				URL:         "https://example.com",
+				Description: "This is the first test.",
+				Icon:        "",
+			})
+			By("Creating session #2")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 2",
+				URL:         "https://example2.com",
+				Description: "This is the second test.",
+				Icon:        "",
+			})
+			By("Creating session #3")
+			generateAndStoreSession(sessionManager, fileEncryptKey[:], &dc.DappData{
+				Name:        "My DApp 3",
+				URL:         "https://example3.com",
+				Description: "This is the third test.",
+				Icon:        "",
+			})
+
+			By("Attempting to remove all stored sessions")
+			numRemoved, err := sessionManager.PurgeAllSessions(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numRemoved).To(Equal(3))
 		})
 	})
 
