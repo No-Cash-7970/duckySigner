@@ -585,13 +585,17 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 			return errors.New(SessionExistsErrMsg)
 		}
 
-		// Writing a new session into an existing Parquet file is a little more
-		// complex than writing a session to a new Parquet file
-		_, err = db.Exec(
-			fmt.Sprintf(itemsAddToDbFileSQL, sessionsFilePath, sessionsTblName, sessionsFilePath),
-		)
+		// Combine the sessions within the file with the new session
+		_, err = db.Exec(fmt.Sprintf(
+			itemsAddToDbFileSQL, sessionsFilePath, sessionsTblName, sessionsFilePath+tempFileSuffix,
+		))
 		if err != nil {
 			return
+		}
+
+		err = sm.removeTempFile(sessionsFilePath)
+		if err != nil {
+			return err
 		}
 	} else { // Session file does not exist
 		// Create a new file and write the session data into it
