@@ -24,12 +24,19 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 
 	Describe("NewManager()", func() {
 		It("creates a new session manager with given configuration", func() {
-			sessionManager := session.NewManager(curve, &session.SessionConfig{"", "", "somewhere/dc", 42, 8})
+			sessionManager := session.NewManager(
+				curve,
+				&session.SessionConfig{"", "", "somewhere/dc", 42, 8, "0123456789ABCDEF", 6},
+			)
 			Expect(sessionManager.DataDir()).To(Equal("somewhere/dc"), "Has correct data directory")
 			Expect(sessionManager.SessionLifetime()).To(Equal(42*time.Second),
 				"Has correct session lifetime")
 			Expect(sessionManager.ConfirmLifetime()).To(Equal(8*time.Second),
 				"Has correct confirmation lifetime")
+			Expect(sessionManager.ConfirmCodeCharset()).To(Equal("0123456789ABCDEF"),
+				"Has correct confirmation code character set")
+			Expect(sessionManager.ConfirmCodeLen()).To(Equal(uint(6)),
+				"Has correct confirmation code length")
 		})
 
 		It("creates a new session manager with default configuration when no configuration is given", func() {
@@ -39,6 +46,10 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 				"Has correct session lifetime")
 			Expect(sessionManager.ConfirmLifetime()).To(Equal(session.DefaultConfirmLifetime),
 				"Has correct confirmation lifetime")
+			Expect(sessionManager.ConfirmCodeCharset()).To(Equal(session.DefaultConfirmCodeCharset),
+				"Has correct confirmation code character set")
+			Expect(sessionManager.ConfirmCodeLen()).To(Equal(uint(session.DefaultConfirmCodeLen)),
+				"Has correct confirmation code length")
 		})
 	})
 
@@ -57,7 +68,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			dappId := dappKey.PublicKey()
 
-			By("Running NewSession()")
+			By("Generating a session")
 			sessionManager := session.NewManager(mockCurve, nil)
 			newSession, err := sessionManager.GenerateSession(dappId, &dc.DappData{})
 			Expect(err).ToNot(HaveOccurred())
@@ -488,7 +499,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 				Icon:        "",
 			})
 
-			By("Attempting to store session")
+			By("Attempting to store session with no session key")
 			// Generate file encryption key
 			var fileEncryptKey [32]byte
 			rand.Read(fileEncryptKey[:])
@@ -547,7 +558,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 				Icon:        "",
 			})
 
-			By("Attempting to store session")
+			By("Attempting to store session with no dApp ID")
 			// Generate file encryption key
 			var fileEncryptKey [32]byte
 			rand.Read(fileEncryptKey[:])
@@ -758,13 +769,163 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GenerateConfirmation()", func() {
-		It("generates a new confirmation", func() {
-			// TODO: Complete this
+	Describe("ConfirmSession()", func() {
+		It("returns an established session if confirmation is valid", func() {
+			By("Generating a dApp key pair (dApp ID & key)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+
+			By("Generating a confirmation")
+			sessionManager := session.NewManager(curve, nil)
+			confirm, err := sessionManager.GenerateConfirmation(dappId)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Generating a confirmation token")
+			token, err := confirm.GenerateTokenString()
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Confirming session using token")
+			testDappData := dc.DappData{
+				Name:        "My DApp",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			}
+			newSession, err := sessionManager.ConfirmSession(
+				token, confirm.Code(), confirm.Key(), &testDappData,
+			)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking confirmed (established) session")
+			Expect(newSession.Key()).To(Equal(confirm.SessionKey()), "Has correct session key")
+			Expect(newSession.Expiration()).To(
+				BeTemporally("~", time.Now().Add(session.DefaultSessionLifetime), time.Second),
+				"Has correct expiry",
+			)
+			Expect(newSession.EstablishedAt()).To(
+				BeTemporally("~", time.Now(), time.Second),
+				"Has correct established-at date-time",
+			)
+			Expect(newSession.DappId()).To(Equal(dappId), "Has correct dApp ID")
+
+			newSessionDappData := newSession.DappData()
+			Expect(newSessionDappData.Name).To(Equal(testDappData.Name),
+				"Retrieved session has correct dApp name")
+			Expect(newSessionDappData.URL).To(Equal(testDappData.URL),
+				"Retrieved session has correct dApp URL")
+			Expect(newSessionDappData.Description).To(Equal(testDappData.Description),
+				"Retrieved session has correct dApp description")
+			Expect(newSessionDappData.Icon).To(Equal(testDappData.Icon),
+				"Retrieved session has correct dApp icon")
+		})
+
+		It("fails when not given a confirmation token", func() {
+			By("Generating a dApp key pair (dApp ID & key)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+
+			By("Generating a confirmation")
+			sessionManager := session.NewManager(curve, nil)
+			confirm, err := sessionManager.GenerateConfirmation(dappId)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempting to confirm session without a token")
+			_, err = sessionManager.ConfirmSession(
+				"", confirm.Code(), confirm.Key(), &dc.DappData{},
+			)
+			Expect(err).To(MatchError(session.NoConfirmTokenGivenErrMsg))
+		})
+
+		It("fails when the given confirmation code is incorrect", func() {
+			By("Generating a dApp key pair (dApp ID & key)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+
+			By("Generating a confirmation")
+			sessionManager := session.NewManager(curve, nil)
+			confirm, err := sessionManager.GenerateConfirmation(dappId)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Generating a confirmation token")
+			token, err := confirm.GenerateTokenString()
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempting to confirm session using token using incorrect confirmation code")
+			_, err = sessionManager.ConfirmSession(token, "XXXXX", confirm.Key(), &dc.DappData{})
+			Expect(err).To(MatchError(session.WrongConfirmCodeErrMsg))
+		})
+
+		It("fails when the given confirmation key is incorrect", func() {
+			By("Generating a dApp key pair (dApp ID & key)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+
+			By("Generating a confirmation")
+			sessionManager := session.NewManager(curve, nil)
+			confirm, err := sessionManager.GenerateConfirmation(dappId)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Generating a confirmation token")
+			token, err := confirm.GenerateTokenString()
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Confirming session using token")
+			testDappData := dc.DappData{
+				Name:        "My DApp",
+				URL:         "https://example.com",
+				Description: "This is a test.",
+				Icon:        "",
+			}
+			_, err = sessionManager.ConfirmSession(
+				token, confirm.Code(), dappKey, &testDappData,
+			)
+			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	PDescribe("GetConfirmation()", Ordered, func() {
+	Describe("GenerateConfirmation()", func() {
+		It("generates a new confirmation", func() {
+			// Mock confirmation key pair to be generated by also mocking the ECDH curve
+			mockConfirmKey := "OA7vIBYGze5Vapw/qO3iPr+F9nRnaxsWSVnViTEZ1Ag="
+			mockCurve := &mocks.EcdhCurveMock{GeneratedPrivateKey: mockConfirmKey}
+			mockConfirmKeyBytes, err := b64encoder.DecodeString(mockConfirmKey)
+			Expect(err).ToNot(HaveOccurred())
+			mockSk, err := mockCurve.NewPrivateKey(mockConfirmKeyBytes)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Generating a dApp key pair (dApp ID & key)")
+			dappKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			dappId := dappKey.PublicKey()
+
+			By("Generating a confirmation")
+			sessionManager := session.NewManager(mockCurve, nil)
+			newConfirm, err := sessionManager.GenerateConfirmation(dappId)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking the newly created confirmation")
+			Expect(newConfirm.ID()).To(Equal(mockSk.PublicKey()), "Has correct confirmation ID")
+			Expect(newConfirm.Key()).To(Equal(mockSk), "Has correct confirmation key")
+			Expect(newConfirm.Expiration()).To(
+				BeTemporally("~", time.Now().Add(session.DefaultConfirmLifetime), time.Second),
+				"Has correct expiry",
+			)
+			Expect(newConfirm.DappId()).To(Equal(dappId), "Has correct dApp ID")
+		})
+
+		It("fails if no dApp ID is given", func() {
+			By("Attempting to generate a confirmation without a dApp ID")
+			sessionManager := session.NewManager(curve, nil)
+			_, err := sessionManager.GenerateConfirmation(nil)
+			Expect(err).To(MatchError(session.NoDappIdGivenErrMsg))
+		})
+	})
+
+	PDescribe("GetConfirmationKey()", Ordered, func() {
 		It("returns nil when attempting to get a confirmation and there is no confirmations file", func() {
 			// TODO: Complete this
 		})
@@ -778,7 +939,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetAllConfirmations()", Ordered, func() {
+	PDescribe("GetAllConfirmationKeys()", Ordered, func() {
 		It("returns an empty slice if there is no confirmations file", func() {
 			// TODO: Complete this
 		})
@@ -788,7 +949,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("StoreConfirmation()", func() {
+	PDescribe("StoreConfirmationKey()", func() {
 		It("stores a valid and unexpired confirmation", func() {
 			// TODO: Complete this
 		})
@@ -806,7 +967,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("RemoveConfirmation()", func() {
+	PDescribe("RemoveConfirmationKey()", func() {
 		It("removes the confirmation with the given ID if it exists", func() {
 			// TODO: Complete this
 		})
@@ -816,26 +977,12 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("PurgeAllConfirmations()", func() {
+	PDescribe("PurgeConfirmationKeystore()", func() {
 		It("removes all confirmations if there are one or more stored confirmations", func() {
 			// TODO: Complete this
 		})
 
 		It("does not fail when attempting to purge all confirmations and there are no stored confirmations", func() {
-			// TODO: Complete this
-		})
-	})
-
-	PDescribe("PurgeInvalidConfirmations()", func() {
-		It("removes all invalid stored confirmations", func() {
-			// TODO: Complete this
-		})
-
-		It("does not fail when attempting to purge invalid confirmations and there are no invalid stored confirmations", func() {
-			// TODO: Complete this
-		})
-
-		It("does not fail when attempting to purge invalid confirmations and there are no stored confirmations", func() {
 			// TODO: Complete this
 		})
 	})

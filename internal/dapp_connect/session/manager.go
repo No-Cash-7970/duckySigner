@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math/big"
 	"net/url"
 	"os"
 	"strings"
@@ -25,10 +26,10 @@ const (
 	// established sessions are stored
 	DefaultSessionsFile = "sessions.parquet"
 	// DefaultConfirmsFile is the default file name for the database file where
-	// pending confirmations are stored
+	// the keys for pending confirmations are stored
 	DefaultConfirmsFile = "confirms.parquet"
 	// DefaultDataDir is the name of the directory where data files, such as the
-	// sessions database file and the confirmations database file, are stored
+	// sessions database and the confirmation keystore, are stored
 	DefaultDataDir = "./dapp_connect"
 	// DefaultSessionLifetime is the default amount of time a session lasts
 	// before expiring
@@ -36,10 +37,25 @@ const (
 	// DefaultConfirmLifetime is the default amount of time an outstanding
 	// confirmation can last before expiring
 	DefaultConfirmLifetime = 10 * time.Minute
+	// DefaultConfirmCodeCharset is a the set of characters used for generating
+	// a confirmation code
+	DefaultConfirmCodeCharset = "0123456789"
+	// DefaultConfirmCodeLen is the length of a confirmation code
+	DefaultConfirmCodeLen = 5
 
 	// dataDirPermission is the OS file permissions used for the data directory
 	// when it is created
 	dataDirPermissions = 0700
+	// tempFileSuffix is the suffix used to create a temporary file. The
+	// temporary file name is the original file name + this suffix.
+	tempFileSuffix = ".new"
+
+	// sessionsTblName is the name of the in-memory table used to temporarily
+	// store new sessions
+	sessionsTblName = "sessions"
+	// confirmsTblName is the name of the in-memory table used to temporarily
+	// store new confirmation keys
+	confirmsTblName = "confirmations"
 
 	// SessionExistsErrMsg is the error message text for when a session already
 	// exists
@@ -56,6 +72,13 @@ const (
 	// RemoveSessionNotExistErrMsg is the error message text for when there is
 	// an attempt to remove a session that is not stored
 	RemoveSessionNotStoredErrMsg = "cannot remove session that is not stored"
+	// WrongConfirmCodeErrMsg is the error message text for when the given
+	// confirmation code does not match the code that is with in the given
+	// confirmation token
+	WrongConfirmCodeErrMsg = "wrong confirmation code"
+	// NoConfirmTokenGivenErrMsg is the error message text for when the given
+	// confirmation token is empty (i.e. no token was given)
+	NoConfirmTokenGivenErrMsg = "no confirmation token given"
 )
 
 // SessionConfig is used to configure the session manager when creating a new
@@ -63,15 +86,20 @@ const (
 type SessionConfig struct {
 	// File name of the database file where the established sessions are stored
 	SessionsFile string `json:"sessions_file,omitempty"`
-	// File name of the database file where the pending confirmations are stored
+	// File name of the database file where the keys for pending confirmations
+	// are stored
 	ConfirmsFile string `json:"confirms_file,omitempty"`
 	// Name of the directory where the data files (e.g. database files) are
 	// stored
 	DataDir string `json:"data_dir,omitempty"`
 	// Amount of time a session lasts
-	SessionLifetimeSecs uint64 `json:"session_lifetime_secs"`
+	SessionLifetimeSecs uint64 `json:"session_lifetime_secs,omitempty"`
 	// Amount of time an outstanding confirmation can last
-	ConfirmLifetimeSecs uint64 `json:"confirm_lifetime_secs"`
+	ConfirmLifetimeSecs uint64 `json:"confirm_lifetime_secs,omitempty"`
+	// The character set used to generate a confirmation code
+	ConfirmCodeCharset string `json:"confirm_code_charset,omitempty"`
+	// The length of a confirmation code
+	ConfirmCodeLen uint `json:"confirm_code_len,omitempty"`
 }
 
 // Manager is the dApp connect session manager
@@ -80,7 +108,8 @@ type Manager struct {
 	curve dc.ECDHCurve
 	// File name of the database file where the established sessions are stored
 	sessionsFile string
-	// File name of the database file where the pending confirmations are stored
+	// File name of the database file where the keys for pending confirmations
+	// are stored
 	confirmsFile string
 	// Name of the directory where the data files (e.g. database files) are
 	// stored
@@ -89,19 +118,11 @@ type Manager struct {
 	sessionLifetime time.Duration
 	// Amount of time an outstanding confirmation can last
 	confirmLifetime time.Duration
+	// The character set used to generate a confirmation code
+	confirmCodeCharset string
+	// The length of a confirmation code
+	confirmCodeLen uint
 }
-
-// tempFileSuffix is the suffix used to create a temporary file. The temporary
-// file name is the original file name + this suffix.
-const tempFileSuffix = ".new"
-
-// sessionsTblName is the name of the in-memory table used to temporarily store
-// new sessions
-const sessionsTblName = "sessions"
-
-// confirmsTblName is the name of the in-memory table used to temporarily store
-// new confirmations
-const confirmsTblName = "confirmations"
 
 // sessionsCreateTblSQL is the SQL statement for created the `sessions`
 // in-memory database table
@@ -137,10 +158,10 @@ COPY %s TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 const itemSimpleInsertSQL = "INSERT INTO %s VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 // itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
-// confirmations) from a in-memory table to a database file. Adding an item to a
-// database file is done by combining the in-memory table and the items already
-// stored in the file, and then writing that combination to a new file (or
-// overwriting the existing file).
+// confirmation keys) from a in-memory table to a database file. Adding an item
+// to a database file is done by combining the in-memory table and the items
+// already stored in the file, and then writing that combination to a new file
+// (or overwriting the existing file).
 // NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
 // to compression algorithm?). Requires the database file name, the name of the
 // in-memory table and the new database (if overwriting the database file, use
@@ -162,12 +183,12 @@ WHERE id = ?
 `
 
 // allItemsSQL is the SQL statement for getting all stored items (eg. sessions,
-// confirmations). Requires the database file name.
+// confirmation keys). Requires the database file name.
 const allItemsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
 
 // removeItemSQL is the SQL statement for removing an item (e.g. session,
-// confirmation) from a database file. Removing an item is done by copying all
-// items except for the item to be removed to a new file (or overwriting the
+// confirmation key) from a database file. Removing an item is done by copying
+// all items except for the item to be removed to a new file (or overwriting the
 // existing file). Requires the database file name, the ID of the item to
 // remove, and the file name of the new database (if overwriting the database
 // file, use the name of the old file).
@@ -185,7 +206,7 @@ SELECT count(id) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}
 `
 
 // removeExpiredItemsSQL is the SQL statement for removing all expired items
-// (e.g. sessions, confirmations) from a database file. Removing all expired
+// (e.g. sessions, confirmation keys) from a database file. Removing all expired
 // items is done by copying all items except the invalid items to a new file (or
 // overwriting the existing file). Requires the database file name, the current
 // date-time, and the file name of the new database (if overwriting the database
@@ -206,11 +227,13 @@ COPY (
 // manager to generate session keys.
 func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 	var (
-		sessionLife  time.Duration
-		confirmLife  time.Duration
-		dataDir      string
-		sessionsFile string
-		confirmsFile string
+		sessionLife        time.Duration
+		confirmLife        time.Duration
+		dataDir            string
+		sessionsFile       string
+		confirmsFile       string
+		confirmCodeCharset string
+		confirmCodeLen     uint
 	)
 
 	// Use default config if no config was given
@@ -220,12 +243,16 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		dataDir = DefaultDataDir
 		sessionsFile = DefaultSessionsFile
 		confirmsFile = DefaultConfirmsFile
+		confirmCodeCharset = DefaultConfirmCodeCharset
+		confirmCodeLen = DefaultConfirmCodeLen
 	} else {
 		sessionLife = time.Duration(sessionConfig.SessionLifetimeSecs) * time.Second
 		confirmLife = time.Duration(sessionConfig.ConfirmLifetimeSecs) * time.Second
 		dataDir = sessionConfig.DataDir
 		sessionsFile = sessionConfig.SessionsFile
 		confirmsFile = sessionConfig.ConfirmsFile
+		confirmCodeCharset = sessionConfig.ConfirmCodeCharset
+		confirmCodeLen = sessionConfig.ConfirmCodeLen
 
 		// If no data directory is given, interpret it as wanting the directory
 		// to be the current directory
@@ -250,6 +277,16 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		if confirmsFile == "" {
 			confirmsFile = DefaultConfirmsFile
 		}
+
+		// If no confirmation code character set was given
+		if confirmCodeCharset == "" {
+			confirmCodeCharset = DefaultConfirmCodeCharset
+		}
+
+		// If no confirmation code length was given
+		if confirmCodeLen == 0 {
+			confirmCodeLen = DefaultConfirmCodeLen
+		}
 	}
 
 	return &Manager{
@@ -258,9 +295,11 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		confirmLifetime: confirmLife,
 		// URL encode directory and files names to prevent SQL injection. Leave
 		// "/" unescaped in data directory name.
-		dataDir:      strings.Join(strings.Split(url.QueryEscape(dataDir), "%2F"), "/"),
-		sessionsFile: url.QueryEscape(sessionsFile),
-		confirmsFile: url.QueryEscape(confirmsFile),
+		dataDir:            strings.Join(strings.Split(url.QueryEscape(dataDir), "%2F"), "/"),
+		sessionsFile:       url.QueryEscape(sessionsFile),
+		confirmsFile:       url.QueryEscape(confirmsFile),
+		confirmCodeCharset: confirmCodeCharset,
+		confirmCodeLen:     confirmCodeLen,
 	}
 }
 
@@ -270,8 +309,8 @@ func (sm *Manager) SessionsFile() string {
 	return sm.sessionsFile
 }
 
-// ConfirmationsFile returns the file name of the database file for storing
-// pending confirmations
+// ConfirmationsFile returns the file name of the database file for storing the
+// keys for pending confirmations
 func (sm *Manager) ConfirmationsFile() string {
 	return sm.confirmsFile
 }
@@ -292,12 +331,23 @@ func (sm *Manager) ConfirmLifetime() time.Duration {
 	return sm.confirmLifetime
 }
 
+// ConfirmCodeCharset returns the charset used to generate a confirmation code
+func (sm *Manager) ConfirmCodeCharset() string {
+	return sm.confirmCodeCharset
+}
+
+// ConfirmCodeLen returns the charset used to generate a confirmation code
+func (sm *Manager) ConfirmCodeLen() uint {
+	return sm.confirmCodeLen
+}
+
 /*******************************************************************************
  * Managing sessions
  ******************************************************************************/
 
-// GenerateSession creates a new session by generating a new session key pair
-// for the dApp with the given ID with the given dApp data
+// GenerateSession creates a new unestablished session (with no established-at
+// date-time) by generating a new session key pair for the dApp with the given
+// ID with the given dApp data
 func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData) (session *Session, err error) {
 	// Generate session key pair
 	sessionKey, err := sm.curve.GenerateKey(rand.Reader)
@@ -480,9 +530,8 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 
 	// Convert some of the session data for storage
 	b64Encoder := base64.StdEncoding
-	sessionKey := session.Key()
-	sessionIdB64 := b64Encoder.EncodeToString(sessionKey.PublicKey().Bytes())
-	dappIdB64 := b64Encoder.EncodeToString(session.DappId().Bytes())
+	sessionIdB64 := b64Encoder.EncodeToString(session.key.PublicKey().Bytes())
+	dappIdB64 := b64Encoder.EncodeToString(session.dappId.Bytes())
 	// Ensure dApp data is not nil
 	var dappData *dc.DappData
 	if session.dappData == nil {
@@ -505,11 +554,11 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	// Insert session into temporary table
 	_, err = db.Exec(fmt.Sprintf(itemSimpleInsertSQL, sessionsTblName),
 		sessionIdB64,
-		sessionKey.Bytes(),
+		session.key.Bytes(),
 		// DuckDB uses ISO8601 format for timestamps
 		// Source: <https://duckdb.org/docs/stable/sql/data_types/timestamp>
-		session.Expiration().UTC().Format(time.DateTime),
-		session.EstablishedAt().UTC().Format(time.DateTime),
+		session.exp.UTC().Format(time.DateTime),
+		session.establishedAt.UTC().Format(time.DateTime),
 		dappIdB64,
 		dappData.Name,
 		dappData.URL,
@@ -653,56 +702,118 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 	return (totalSessions - numValid), nil
 }
 
+// ConfirmSession creates a new session using the given dApp data after checking
+// the given confirmation token, code and key
+func (sm *Manager) ConfirmSession(
+	token string,
+	code string,
+	key *ecdh.PrivateKey,
+	dappData *dc.DappData,
+) (*Session, error) {
+	// Check token
+	if token == "" {
+		return nil, errors.New(NoConfirmTokenGivenErrMsg)
+	}
+
+	// Decrypt token
+	confirm, err := DecryptToken(token, key, sm.curve)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check code
+	if code != confirm.code {
+		return nil, errors.New(WrongConfirmCodeErrMsg)
+	}
+
+	// Create the new established session
+	now := time.Now()
+	session := Session{
+		key:           confirm.sessionKey,
+		dappId:        confirm.dappId,
+		dappData:      dappData,
+		establishedAt: now,
+		exp:           now.Add(sm.sessionLifetime),
+	}
+
+	return &session, nil
+}
+
 /*******************************************************************************
  * Managing confirmations
  ******************************************************************************/
 
 // GenerateConfirmation creates a new confirmation by generating a new
-// confirmation key pair for the dApp with the given ID with the given dApp data
-func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey, dappData *dc.DappData) (confirm *Confirmation, err error) {
+// confirmation key pair for the dApp with the given ID
+func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey) (confirm *Confirmation, err error) {
+	// Check dApp ID
+	if dappId == nil {
+		return nil, errors.New(NoDappIdGivenErrMsg)
+	}
+
+	// Generate confirmation key pair
+	confirmKey, err := sm.curve.GenerateKey(rand.Reader)
+	if err != nil {
+		return
+	}
+
+	// Generate session key pair
+	sessionKey, err := sm.curve.GenerateKey(rand.Reader)
+	if err != nil {
+		return
+	}
+
+	// Generate confirmation code
+	code, err := sm.generateConfirmationCode()
+	if err != nil {
+		return
+	}
+
+	confirm = NewConfirmation(
+		dappId,
+		sessionKey,
+		confirmKey,
+		code,
+		time.Now().Add(sm.confirmLifetime),
+	)
+
 	return
 }
 
-// GetConfirmation attempts to retrieve the stored confirmation with the given
-// ID (in base64) using the given file encryption key to decrypt the
-// confirmations database file. Returns nil without an error if no confirmation
+// GetConfirmationKey attempts to retrieve the stored confirmation key with the
+// given ID (in base64) using the given file encryption key to decrypt the
+// confirmation keystore file. Returns nil without an error if no confirmation
 // with the given ID is found.
-func (sm *Manager) GetConfirmation(confirmId string, fileEncKey []byte) (*Confirmation, error) {
+func (sm *Manager) GetConfirmationKey(confirmId string, fileEncKey []byte) (*ecdh.PrivateKey, error) {
 	// TODO: Complete this
 	return nil, nil
 }
 
-// GetAllConfirmations attempts to retrieve all stored confirmations using the
-// given file encryption key to decrypt the confirmations database file.
-func (sm *Manager) GetAllConfirmations(fileEncKey []byte) ([]*Confirmation, error) {
+// GetAllConfirmationKeys attempts to retrieve all stored confirmation keys
+// using the given file encryption key to decrypt the confirmation keystore
+// file.
+func (sm *Manager) GetAllConfirmationKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, error) {
 	// TODO: Complete this
-	return []*Confirmation{}, nil
+	return []*ecdh.PrivateKey{}, nil
 }
 
-// StoreConfirmation attempts to store the given confirmation using the given
-// file encryption key to access the sessions database file
-func (sm *Manager) StoreConfirmation(confirm *Confirmation) error {
-	// TODO: Complete this
-	return nil
-}
-
-// RemoveConfirmation attempts to remove the stored confirmation with the given
-// ID
-func (sm *Manager) RemoveConfirmation(sessionId string) error {
+// StoreConfirmKey attempts to store the given confirmation key using the given
+// file encryption key to access the confirmation keystore file
+func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey) error {
 	// TODO: Complete this
 	return nil
 }
 
-// PurgeAllConfirmations attempts to completely delete all confirmations. It
-// returns the number of confirmations that were deleted.
-func (sm *Manager) PurgeAllConfirmations() (int, error) {
+// RemoveConfirmKey attempts to remove the confirmation key with the given ID
+// from the confirmation keystore
+func (sm *Manager) RemoveConfirmKey(confirmId string) error {
 	// TODO: Complete this
-	return 0, nil
+	return nil
 }
 
-// PurgeInvalidConfirmations attempts to delete all expired or invalid stored
-// confirmations. It returns the number of confirmations that were deleted.
-func (sm *Manager) PurgeInvalidConfirmations() (int, error) {
+// PurgeConfirmKeystore attempts to delete the entire confirmation keystore. It
+// returns the number of confirmation keys that were deleted.
+func (sm *Manager) PurgeConfirmKeystore() (int, error) {
 	// TODO: Complete this
 	return 0, nil
 }
@@ -741,10 +852,10 @@ func (sm *Manager) OpenSessionsDb(fileEncKey []byte) (db *sql.DB, err error) {
 // checks if the file exists. If the file does not exist, an os.ErrNotExist is
 // returned as the error.
 func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
-	filePath = sm.DataDir() + "/" + sm.SessionsFile()
+	filePath = sm.dataDir + "/" + sm.sessionsFile
 
 	// Ensure data directory exists
-	err = os.Mkdir(sm.DataDir(), dataDirPermissions)
+	err = os.Mkdir(sm.dataDir, dataDirPermissions)
 	if err != nil && !os.IsExist(err) {
 		return
 	}
@@ -827,4 +938,21 @@ func (sm *Manager) removeTempFile(originalFilename string) error {
 	}
 
 	return nil
+}
+
+// generateConfirmationCode generates a confirmation using the confirmation code
+// settings in the session manager
+func (sm *Manager) generateConfirmationCode() (string, error) {
+	var code string
+
+	for range sm.confirmCodeCharset {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(sm.confirmCodeCharset))))
+		if err != nil {
+			// Return partial code if there is an error
+			return code, err
+		}
+		code = code + string(DefaultConfirmCodeCharset[n.Uint64()])
+	}
+
+	return code, nil
 }
