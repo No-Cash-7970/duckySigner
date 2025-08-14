@@ -34,44 +34,6 @@ const (
 	confirmsTblName = "confirms"
 )
 
-// Manager is the dApp connect session manager
-type Manager struct {
-	// The ECDH curve to use for generating a keys or processing stored keys
-	curve dc.ECDHCurve
-	// File name of the database file where the established sessions are stored
-	sessionsFile string
-	// File name of the database file where the keys for pending confirmations
-	// are stored
-	confirmsFile string
-	// Name of the directory where the data files (e.g. database files) are
-	// stored
-	dataDir string
-	// Amount of time a session lasts
-	sessionLifetime time.Duration
-	// Amount of time an outstanding confirmation can last
-	confirmLifetime time.Duration
-	// The character set used to generate a confirmation code
-	confirmCodeCharset string
-	// The length of a confirmation code
-	confirmCodeLen uint
-}
-
-// sessionsCreateTblSQL is the SQL statement for created the `sessions`
-// in-memory database table
-const sessionsCreateTblSQL = `
-CREATE TABLE sessions (
-    id VARCHAR PRIMARY KEY,
-    key BLOB NOT NULL,
-    expiry TIMESTAMP_S NOT NULL,
-    est TIMESTAMP_S NOT NULL,
-    dapp_id VARCHAR NOT NULL,
-    dapp_name VARCHAR,
-    dapp_url VARCHAR,
-    dapp_desc VARCHAR,
-    dapp_icon BLOB
-);
-`
-
 // addParquetKeySQL is the SQL statement for setting the Parquet file encryption
 // key within DuckDB. The file encryption key is used for encrypting and
 // decrypting all the Parquet files that are used as the database files.
@@ -83,28 +45,6 @@ const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
 // Requires the in-memory table name and the name of the new file.
 const itemsWriteToDbFileSQL = `
 COPY %s TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
-`
-
-// sessionSimpleInsertSQL is the SQL statement for inserting a session into a
-// in-memory table.
-const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-
-// itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
-// confirmation keys) from a in-memory table to a database file. Adding an item
-// to a database file is done by combining the in-memory table and the items
-// already stored in the file, and then writing that combination to a new file
-// (or overwriting the existing file).
-// NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
-// to compression algorithm?). Requires the database file name, the name of the
-// in-memory table and the new database (if overwriting the database file, use
-// the name of the old file).
-const itemsAddToDbFileSQL = `
-COPY (
-    (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-    UNION
-    FROM %s)
-)
-TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
 // findItemByIdSQL is the SQL statement for finding an item (e.g. session)
@@ -137,17 +77,38 @@ const countItemsSQL = `
 SELECT count(id) FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
 `
 
-// removeExpiredItemsSQL is the SQL statement for removing all expired items
-// (e.g. sessions, confirmation keys) from a database file. Removing all expired
-// items is done by copying all items except the invalid items to a new file (or
-// overwriting the existing file). Requires the database file name, the current
-// date-time, and the file name of the new database (if overwriting the database
-// file, use the name of the old file).
-const removeExpiredItemsSQL = `
+// itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
+// confirmation keys) from a in-memory table to a database file. Adding an item
+// to a database file is done by combining the in-memory table and the items
+// already stored in the file, and then writing that combination to a new file
+// (or overwriting the existing file).
+// NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
+// to compression algorithm?). Requires the database file name, the name of the
+// in-memory table and the new database (if overwriting the database file, use
+// the name of the old file).
+const itemsAddToDbFileSQL = `
 COPY (
-    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-    WHERE expiry > ?
-) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+    (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+    UNION
+    FROM %s)
+)
+TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+`
+
+// sessionsCreateTblSQL is the SQL statement for created the `sessions`
+// in-memory database table
+const sessionsCreateTblSQL = `
+CREATE TABLE sessions (
+    id VARCHAR PRIMARY KEY,
+    key BLOB NOT NULL,
+    expiry TIMESTAMP_S NOT NULL,
+    est TIMESTAMP_S NOT NULL,
+    dapp_id VARCHAR NOT NULL,
+    dapp_name VARCHAR,
+    dapp_url VARCHAR,
+    dapp_desc VARCHAR,
+    dapp_icon BLOB
+);
 `
 
 // confirmsCreateTblSQL is the SQL statement for created the `confirms`
@@ -159,13 +120,52 @@ CREATE TABLE confirms (
 );
 `
 
+// sessionSimpleInsertSQL is the SQL statement for inserting a session into a
+// in-memory table.
+const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
 // confirmSimpleInsertSQL is the SQL statement for inserting a confirmation key
 // pair into a in-memory table.
 const confirmSimpleInsertSQL = "INSERT INTO confirms VALUES (?, ?)"
 
+// removeExpiredSessionsSQL is the SQL statement for removing all expired items
+// (e.g. sessions, confirmation keys) from a database file. Removing all expired
+// items is done by copying all items except the invalid items to a new file (or
+// overwriting the existing file). Requires the database file name, the current
+// date-time, and the file name of the new database (if overwriting the database
+// file, use the name of the old file).
+const removeExpiredSessionsSQL = `
+COPY (
+    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
+    WHERE expiry > ?
+) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+`
+
 /*******************************************************************************
  * Manager
  ******************************************************************************/
+
+// Manager is the dApp connect session manager
+type Manager struct {
+	// The ECDH curve to use for generating a keys or processing stored keys
+	curve dc.ECDHCurve
+	// File name of the database file where the established sessions are stored
+	sessionsFile string
+	// File name of the database file where the keys for pending confirmations
+	// are stored
+	confirmsFile string
+	// Name of the directory where the data files (e.g. database files) are
+	// stored
+	dataDir string
+	// Amount of time a session lasts
+	sessionLifetime time.Duration
+	// Amount of time an outstanding confirmation can last
+	confirmLifetime time.Duration
+	// The character set used to generate a confirmation code
+	confirmCodeCharset string
+	// The length of a confirmation code
+	confirmCodeLen uint
+}
 
 // NewManager creates a new session manager using the given configuration for
 // creating sessions. The given ECDH curve will be used by this new session
@@ -634,7 +634,7 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 
 	// Remove expired sessions by exclusion
 	row = db.QueryRow(
-		fmt.Sprintf(removeExpiredItemsSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix),
+		fmt.Sprintf(removeExpiredSessionsSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix),
 		time.Now().UTC(),
 	)
 	var numValid uint
