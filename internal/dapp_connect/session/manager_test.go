@@ -1080,13 +1080,66 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("RemoveConfirmKey()", func() {
-		It("removes the confirmation with the given ID if it exists", func() {
-			// TODO: Complete this
+	Describe("RemoveConfirmKey()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+		var dirName = ".test_dc_remove_confirm"
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("fails when attempting to remove a confirmation that does not exist", func() {
-			// TODO: Complete this
+		It("fails when attempting to remove a confirmation key when confirmation keystore file does not exist", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+
+			// Generate a new confirmation ID
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			// Check that removing the confirmation key failed
+			err = sessionManager.RemoveConfirmKey(confirmId, fileEncryptKey[:])
+			Expect(err).To(MatchError(session.RemoveConfirmKeyNotStoredErrMsg))
+		})
+
+		It("removes the confirmation key with the given ID if it exists", func() {
+			By("Generating and storing confirmation key pair")
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempting to remove created confirmation key")
+			err = sessionManager.RemoveConfirmKey(confirmId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if confirmation key has been removed")
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			defer db.Close()
+
+			confirmRow := db.QueryRow(fmt.Sprintf(
+				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
+				dirName+"/"+sessionManager.ConfirmationsFile(),
+			))
+			err = confirmRow.Scan()
+
+			Expect(err).To(MatchError(sql.ErrNoRows), "Key is not in the database file anymore")
+		})
+
+		It("fails when attempting to remove a confirmation key that does not exist", func() {
+			// Generate a new confirmation ID
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			// Check that removing the confirmation key failed
+			err = sessionManager.RemoveConfirmKey(confirmId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 

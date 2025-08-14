@@ -85,6 +85,9 @@ const (
 	// NoConfirmKeyGivenErrMsg is the error message text for when no
 	// confirmation key is provided
 	NoConfirmKeyGivenErrMsg = "no confirmation key was given"
+	// RemoveConfirmKeyNotExistErrMsg is the error message text for when there is
+	// an attempt to remove a confirmation key that is not stored
+	RemoveConfirmKeyNotStoredErrMsg = "cannot remove confirmation key that is not stored"
 )
 
 // SessionConfig is used to configure the session manager when creating a new
@@ -950,7 +953,31 @@ func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) erro
 // RemoveConfirmKey attempts to remove the confirmation key with the given ID
 // from the confirmation keystore
 func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
-	// TODO: Complete this
+	confirmsFilePath, err := sm.getConfirmsFilePath()
+	if os.IsNotExist(err) {
+		return errors.New(RemoveConfirmKeyNotStoredErrMsg)
+	}
+	if err != nil {
+		return err
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Remove confirmation key
+	_, err = db.Exec(fmt.Sprintf(removeItemSQL, confirmsFilePath, confirmsFilePath+tempFileSuffix), confirmId)
+	if err != nil {
+		return err
+	}
+
+	err = sm.removeTempFile(confirmsFilePath)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
