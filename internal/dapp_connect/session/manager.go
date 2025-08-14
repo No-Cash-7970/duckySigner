@@ -983,9 +983,32 @@ func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
 
 // PurgeConfirmKeystore attempts to delete the entire confirmation keystore. It
 // returns the number of confirmation keys that were deleted.
-func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (int, error) {
-	// TODO: Complete this
-	return 0, nil
+func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (numPurged uint, err error) {
+	confirmsFilePath, err := sm.getConfirmsFilePath()
+	if err != nil {
+		return 0, nil
+	}
+
+	db, err := sm.OpenDb(fileEncKey)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	// Count number of confirmation keys in the file
+	row := db.QueryRow(fmt.Sprintf(countItemsSQL, confirmsFilePath))
+	row.Scan(&numPurged)
+	if err != nil {
+		return 0, err
+	}
+
+	// Remove the file
+	err = os.Remove(confirmsFilePath)
+	if err != nil && !os.IsNotExist(err) {
+		return 0, err
+	}
+
+	return
 }
 
 /*******************************************************************************
