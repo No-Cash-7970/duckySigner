@@ -20,7 +20,7 @@ import (
 var b64encoder = base64.StdEncoding
 var curve = ecdh.X25519()
 
-var _ = FDescribe("DApp Connect Session Manager", func() {
+var _ = Describe("DApp Connect Session Manager", func() {
 
 	Describe("NewManager()", func() {
 		It("creates a new session manager with given configuration", func() {
