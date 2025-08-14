@@ -792,7 +792,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 				Description: "This is a test.",
 				Icon:        "",
 			}
-			newSession, err := sessionManager.ConfirmSession(
+			newSession, err := sessionManager.EstablishSession(
 				token, confirm.Code(), confirm.Key(), &testDappData,
 			)
 			Expect(err).ToNot(HaveOccurred())
@@ -832,7 +832,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Attempting to confirm session without a token")
-			_, err = sessionManager.ConfirmSession(
+			_, err = sessionManager.EstablishSession(
 				"", confirm.Code(), confirm.Key(), &dc.DappData{},
 			)
 			Expect(err).To(MatchError(session.NoConfirmTokenGivenErrMsg))
@@ -854,7 +854,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Attempting to confirm session using token using incorrect confirmation code")
-			_, err = sessionManager.ConfirmSession(token, "XXXXX", confirm.Key(), &dc.DappData{})
+			_, err = sessionManager.EstablishSession(token, "XXXXX", confirm.Key(), &dc.DappData{})
 			Expect(err).To(MatchError(session.WrongConfirmCodeErrMsg))
 		})
 
@@ -880,7 +880,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 				Description: "This is a test.",
 				Icon:        "",
 			}
-			_, err = sessionManager.ConfirmSession(
+			_, err = sessionManager.EstablishSession(
 				token, confirm.Code(), dappKey, &testDappData,
 			)
 			Expect(err).To(HaveOccurred())

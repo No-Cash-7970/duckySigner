@@ -722,9 +722,9 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 	return (totalSessions - numValid), nil
 }
 
-// ConfirmSession creates a new session using the given dApp data after checking
-// the given confirmation token, code and key
-func (sm *Manager) ConfirmSession(
+// EstablishSession creates a new established session using the given dApp data
+// after checking the given confirmation token, code and key
+func (sm *Manager) EstablishSession(
 	token string,
 	code string,
 	key *ecdh.PrivateKey,
