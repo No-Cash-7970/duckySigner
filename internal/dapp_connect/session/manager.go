@@ -18,7 +18,6 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 )
 
-
 const (
 	// dataDirPermission is the OS file permissions used for the data directory
 	// when it is created
@@ -33,38 +32,6 @@ const (
 	// confirmsTblName is the name of the in-memory table used to temporarily
 	// store new confirmation keys
 	confirmsTblName = "confirms"
-
-	// SessionExistsErrMsg is the error message text for when a session already
-	// exists
-	SessionExistsErrMsg = "session already exists"
-	// NoSessionGivenErrMsg is the error message text for when no session is
-	// provided
-	NoSessionGivenErrMsg = "no session was given"
-	// NoSessionKeyGivenErrMsg is the error message text for when no session key
-	// is given
-	NoSessionKeyGivenErrMsg = "no session key was given"
-	// NoDappIdGivenErrMsg is the error message text for when no dApp ID is
-	// given
-	NoDappIdGivenErrMsg = "no dApp ID was given"
-	// RemoveSessionNotExistErrMsg is the error message text for when there is
-	// an attempt to remove a session that is not stored
-	RemoveSessionNotStoredErrMsg = "cannot remove session that is not stored"
-	// WrongConfirmCodeErrMsg is the error message text for when the given
-	// confirmation code does not match the code that is with in the given
-	// confirmation token
-	WrongConfirmCodeErrMsg = "wrong confirmation code"
-	// NoConfirmTokenGivenErrMsg is the error message text for when the given
-	// confirmation token is empty (i.e. no token was given)
-	NoConfirmTokenGivenErrMsg = "no confirmation token given"
-	// ConfirmKeyExistsErrMsg is the error message text for when a confirmation
-	// key already exists
-	ConfirmKeyExistsErrMsg = "confirmation key already exists"
-	// NoConfirmKeyGivenErrMsg is the error message text for when no
-	// confirmation key is provided
-	NoConfirmKeyGivenErrMsg = "no confirmation key was given"
-	// RemoveConfirmKeyNotExistErrMsg is the error message text for when there is
-	// an attempt to remove a confirmation key that is not stored
-	RemoveConfirmKeyNotStoredErrMsg = "cannot remove confirmation key that is not stored"
 )
 
 // Manager is the dApp connect session manager
