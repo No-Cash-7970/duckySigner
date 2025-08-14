@@ -925,7 +925,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetConfirmationKey()", Ordered, func() {
+	PDescribe("GetConfirmKey()", Ordered, func() {
 		It("returns nil when attempting to get a confirmation and there is no confirmations file", func() {
 			// TODO: Complete this
 		})
@@ -939,7 +939,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetAllConfirmationKeys()", Ordered, func() {
+	PDescribe("GetAllConfirmKeys()", Ordered, func() {
 		It("returns an empty slice if there is no confirmations file", func() {
 			// TODO: Complete this
 		})
@@ -949,25 +949,59 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("StoreConfirmationKey()", func() {
-		It("stores a valid and unexpired confirmation", func() {
-			// TODO: Complete this
+	Describe("StoreConfirmKey()", func() {
+		It("stores a confirmation key", func() {
+			dirName := ".test_dc_store_confirm"
+			sessionManager := session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
+
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+
+			By("Attempting to store a confirmation key")
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
+
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if confirmation key is stored")
+			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			defer db.Close()
+
+			var (
+				storedConfirmId  string
+				storedConfirmKey []byte
+			)
+			storedSessionRow := db.QueryRow(fmt.Sprintf(
+				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
+				dirName+"/"+sessionManager.ConfirmationsFile(),
+			))
+			storedSessionRow.Scan(&storedConfirmId, &storedConfirmKey)
+
+			Expect(storedConfirmId).To(Equal(confirmId), "Stored confirmation key has correct ID")
+			Expect(storedConfirmKey).To(Equal(confirmKey.Bytes()), "Stored the correct key")
 		})
 
-		It("stores an expired confirmation", func() {
-			// TODO: Complete this
-		})
+		It("fails when not given a confirmation key", func() {
+			dirName := ".test_dc_store_confirm_key_fail"
+			sessionManager := session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 
-		It("fails to store a confirmation without a confirmation ID", func() {
-			// TODO: Complete this
-		})
+			By("Attempting to store empty (nil) confirmation key")
+			// Generate file encryption key
+			var fileEncryptKey [32]byte
+			rand.Read(fileEncryptKey[:])
 
-		It("fails to store a confirmation without a confirmation key", func() {
-			// TODO: Complete this
+			err := sessionManager.StoreConfirmKey(nil, fileEncryptKey[:])
+			Expect(err).To(MatchError(session.NoConfirmKeyGivenErrMsg))
 		})
 	})
 
-	PDescribe("RemoveConfirmationKey()", func() {
+	PDescribe("RemoveConfirmKey()", func() {
 		It("removes the confirmation with the given ID if it exists", func() {
 			// TODO: Complete this
 		})
@@ -977,7 +1011,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("PurgeConfirmationKeystore()", func() {
+	PDescribe("PurgeConfirmKeystore()", func() {
 		It("removes all confirmations if there are one or more stored confirmations", func() {
 			// TODO: Complete this
 		})

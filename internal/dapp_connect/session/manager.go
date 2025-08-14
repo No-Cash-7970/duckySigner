@@ -55,7 +55,7 @@ const (
 	sessionsTblName = "sessions"
 	// confirmsTblName is the name of the in-memory table used to temporarily
 	// store new confirmation keys
-	confirmsTblName = "confirmations"
+	confirmsTblName = "confirms"
 
 	// SessionExistsErrMsg is the error message text for when a session already
 	// exists
@@ -79,6 +79,12 @@ const (
 	// NoConfirmTokenGivenErrMsg is the error message text for when the given
 	// confirmation token is empty (i.e. no token was given)
 	NoConfirmTokenGivenErrMsg = "no confirmation token given"
+	// ConfirmKeyExistsErrMsg is the error message text for when a confirmation
+	// key already exists
+	ConfirmKeyExistsErrMsg = "confirmation key already exists"
+	// NoConfirmKeyGivenErrMsg is the error message text for when no
+	// confirmation key is provided
+	NoConfirmKeyGivenErrMsg = "no confirmation key was given"
 )
 
 // SessionConfig is used to configure the session manager when creating a new
@@ -153,9 +159,9 @@ const itemsWriteToDbFileSQL = `
 COPY %s TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
 
-// itemSimpleInsertSQL is the SQL statement for inserting an item (e.g. session)
-// into a in-memory table. Requires the name of the in-memory table.
-const itemSimpleInsertSQL = "INSERT INTO %s VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+// sessionSimpleInsertSQL is the SQL statement for inserting a session into a
+// in-memory table.
+const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 // itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
 // confirmation keys) from a in-memory table to a database file. Adding an item
@@ -217,6 +223,19 @@ COPY (
     WHERE expiry > ?
 ) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
 `
+
+// confirmsCreateTblSQL is the SQL statement for created the `confirms`
+// in-memory database table
+const confirmsCreateTblSQL = `
+CREATE TABLE confirms (
+    id VARCHAR PRIMARY KEY,
+    key BLOB NOT NULL
+);
+`
+
+// confirmSimpleInsertSQL is the SQL statement for inserting a confirmation key
+// pair into a in-memory table.
+const confirmSimpleInsertSQL = "INSERT INTO confirms VALUES (?, ?)"
 
 /*******************************************************************************
  * Manager
@@ -552,7 +571,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	}
 
 	// Insert session into temporary table
-	_, err = db.Exec(fmt.Sprintf(itemSimpleInsertSQL, sessionsTblName),
+	_, err = db.Exec(sessionSimpleInsertSQL,
 		sessionIdB64,
 		session.key.Bytes(),
 		// DuckDB uses ISO8601 format for timestamps
@@ -784,40 +803,95 @@ func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey) (confirm *Confir
 	return
 }
 
-// GetConfirmationKey attempts to retrieve the stored confirmation key with the
-// given ID (in base64) using the given file encryption key to decrypt the
+// GetConfirmKey attempts to retrieve the stored confirmation key with the given
+// ID (in base64) using the given file encryption key to decrypt the
 // confirmation keystore file. Returns nil without an error if no confirmation
 // with the given ID is found.
-func (sm *Manager) GetConfirmationKey(confirmId string, fileEncKey []byte) (*ecdh.PrivateKey, error) {
+func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.PrivateKey, error) {
 	// TODO: Complete this
 	return nil, nil
 }
 
-// GetAllConfirmationKeys attempts to retrieve all stored confirmation keys
-// using the given file encryption key to decrypt the confirmation keystore
-// file.
-func (sm *Manager) GetAllConfirmationKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, error) {
+// GetAllConfirmKeys attempts to retrieve all stored confirmation keys using the
+// given file encryption key to decrypt the confirmation keystore file.
+func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, error) {
 	// TODO: Complete this
 	return []*ecdh.PrivateKey{}, nil
 }
 
 // StoreConfirmKey attempts to store the given confirmation key using the given
 // file encryption key to access the confirmation keystore file
-func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey) error {
-	// TODO: Complete this
+func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) error {
+	if key == nil {
+		return errors.New(NoConfirmKeyGivenErrMsg)
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Create temporary table in memory
+	_, err = db.Exec(confirmsCreateTblSQL)
+	if err != nil {
+		return err
+	}
+
+	idB64 := base64.StdEncoding.EncodeToString(key.PublicKey().Bytes())
+
+	// Insert confirmation key pair into temporary table
+	_, err = db.Exec(confirmSimpleInsertSQL, idB64, key.Bytes())
+	if err != nil {
+		return err
+	}
+
+	confirmsFilePath, err := sm.getConfirmsFilePath()
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Write the confirmation key pair in the temporary table into the file
+	if !os.IsNotExist(err) { // If confirmation keystore file exists
+		// Check if confirmation key pair is already stored in the file
+		sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, confirmsFilePath), idB64)
+		if sessionRow.Scan() != sql.ErrNoRows {
+			return errors.New(ConfirmKeyExistsErrMsg)
+		}
+
+		// Combine the confirmation key within the file with the new session
+		_, err = db.Exec(fmt.Sprintf(
+			itemsAddToDbFileSQL, confirmsFilePath, confirmsTblName, confirmsFilePath+tempFileSuffix,
+		))
+		if err != nil {
+			return err
+		}
+
+		err = sm.removeTempFile(confirmsFilePath)
+		if err != nil {
+			return err
+		}
+	} else { // Confirmation keystore file does not exist
+		// Create a new file and write the confirmation key pair into it
+		_, err = db.Exec(fmt.Sprintf(itemsWriteToDbFileSQL, confirmsTblName, confirmsFilePath))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 // RemoveConfirmKey attempts to remove the confirmation key with the given ID
 // from the confirmation keystore
-func (sm *Manager) RemoveConfirmKey(confirmId string) error {
+func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
 	// TODO: Complete this
 	return nil
 }
 
 // PurgeConfirmKeystore attempts to delete the entire confirmation keystore. It
 // returns the number of confirmation keys that were deleted.
-func (sm *Manager) PurgeConfirmKeystore() (int, error) {
+func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (int, error) {
 	// TODO: Complete this
 	return 0, nil
 }
@@ -851,10 +925,10 @@ func (sm *Manager) OpenSessionsDb(fileEncKey []byte) (db *sql.DB, err error) {
 	return
 }
 
-// getSessionsFilePath ALWAYS returns the file path of the sessions database
-// file. If the data directory does not exist, it tries to created it. It also
-// checks if the file exists. If the file does not exist, an os.ErrNotExist is
-// returned as the error.
+// getSessionsFilePath returns the file path of the sessions database file. If
+// the data directory does not exist, it tries to created it. It also checks if
+// the file exists. If the file does not exist, an os.ErrNotExist is returned as
+// the error.
 func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 	filePath = sm.dataDir + "/" + sm.sessionsFile
 
@@ -865,6 +939,28 @@ func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 	}
 
 	// Check if session file exists
+	_, err = os.Stat(filePath)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// getConfirmsFilePath returns the file path of the confirmation keystore file.
+// If the data directory does not exist, it tries to created it. It also checks
+// if the file exists. If the file does not exist, an os.ErrNotExist is returned
+// as the error.
+func (sm *Manager) getConfirmsFilePath() (filePath string, err error) {
+	filePath = sm.dataDir + "/" + sm.confirmsFile
+
+	// Ensure data directory exists
+	err = os.Mkdir(sm.dataDir, dataDirPermissions)
+	if err != nil && !os.IsExist(err) {
+		return
+	}
+
+	// Check if confirmation keystore file exists
 	_, err = os.Stat(filePath)
 	if err != nil {
 		return
