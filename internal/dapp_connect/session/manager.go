@@ -415,10 +415,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappDesc        string
 		retrievedDappIcon        []byte
 	)
-	sessionRow := db.QueryRow(
-		fmt.Sprintf(findItemByIdSQL, sessionsFilePath),
-		sessionId,
-	)
+	sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, sessionsFilePath), sessionId)
 	err = sessionRow.Scan(
 		&retrievedSessionId,
 		&retrievedSessionKeyBytes,
@@ -808,8 +805,35 @@ func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey) (confirm *Confir
 // confirmation keystore file. Returns nil without an error if no confirmation
 // with the given ID is found.
 func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.PrivateKey, error) {
-	// TODO: Complete this
-	return nil, nil
+	confirmsFilePath, err := sm.getConfirmsFilePath()
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	// Retrieve confirmation key from database
+	var retrievedId string
+	var retrievedKeyBytes []byte
+	row := db.QueryRow(fmt.Sprintf(findItemByIdSQL, confirmsFilePath), confirmId)
+	err = row.Scan(&retrievedId, &retrievedKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	confirmKey, err := sm.curve.NewPrivateKey(retrievedKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return confirmKey, nil
 }
 
 // GetAllConfirmKeys attempts to retrieve all stored confirmation keys using the

@@ -925,17 +925,58 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetConfirmKey()", Ordered, func() {
-		It("returns nil when attempting to get a confirmation and there is no confirmations file", func() {
-			// TODO: Complete this
+	Describe("GetConfirmKey()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			dirName := ".test_dc_get_confirm"
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("gets the confirmation with the given ID if it exists", func() {
-			// TODO: Complete this
+		It("returns nil when attempting to get a confirmation key and there is no confirmation keystore file", func() {
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+
+			// Generate a new confirmation ID
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			// Check that no confirmation key is returned
+			retrievedConfirmKey, err := sessionManager.GetConfirmKey(confirmId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedConfirmKey).To(BeNil())
 		})
 
-		It("returns nil when attempting to get a confirmation that does not exist", func() {
-			// TODO: Complete this
+		It("gets the confirmation key with the given ID if it exists", func() {
+			By("Generating and storing confirmation key pair")
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempting to retrieve created confirmation key")
+			retrievedKey, err := sessionManager.GetConfirmKey(confirmId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Checking if confirmation key has been retrieved")
+			Expect(retrievedKey).To(Equal(confirmKey), "Retrieved the correct key")
+		})
+
+		It("returns nil when attempting to get a confirmation key that does not exist", func() {
+			// Generate a new confirmation ID
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
+			// Check that no confirmation key is returned
+			retrievedConfirmKey, err := sessionManager.GetSession(confirmId, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedConfirmKey).To(BeNil())
 		})
 	})
 
