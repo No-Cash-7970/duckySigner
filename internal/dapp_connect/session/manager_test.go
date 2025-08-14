@@ -244,7 +244,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -341,7 +341,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if second session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -421,7 +421,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if session is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -610,7 +610,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if session has been removed")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -748,7 +748,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(numRemoved).To(Equal(uint(1)), "Expired session was removed")
 
 			By("Checking the expired sessions is removed")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -1047,7 +1047,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if confirmation key is stored")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
@@ -1119,7 +1119,7 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking if confirmation key has been removed")
-			db, err := sessionManager.OpenSessionsDb(fileEncryptKey[:])
+			db, err := sessionManager.OpenDb(fileEncryptKey[:])
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 

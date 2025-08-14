@@ -400,7 +400,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		return nil, err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return nil, err
 	}
@@ -461,7 +461,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 		return []*Session{}, err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return []*Session{}, err
 	}
@@ -541,7 +541,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		return errors.New(NoDappIdGivenErrMsg)
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
 	}
@@ -637,7 +637,7 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 		return err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
 	}
@@ -665,7 +665,7 @@ func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged uint, err erro
 		return 0, nil
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return 0, err
 	}
@@ -695,7 +695,7 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 		return 0, nil
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return 0, err
 	}
@@ -816,7 +816,7 @@ func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.Pri
 		return nil, err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return nil, err
 	}
@@ -850,7 +850,7 @@ func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, err
 		return []*ecdh.PrivateKey{}, err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return []*ecdh.PrivateKey{}, err
 	}
@@ -894,7 +894,7 @@ func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) erro
 		return errors.New(NoConfirmKeyGivenErrMsg)
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
 	}
@@ -961,7 +961,7 @@ func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
 		return err
 	}
 
-	db, err := sm.OpenSessionsDb(fileEncKey)
+	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
 	}
@@ -992,13 +992,13 @@ func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (int, error) {
  * Helpers
  ******************************************************************************/
 
-// OpenSessionsDb is a helper function that opens the database connection for
-// the sessions database and sets the file encryption key that will be used to
-// encrypt and decrypt database file(s). This function usually does not need to
-// be called directly outside of testing. The file encryption key is only set
-// within the database connection. The key is NOT checked if it is correct.
-// Returns a database handle if there are no errors.
-func (sm *Manager) OpenSessionsDb(fileEncKey []byte) (db *sql.DB, err error) {
+// OpenDb is a helper function that opens the database connection for a database
+// and sets the file encryption key that will be used to encrypt and decrypt
+// database file(s). This function usually does not need to be called directly
+// outside of testing. The file encryption key is only set within the database
+// connection. The key is NOT checked if it is correct. Returns a database
+// handle if there are no errors.
+func (sm *Manager) OpenDb(fileEncKey []byte) (db *sql.DB, err error) {
 	// Open DuckDB in in-memory mode
 	db, err = sql.Open("duckdb", "")
 	if err != nil {
