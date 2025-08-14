@@ -980,13 +980,51 @@ var _ = FDescribe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	PDescribe("GetAllConfirmKeys()", Ordered, func() {
+	Describe("GetAllConfirmKeys()", Ordered, func() {
+		var sessionManager *session.Manager
+		var fileEncryptKey [32]byte
+
+		BeforeAll(func() {
+			// Generate file encryption key
+			rand.Read(fileEncryptKey[:])
+
+			dirName := ".test_dc_get_all_confirms"
+			sessionManager = session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
+			DeferCleanup(sessionManagerCleanup(dirName))
+		})
+
 		It("returns an empty slice if there is no confirmations file", func() {
-			// TODO: Complete this
+			// NOTE: Because this `Describe` container is "Ordered", the session
+			// database file is assumed to not have been created yet
+			By("Attempting to retrieve all stored confirmation keys")
+			retrievedKeys, err := sessionManager.GetAllConfirmKeys(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedKeys).To(HaveLen(0))
 		})
 
 		It("gets all confirmations if there are one or more stored confirmations", func() {
-			// TODO: Complete this
+			By("Creating confirmation key #1")
+			confirmKey, err := curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Creating confirmation key #2")
+			confirmKey, err = curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Creating confirmation key #3")
+			confirmKey, err = curve.GenerateKey(rand.Reader)
+			Expect(err).ToNot(HaveOccurred())
+			err = sessionManager.StoreConfirmKey(confirmKey, fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Attempting to retrieve all stored confirmation keys")
+			retrievedKeys, err := sessionManager.GetAllConfirmKeys(fileEncryptKey[:])
+			Expect(err).ToNot(HaveOccurred())
+			Expect(retrievedKeys).To(HaveLen(3))
 		})
 	})
 

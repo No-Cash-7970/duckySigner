@@ -839,8 +839,49 @@ func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.Pri
 // GetAllConfirmKeys attempts to retrieve all stored confirmation keys using the
 // given file encryption key to decrypt the confirmation keystore file.
 func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, error) {
-	// TODO: Complete this
-	return []*ecdh.PrivateKey{}, nil
+	confirmsFilePath, err := sm.getConfirmsFilePath()
+	if os.IsNotExist(err) {
+		return []*ecdh.PrivateKey{}, nil
+	}
+	if err != nil {
+		return []*ecdh.PrivateKey{}, err
+	}
+
+	db, err := sm.OpenSessionsDb(fileEncKey)
+	if err != nil {
+		return []*ecdh.PrivateKey{}, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(fmt.Sprintf(allItemsSQL, confirmsFilePath))
+	if err != nil {
+		return []*ecdh.PrivateKey{}, err
+	}
+
+	var retrievedKeys []*ecdh.PrivateKey
+
+	// Convert each row into an ECDH private key
+	for rows.Next() {
+		var id string
+		var keyBytes []byte
+
+		err := rows.Scan(&id, &keyBytes)
+		if err != nil {
+			// An unexpected error occurred
+			// Return the incomplete set along with the error
+			return retrievedKeys, err
+		}
+
+		key, err := sm.curve.NewPrivateKey(keyBytes)
+		if err != nil {
+			// Return the incomplete set along with the error
+			return retrievedKeys, err
+		}
+
+		retrievedKeys = append(retrievedKeys, key)
+	}
+
+	return retrievedKeys, nil
 }
 
 // StoreConfirmKey attempts to store the given confirmation key using the given
