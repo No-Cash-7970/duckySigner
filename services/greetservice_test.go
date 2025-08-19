@@ -7,8 +7,8 @@ import (
 	. "duckysigner/services"
 )
 
-var _ = Describe("Greetservice", func() {
-	Describe("Greet()", func() {
+var _ = Describe("Greet Service", func() {
+	Describe("GreetService.Greet()", func() {
 		It("says hello with given name", func() {
 			greetService := GreetService{}
 			Expect(greetService.Greet("world")).To(Equal("Hello world!"))

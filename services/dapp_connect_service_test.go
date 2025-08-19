@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("DappConnectService", func() {
-	Describe("Start()", func() {
+	Describe("DappConnectService.Start()", func() {
 		It("starts the server", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so
@@ -47,7 +47,7 @@ var _ = Describe("DappConnectService", func() {
 		})
 	})
 
-	Describe("Stop()", func() {
+	Describe("DappConnectService.Stop()", func() {
 		It("stops the server if it running", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so the
@@ -83,7 +83,7 @@ var _ = Describe("DappConnectService", func() {
 		})
 	})
 
-	Describe("IsOn()", func() {
+	Describe("DappConnectService.IsOn()", func() {
 		It("shows if the server is currently on", func() {
 			dcService := DappConnectService{
 				// Make sure to use a port that is not used in another test so the

@@ -48,3 +48,15 @@ type SessionConfig struct {
 	// The length of a confirmation code
 	ConfirmCodeLen uint `json:"confirm_code_len,omitempty"`
 }
+
+func (sc *SessionConfig) ToFile(fileEncKey []byte) error {
+	// TODO: Put config JSON into a Paseto and write it to a file
+	return nil
+}
+
+func ConfigFromFile() (*SessionConfig, error) {
+	// TODO: Read config from file
+	// TODO: Parse config Paseto
+	// TODO: Parse config
+	return nil, nil
+}

@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("DApp Connect Confirmation", func() {
 
-	Describe("DappId()", func() {
+	Describe("Confirmation.DappId()", func() {
 		It("returns the dApp ID", func() {
 			By("Generating a dApp key pair (dApp ID & key)")
 			dappKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -29,7 +29,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("SessionKey()", func() {
+	Describe("Confirmation.SessionKey()", func() {
 		It("returns the session secret key", func() {
 			By("Generating a session key pair (session ID & key)")
 			sessionKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -42,7 +42,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("ID()", func() {
+	Describe("Confirmation.ID()", func() {
 		It("returns the confirmation ID", func() {
 			By("Generating a confirmation key pair (confirmation ID & key)")
 			confirmKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -56,7 +56,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("Key()", func() {
+	Describe("Confirmation.Key()", func() {
 		It("returns the confirmation secret key", func() {
 			By("Generating a confirmation key pair (confirmation ID & key)")
 			confirmKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -69,7 +69,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("Code()", func() {
+	Describe("Confirmation.Code()", func() {
 		It("returns the confirmation ID", func() {
 			confirmCode := "123456"
 			confirmToken := session.NewConfirmation(nil, nil, nil, confirmCode, time.Time{})
@@ -77,7 +77,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("Expiration()", func() {
+	Describe("Confirmation.Expiration()", func() {
 		It("returns the expiration date-time", func() {
 			testTime := time.Now()
 			confirmToken := session.NewConfirmation(nil, nil, nil, "", testTime)
@@ -85,7 +85,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("SharedKey()", func() {
+	Describe("Confirmation.SharedKey()", func() {
 		It("Returns the confirmation shared secret key", func() {
 			By("Generating a confirmation key pair (confirmation ID & key)")
 			confirmKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -108,7 +108,7 @@ var _ = Describe("DApp Connect Confirmation", func() {
 		})
 	})
 
-	Describe("GenerateTokenString()", func() {
+	Describe("Confirmation.GenerateTokenString()", func() {
 		It("returns token string", func() {
 			curve := ecdh.X25519()
 			// Create dApp ID

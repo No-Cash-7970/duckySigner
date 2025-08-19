@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("DApp Connect Session", func() {
 
-	Describe("ID()", func() {
+	Describe("Session.ID()", func() {
 		It("returns the session ID", func() {
 			By("Generating a session key pair (session ID & key)")
 			sessionKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -28,7 +28,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("Key()", func() {
+	Describe("Session.Key()", func() {
 		It("returns the session secret key", func() {
 			By("Generating a session key pair (session ID & key)")
 			sessionKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -41,7 +41,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("DappId()", func() {
+	Describe("Session.DappId()", func() {
 		It("returns the dApp ID", func() {
 			By("Generating a dApp key pair (dApp ID & key)")
 			dappKey, err := ecdh.X25519().GenerateKey(rand.Reader)
@@ -55,7 +55,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("Expiration()", func() {
+	Describe("Session.Expiration()", func() {
 		It("returns the expiration date-time", func() {
 			testTime := time.Now()
 			session := session.New(nil, nil, testTime, time.Time{}, nil)
@@ -63,7 +63,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("EstablishedAt()", func() {
+	Describe("Session.EstablishedAt()", func() {
 		It("returns the establishment date-time", func() {
 			testTime := time.Now()
 			session := session.New(nil, nil, time.Time{}, testTime, nil)
@@ -71,7 +71,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("DappData()", func() {
+	Describe("Session.DappData()", func() {
 		It("returns the dApp data", func() {
 			By("Creating some dApp data")
 			dAppIconUri := "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 50 50'%3e%3cpath d='M22 38V51L32 32l19-19v12C44 26 43 10 38 0 52 15 49 39 22 38z'/%3e%3c/svg%3e"
@@ -93,7 +93,7 @@ var _ = Describe("DApp Connect Session", func() {
 		})
 	})
 
-	Describe("SharedKey()", func() {
+	Describe("Session.SharedKey()", func() {
 		It("Returns the session shared secret key", func() {
 			By("Generating a session key pair (session ID & key)")
 			sessionKey, err := ecdh.X25519().GenerateKey(rand.Reader)
