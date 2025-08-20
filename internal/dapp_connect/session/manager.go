@@ -535,7 +535,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 			return
 		}
 
-		err = sm.removeTempFile(sessionsFilePath)
+		err = removeTempFile(sessionsFilePath)
 		if err != nil {
 			return err
 		}
@@ -572,7 +572,7 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 		return err
 	}
 
-	err = sm.removeTempFile(sessionsFilePath)
+	err = removeTempFile(sessionsFilePath)
 	if err != nil {
 		return err
 	}
@@ -640,7 +640,7 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 	var numValid uint
 	row.Scan(&numValid)
 
-	err = sm.removeTempFile(sessionsFilePath)
+	err = removeTempFile(sessionsFilePath)
 	if err != nil {
 		return 0, err
 	}
@@ -858,7 +858,7 @@ func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) erro
 			return err
 		}
 
-		err = sm.removeTempFile(confirmsFilePath)
+		err = removeTempFile(confirmsFilePath)
 		if err != nil {
 			return err
 		}
@@ -896,7 +896,7 @@ func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
 		return err
 	}
 
-	err = sm.removeTempFile(confirmsFilePath)
+	err = removeTempFile(confirmsFilePath)
 	if err != nil {
 		return err
 	}
@@ -1049,9 +1049,26 @@ func (sm *Manager) rowToSession(
 	}, nil
 }
 
+// generateConfirmationCode generates a confirmation using the confirmation code
+// settings in the session manager
+func (sm *Manager) generateConfirmationCode() (string, error) {
+	var code string
+
+	for range sm.confirmCodeCharset {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(sm.confirmCodeCharset))))
+		if err != nil {
+			// Return partial code if there is an error
+			return code, err
+		}
+		code = code + string(DefaultConfirmCodeCharset[n.Uint64()])
+	}
+
+	return code, nil
+}
+
 // removeTempFile attempts to remove the temporary file used when modifying the
 // file with the given file name.
-func (sm *Manager) removeTempFile(originalFilename string) error {
+func removeTempFile(originalFilename string) error {
 	// Check if temporary file exists
 	_, err := os.Stat(originalFilename + tempFileSuffix)
 	if os.IsNotExist(err) {
@@ -1076,21 +1093,4 @@ func (sm *Manager) removeTempFile(originalFilename string) error {
 	}
 
 	return nil
-}
-
-// generateConfirmationCode generates a confirmation using the confirmation code
-// settings in the session manager
-func (sm *Manager) generateConfirmationCode() (string, error) {
-	var code string
-
-	for range sm.confirmCodeCharset {
-		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(sm.confirmCodeCharset))))
-		if err != nil {
-			// Return partial code if there is an error
-			return code, err
-		}
-		code = code + string(DefaultConfirmCodeCharset[n.Uint64()])
-	}
-
-	return code, nil
 }
