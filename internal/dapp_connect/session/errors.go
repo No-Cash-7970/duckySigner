@@ -32,4 +32,17 @@ const (
 	// RemoveConfirmKeyNotExistErrMsg is the error message text for when there is
 	// an attempt to remove a confirmation key that is not stored
 	RemoveConfirmKeyNotStoredErrMsg = "cannot remove confirmation key that is not stored"
+
+	// MissingConfirmTokenDappIdErrMsg is the error message for when the dApp ID
+	// is missing within the confirmation token
+	MissingConfirmTokenDappIdErrMsg = "missing dApp ID in confirmation token"
+	// MissingConfirmTokenSessionKeyErrMsg is the error message for when the
+	// session key is missing within the confirmation token
+	MissingConfirmTokenSessionKeyErrMsg = "missing session key in confirmation token"
+	// MissingConfirmTokenConfirmKeyErrMsg is the error message for when the
+	// confirmation key is missing within the confirmation token
+	MissingConfirmTokenConfirmKeyErrMsg = "missing confirmation key in confirmation token"
+	// MissingConfirmTokenCodeErrMsg is the error message for when the
+	// confirmation code is missing within the confirmation token
+	MissingConfirmTokenCodeErrMsg = "missing confirmation code in confirmation token"
 )
