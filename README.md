@@ -13,6 +13,16 @@ cd duckySigner
 go mod download
 ```
 
+### Installation on Windows[^1]
+
+You must have the correct version of `gcc` and the necessary runtime libraries installed on Windows. One method to do this is using [MSYS2](https://www.msys2.org/). To begin, install MSYS2 using their installer. Once you installed MSYS2, open a MINGW64 (a component of MSYS) shell and run:
+
+```shell
+pacman -S mingw-w64-ucrt-x86_64-gcc
+```
+
+Select "yes" when necessary; it is okay if the shell closes. Then, add gcc to the path using whatever method you prefer. In powershell this is `$env:PATH = "C:\msys64\ucrt64\bin:$env:PATH"`. After, you can compile this package in Windows.
+
 ## Upgrading backend dependencies
 
 The easy way to update the project's Go dependencies is to use the [go-mod-upgrade](https://github.com/oligot/go-mod-upgrade) tool. If go-mod-upgrade is not installed yet, install it:
@@ -112,3 +122,5 @@ This project largely follows the file structure of a [Wails v3-alpha](https://v3
 - The modified KMD code is in the `kmd` directory.
 - Wails services used connect the frontend actions to the backend are in the `services` directory.
 - Other miscellaneous backend code (if any) is put in the `internal` directory.
+
+[^1]: <https://github.com/marcboeker/go-duckdb?tab=readme-ov-file#windows>
