@@ -452,6 +452,7 @@ When establishing a dApp connect session, the ID the dApp creates and sends to t
   1. NEVER store ANY sensitive or secret data on disk unencrypted. Unencrypted data should only be in memory. Using a secure software enclave like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) can prevent secret data in memory from being written onto the disk unencrypted.
   2. When using a SQLite database, encrypt the data and then store it, rather than encrypt the whole database file. That way, the data is never stored on disk unencrypted and the only the data that is needed is unencrypted and placed into memory when it is needed.
   3. Store data in a file format that supports modular encryption like [Parquet](https://github.com/apache/parquet-format/blob/master/Encryption.md), which can be accessed using [DuckDB](https://duckdb.org/docs/stable/data/parquet/encryption).
+  4. When modifying a file, create a temporary copy of the old version of the file. This way, the old file can be recovered the modification fails in the middle.
 
 [Back to top ↑](#table-of-contents)
 
