@@ -45,6 +45,7 @@
   - [EXIT-06: DApp connect server API](#exit-06-dapp-connect-server-api)
   - [EXIT-07: Algorand node API](#exit-07-algorand-node-api)
   - [EXIT-08: External server connection](#exit-08-external-server-connection)
+  - [EXIT-09: Logs](#exit-09-logs)
 - [Assets](#assets)
   - [ASSET-01: Account private keys](#asset-01-account-private-keys)
   - [ASSET-02: User preferences](#asset-02-user-preferences)
@@ -302,6 +303,17 @@ If the software is compromised, the software may send sensitive or secret data t
 1. Software developer/maintainer
 2. Software dependency
 3. Software contributor
+
+### EXIT-09: Logs
+
+Logs are used for debugging during development and troubleshooting in production. The logs during development are typically displayed in the terminal while the software is running and are not written to a file. In production, error logs may be written to a file or displayed in the UI.
+
+**Trust Levels**:
+
+1. Software developer/maintainer
+2. Software dependency
+3. Authenticated wallet user
+4. Anonymous wallet user
 
 ## Assets
 
