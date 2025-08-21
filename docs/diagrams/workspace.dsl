@@ -13,6 +13,9 @@ workspace {
             sessionStore = container "DApp Connect Session Store" "Storage for connect session key pairs and data" {
                 tags Database
             }
+            confirmKeystore = container "DApp Connect Session Confirmation Keystore" "Storage for keys used to create encrypted confirmation tokens" {
+                tags Database
+            }
             settingsManager = container "Settings Manager" "Manages the user's wallet settings & the settings store"
             settingsStore = container "Settings Store" "Storage for the user's wallet settings" {
                 tags Database
@@ -81,6 +84,7 @@ workspace {
         connectServer -> sessionManager "Manages dApp connect sessions through"
         sessionManager -> connectServer "Provides data about dApp connect sessions to"
         sessionManager -> sessionStore "Stores & retrieves session keys and data from" "With password from user"
+        sessionManager -> confirmKeystore "Stores & retrieves session confirmation keys and data from" "With password from user"
     }
 
     views {
@@ -105,13 +109,13 @@ workspace {
             user -> dapp1 "Needs to connect to wallet within"
             dapp1 -> connectServer "Sends request to initialize session to"
             connectServer -> sessionManager "Generates confirmation key pair using"
-            sessionManager -> sessionStore "Stores generated key pair into"
+            sessionManager -> confirmKeystore "Stores generated key pair into"
             connectServer -> dapp1 "Responds with confirmation token, code and data to"
             # Confirmation
             dapp1 -> user "Displays confirmation code to"
             dapp1 -> connectServer "Sends request to confirm session to"
             connectServer -> sessionManager "Attempts to get confirmation key using"
-            sessionManager -> sessionStore "Retrieves confirmation key from"
+            sessionManager -> confirmKeystore "Retrieves confirmation key from"
             sessionManager -> connectServer "Returns with confirmation key to"
             connectServer -> walletUI "Request for user approval through"
             walletUI -> user "Asks for approval from"
