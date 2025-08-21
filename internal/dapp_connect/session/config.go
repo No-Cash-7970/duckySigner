@@ -11,7 +11,7 @@ import (
 const (
 	// DefaultConfigFile is the default file name for the session configuration
 	// file
-	DefaultConfigFile = "session_config.json"
+	DefaultConfigFile = "session_config.paseto"
 	// DefaultSessionsFile is the default file name for the database file where
 	// established sessions are stored
 	DefaultSessionsFile = "sessions.parquet"
