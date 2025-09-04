@@ -1,0 +1,1536 @@
+// XXX: This driver is a modified version of a modified version of the sqlite driver in go-algorand. This is modified to use DuckDB instead of SQLite.
+// Modified SQLite driver: https://github.com/No-Cash-7970/duckySigner/blob/0f5365f1062a36c20af88379dd61d53693314b11/internal/kmd/wallet/driver/sqlite.go
+// Original SQLite driver: https://github.com/algorand/go-algorand/tree/c2d7047585f6109d866ebaf9fca0ee7490b16c6a/daemon/kmd/wallet/driver/sqlite.go
+
+package driver
+
+import (
+	"bytes"
+	"crypto/ed25519"
+	"crypto/subtle"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"slices"
+
+	"duckysigner/internal/kmd/config"
+	kmdCrypto "duckysigner/internal/kmd/crypto"
+	"duckysigner/internal/kmd/wallet"
+
+	"github.com/algorand/go-algorand-sdk/v2/crypto"
+	"github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorand/go-codec/codec"
+	"github.com/algorand/go-deadlock"
+	"github.com/awnumar/memguard"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/marcboeker/go-duckdb/v2"
+	logging "github.com/sirupsen/logrus"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
+)
+
+const (
+	parquetWalletDriverName      = "parquet"
+	parquetWalletDriverVersion   = 1
+	parquetWalletsDirName        = "parquet_wallets"
+	parquetWalletsDirPermissions = 0700
+	parquetWalletDBOptions       = "_pragma=secure_delete(1)&_txlock=exclusive"
+	parquetMaxWalletNameLen      = 64
+	parquetMaxWalletIDLen        = 64
+	parquetIntOverflow           = 1 << 63
+	parquetWalletHasMnemonicUX   = false
+	parquetWalletHasMasterKey    = true
+	ParquetMetadatasFile         = "metadatas.parquet"
+	ParquetWalletMetadataFile    = "metadata.json"
+
+	// tempFileSuffix is the suffix used to create a temporary file. The
+	// temporary file name is the original file name + this suffix.
+	tempFileSuffix = ".new"
+)
+
+var parquetWalletSupportedTxs = []types.TxType{
+	types.PaymentTx,
+	types.KeyRegistrationTx,
+	types.ApplicationCallTx,
+	types.AssetConfigTx,
+	types.AssetFreezeTx,
+	types.AssetTransferTx,
+}
+var disallowedParquetFilenameRegex = regexp.MustCompile("[^a-zA-Z0-9_-]*")
+var parquetFilenameRegex = regexp.MustCompile(`^.*\.parquet$`)
+
+var parquetCreateMetadatasTblSchema = `
+CREATE TABLE IF NOT EXISTS metadatas (
+	driver_name TEXT NOT NULL,
+	driver_version INT NOT NULL,
+	wallet_id TEXT NOT NULL UNIQUE,
+	wallet_name TEXT NOT NULL,
+	mep_encrypted BLOB NOT NULL,
+	mdk_encrypted BLOB NOT NULL,
+	max_key_idx_encrypted BLOB NOT NULL
+);
+`
+
+var parquetWalletSchema = `
+CREATE TABLE IF NOT EXISTS metadata (
+	driver_name TEXT NOT NULL,
+	driver_version INT NOT NULL,
+	wallet_id TEXT NOT NULL UNIQUE,
+	wallet_name TEXT NOT NULL,
+	mep_encrypted BLOB NOT NULL,
+	mdk_encrypted BLOB NOT NULL,
+	max_key_idx_encrypted BLOB NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS keys (
+	address BLOB PRIMARY KEY,
+	secret_key_encrypted BLOB NOT NULL,
+	key_idx INT
+);
+
+CREATE TABLE IF NOT EXISTS msig_addrs (
+	address BLOB PRIMARY KEY,
+	version INT NOT NULL,
+	threshold INT NOT NULL,
+	pks BLOB NOT NULL
+);
+`
+
+// ParquetWalletDriver is the default wallet driver used by kmd. Keys are stored
+// as authenticated-encrypted blobs in a sqlite 3 database.
+type ParquetWalletDriver struct {
+	globalCfg  config.KMDConfig
+	parquetCfg config.ParquetWalletDriverConfig
+	mux        *deadlock.Mutex
+}
+
+// ParquetWallet represents a particular ParquetWallet under the
+// ParquetWalletDriver
+type ParquetWallet struct {
+	masterEncryptionKey  *memguard.Enclave
+	masterDerivationKey  *memguard.Enclave
+	walletPasswordSalt   [saltLen]byte
+	walletPasswordHash   types.Digest
+	walletPasswordHashed bool
+	dbPath               string
+	cfg                  config.ParquetWalletDriverConfig
+}
+
+type ParquetWalletMetadata struct {
+	DriverName         string `json:"driver_name"`
+	DriverVersion      int    `json:"driver_version"`
+	WalletId           string `json:"wallet_id"`
+	WalletName         string `json:"wallet_name"`
+	MEPEncrypted       []byte `json:"mep_encrypted"`
+	MDKEncrypted       []byte `json:"mdk_encrypted"`
+	MaxKeyIdxEncrypted []byte `json:"max_key_idx_encrypted"`
+}
+
+// InitWithConfig accepts a driver configuration so that the Parquet driver
+// knows where to read and write its wallet databases
+func (parqwd *ParquetWalletDriver) InitWithConfig(cfg config.KMDConfig, log *logging.Logger) error {
+	parqwd.globalCfg = cfg
+	parqwd.parquetCfg = cfg.DriverConfig.ParquetWalletDriverConfig
+
+	// Make sure the scrypt params are reasonable
+	if !parqwd.parquetCfg.UnsafeScrypt {
+		if parqwd.parquetCfg.ScryptParams.ScryptN < minScryptN {
+			return fmt.Errorf("slow scrypt N must be at least %d", minScryptN)
+		}
+		if parqwd.parquetCfg.ScryptParams.ScryptR < minScryptR {
+			return fmt.Errorf("slow scrypt R must be at least %d", minScryptR)
+		}
+		if parqwd.parquetCfg.ScryptParams.ScryptP < minScryptP {
+			return fmt.Errorf("slow scrypt P must be at least %d", minScryptP)
+		}
+	}
+
+	// Make the wallets directory if it doesn't already exist
+	err := parqwd.maybeMakeWalletsDir()
+	if err != nil {
+		return err
+	}
+
+	// Initialize lock. When creating a new wallet, this lock protects us from
+	// creating another with the same name or ID
+	parqwd.mux = &deadlock.Mutex{}
+
+	return nil
+}
+
+// ListWalletMetadata returns the metadatas stored in the generated "metadatas"
+// parquet file. If the metadatas parquet file does not exist, the file is
+// generated by extracting the metadata of each wallet in the wallets directory.
+func (parqwd *ParquetWalletDriver) ListWalletMetadatas() (metadatas []wallet.Metadata, err error) {
+	// TODO: Rewrite this so that a wallet path is a directory instead of a single .db file
+	paths, err := parqwd.potentialWalletPaths()
+	if err != nil {
+		return
+	}
+	for _, path := range paths {
+		// Ignore errors in case people dumped non-database files into this directory
+		walletMetadata, err := parquetWalletMetadataFromDBPath(path)
+		if err != nil {
+			continue
+		}
+		metadatas = append(metadatas, walletMetadata)
+	}
+	return metadatas, nil
+}
+
+// CreateWallet creates a wallet with the given name and ID that will be
+// protected with the given password and Master Derivation Key (MDK). Providing
+// the MDK is optional. If an MDK is provided, then one will be generated.
+func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byte, mdk types.MasterDerivationKey) error {
+	if len(name) > parquetMaxWalletNameLen {
+		return errNameTooLong
+	}
+
+	if len(id) > parquetMaxWalletIDLen {
+		return errIDTooLong
+	}
+
+	walletPath := parqwd.idToPath(id)
+
+	// Create directory for new wallet
+	err := os.Mkdir(walletPath, parquetWalletsDirPermissions)
+	if err != nil {
+
+		return err
+	}
+
+	// Generate the master encryption password, used to encrypt the master
+	// derivation key, generated keys, and imported keys
+	var masterKey [masterKeyLen]byte
+	err = fillRandomBytes(masterKey[:])
+	if err != nil {
+		return err
+	}
+
+	// If we were passed a blank master derivation key, generate one here
+	masterDerivationKey := mdk
+	if masterDerivationKey == (types.MasterDerivationKey{}) {
+		err = fillRandomBytes(masterDerivationKey[:])
+		if err != nil {
+			return err
+		}
+	}
+
+	// Encrypt the master encryption password using the user's password (which
+	// may be blank)
+	encryptedMEPBlob, err := encryptBlobWithPasswordBlankOK(masterKey[:], PTMasterKey, pw, &parqwd.parquetCfg.ScryptParams)
+	if err != nil {
+		return err
+	}
+
+	// Encrypt the master derivation key using the master encryption password
+	// (which may not be blank)
+	encryptedMDKBlob, err := encryptBlobWithKey(masterDerivationKey[:], PTMasterDerivationKey, masterKey[:])
+	if err != nil {
+		return err
+	}
+
+	// Encrypt the max key index using the master encryption password. We encrypt
+	// this for integrity reasons, so that someone with access to the file can't
+	// make the index enormous.
+	maxKeyIdx := 0
+	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(maxKeyIdx), PTMaxKeyIdx, masterKey[:])
+	if err != nil {
+		return err
+	}
+
+	metadata := ParquetWalletMetadata{
+		DriverName:         parquetWalletDriverName,
+		DriverVersion:      parquetWalletDriverVersion,
+		WalletId:           string(id),
+		WalletName:         string(name),
+		MEPEncrypted:       encryptedMEPBlob,
+		MDKEncrypted:       encryptedMDKBlob,
+		MaxKeyIdxEncrypted: encryptedIdxBlob,
+	}
+
+	// Add metadata of new wallet metadatas file (if it exists)
+	parqwd.addParquetWalletMetadata(&metadata)
+
+	// Create metadata.json file in new wallet directory
+	metadataJson, err := json.Marshal(metadata)
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(walletPath+"/"+ParquetWalletMetadataFile, metadataJson, parquetWalletsDirPermissions)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// FetchWallet looks up a wallet by ID and returns it, failing if there's more
+// than one wallet with the given ID
+func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (sqWallet wallet.Wallet, err error) {
+	parqwd.mux.Lock()
+	defer parqwd.mux.Unlock()
+	return parqwd.fetchWalletLocked(id)
+}
+
+// RenameWallet renames the wallet with the given id to newName. It does not
+// rename the database file itself, because doing so safely is tricky
+func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []byte) error {
+	// Grab a lock so our duplicate names check can't race
+	parqwd.mux.Lock()
+	defer parqwd.mux.Unlock()
+
+	// Ensure a wallet with this name doesn't already exist
+	sameNameDBPaths, err := parqwd.findDBPathsByName(newName)
+	if err != nil {
+		return err
+	}
+	if len(sameNameDBPaths) != 0 {
+		return errSameName
+	}
+
+	// Fetch the wallet
+	curWallet, err := parqwd.fetchWalletLocked(id)
+	if err != nil {
+		return err
+	}
+	sqWallet, ok := curWallet.(*ParquetWallet)
+	if !ok {
+		return errSQLiteWrongType
+	}
+
+	// Check the password
+	err = sqWallet.CheckPassword(pw)
+	if err != nil {
+		return err
+	}
+
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(sqWallet.dbPath))
+	if err != nil {
+		return errDatabaseConnect
+	}
+	defer db.Close()
+
+	// Update the metadata row
+	_, err = db.Exec("UPDATE metadata SET wallet_name=? WHERE wallet_id=?", newName, id)
+	if err != nil {
+		return errDatabase
+	}
+
+	return nil
+}
+
+// Metadata builds a wallet.Metadata from our metadata table
+func (pqw *ParquetWallet) Metadata() (meta wallet.Metadata, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	return parquetWalletMetadataFromDB(db)
+}
+
+// Init attempts to decrypt the master encrypt password and master derivation
+// key, and store them in memory for subsequent operations
+func (pqw *ParquetWallet) Init(pw []byte) error {
+	// Decrypt the master password
+	masterEncryptionKey, err := pqw.decryptAndGetMasterKey(pw)
+	if err != nil {
+		return err
+	}
+
+	// Decrypt the master derivation key
+	masterDerivationKey, err := pqw.decryptAndGetMasterDerivationKey(masterEncryptionKey)
+	if err != nil {
+		return err
+	}
+
+	// Initialize wallet
+	pqw.masterEncryptionKey = memguard.NewEnclave(masterEncryptionKey)
+	pqw.masterDerivationKey = memguard.NewEnclave(masterDerivationKey)
+	err = fillRandomBytes(pqw.walletPasswordSalt[:])
+	if err != nil {
+		return err
+	}
+	pqw.walletPasswordHash = fastHashWithSalt(pw, pqw.walletPasswordSalt[:])
+	pqw.walletPasswordHashed = true
+	return nil
+}
+
+// CheckPassword checks that the database can be decrypted with the password.
+// It's the same as Init but doesn't store the decrypted key
+func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
+	if pqw.walletPasswordHashed {
+		// Check against pre-computed password hash
+		pwhash := fastHashWithSalt(pw, pqw.walletPasswordSalt[:])
+		if subtle.ConstantTimeCompare(pwhash[:], pqw.walletPasswordHash[:]) == 1 {
+			return nil
+		}
+		return errDecrypt
+	}
+
+	_, err := pqw.decryptAndGetMasterKey(pw)
+	return err
+}
+
+// ListKeys lists all the addresses in the wallet
+func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		return nil, errDatabaseConnect
+	}
+	defer db.Close()
+
+	var addrByteSlices [][]byte
+	var tmp types.Digest
+	// We can't select directly into a types.Digest array, unfortunately.
+	// Instead, we select into a slice of byte slices, and then convert each of
+	// those slices into a types.Digest.
+	err = db.Select(&addrByteSlices, "SELECT address FROM keys")
+	if err != nil {
+		err = errDatabase
+		return
+	}
+
+	for _, byteSlice := range addrByteSlices {
+		copy(tmp[:], byteSlice)
+		addrs = append(addrs, tmp)
+	}
+
+	return
+}
+
+// ExportMasterDerivationKey decrypts the encrypted MDK and returns it
+func (pqw *ParquetWallet) ExportMasterDerivationKey(pw []byte) (mdk types.MasterDerivationKey, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Decrypt the master derivation key stored in enclave into a local copy
+	mdkBuf, err := pqw.masterDerivationKey.Open()
+	if err != nil {
+		return
+	}
+	defer mdkBuf.Destroy() // Destroy the copy when we return
+
+	// Copy master derivation key into the result
+	copy(mdk[:], mdkBuf.Bytes())
+	return
+}
+
+// ImportKey imports a keypair into the wallet, deriving the public key from
+// the passed secret key
+func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest, err error) {
+	// Extract the seed from the secret key so that we don't trust the public part
+	seed := rawSK.Seed()
+
+	// Convert the seed to an sk/pk pair
+	sk := ed25519.NewKeyFromSeed(seed[:])
+	pk := sk.Public().(ed25519.PublicKey)
+
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Encrypt the encoded secret key
+	skEncrypted, err := encryptBlobWithKey(msgpackEncode(sk), PTSecretKey, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	// Insert the pk, e(sk) into the database
+	addr = publicKeyToAddress(pk)
+	_, err = db.Exec("INSERT INTO keys (address, secret_key_encrypted) VALUES(?, ?)", addr[:], skEncrypted)
+	err = checkParquetDBError(err)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// ExportKey fetches the encrypted private key using the public key, decrypts
+// it, verifies that it matches the passed public key, and returns it
+func (pqw *ParquetWallet) ExportKey(addr types.Digest, pw []byte) (sk ed25519.PrivateKey, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Export the key
+	return pqw.fetchSecretKey(addr)
+}
+
+// GenerateKey generates a key from system entropy and imports it
+func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	// The sqlite wallet has SupportsMnemonicUX = false, meaning we don't know how to
+	// show mnemonics to the user
+	if displayMnemonic {
+		err = errNoMnemonicUX
+		return
+	}
+
+	// Begin an exclusive database transaction (we set _txlock=exclusive on the
+	// database connection string)
+	tx, err := db.Beginx()
+	if err != nil {
+		err = errDatabase
+		return
+	}
+
+	// Generate and insert the next key
+	addr, err = pqw.generateKeyTxLocked(tx)
+	if err != nil {
+		// Rollback in case any part of the tx failed
+		tx.Rollback()
+		return
+	}
+
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		err = errDatabase
+		return
+	}
+
+	return addr, nil
+}
+
+// DeleteKey deletes the key corresponding to the passed public key from the wallet
+func (pqw *ParquetWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		return errDatabaseConnect
+	}
+	defer db.Close()
+
+	// Delete the key
+	_, err = db.Exec("DELETE FROM keys WHERE address=?", addr[:])
+	if err != nil {
+		err = errDatabase
+	}
+	return
+}
+
+// ImportMultisigAddr imports a multisig address, taking in version, threshold,
+// and public keys
+func (pqw *ParquetWallet) ImportMultisigAddr(version, threshold uint8, pks []ed25519.PublicKey) (addr types.Digest, err error) {
+	addr, err = kmdCrypto.MultisigAddrGen(version, threshold, pks)
+	if err != nil {
+		return
+	}
+
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("INSERT INTO msig_addrs (address, version, threshold, pks) VALUES (?, ?, ?, ?)", addr[:], version, threshold, msgpackEncode(pks))
+	err = checkParquetDBError(err)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// LookupMultisigPreimage exports the preimage of a multisig address: version,
+// threshold, public keys
+func (pqw *ParquetWallet) LookupMultisigPreimage(addr types.Digest) (version, threshold uint8, pks []ed25519.PublicKey, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	var pksCandidate []ed25519.PublicKey
+	var versionCandidate, thresholdCandidate int
+	var pksBlob []byte
+
+	row := db.QueryRow("SELECT version, threshold, pks FROM msig_addrs WHERE address=?", addr[:])
+	err = row.Scan(&versionCandidate, &thresholdCandidate, &pksBlob)
+	if err != nil {
+		err = errMsigDataNotFound
+		return
+	}
+
+	// Decode the candidate
+	err = msgpackDecode(pksBlob, &pksCandidate)
+	if err != nil {
+		return
+	}
+
+	// Sanity check: make sure the preimage is correct
+	addr2, err := kmdCrypto.MultisigAddrGen(uint8(versionCandidate), uint8(thresholdCandidate), pksCandidate)
+	if addr2 != addr {
+		err = errTampering
+		return
+	}
+
+	version = uint8(versionCandidate)
+	threshold = uint8(thresholdCandidate)
+	pks = pksCandidate
+	return
+}
+
+// DeleteMultisigAddr deletes the multisig address and preimage from the database
+func (pqw *ParquetWallet) DeleteMultisigAddr(addr types.Digest, pw []byte) (err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		return errDatabaseConnect
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DELETE FROM msig_addrs WHERE address=?", addr[:])
+	if err != nil {
+		err = errDatabase
+	}
+	return
+}
+
+// ListMultisigAddrs lists the multisig addresses whose preimages we know
+func (pqw *ParquetWallet) ListMultisigAddrs() (addrs []types.Digest, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	var addrByteSlices [][]byte
+	var tmp types.Digest
+	err = db.Select(&addrByteSlices, "SELECT address FROM msig_addrs")
+	if err != nil {
+		err = errDatabase
+		return
+	}
+	for _, addr := range addrByteSlices {
+		copy(tmp[:], addr)
+		addrs = append(addrs, tmp)
+	}
+	return
+}
+
+// SignTransaction signs the passed transaction with the private key whose public key is provided, or
+// if the provided public key is zero, inferring the required private key from the transaction itself
+func (pqw *ParquetWallet) SignTransaction(tx types.Transaction, pk ed25519.PublicKey, pw []byte) (stx []byte, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Fetch the required key
+	var sk ed25519.PrivateKey
+	if (slices.Equal(pk, ed25519.PublicKey{})) {
+		sk, err = pqw.fetchSecretKey(types.Digest(tx.Sender))
+	} else {
+		sk, err = pqw.fetchSecretKey(types.Digest(pk))
+	}
+	if err != nil {
+		return
+	}
+
+	// Sign the transaction with the required key
+	_, stx, err = crypto.SignTransaction(sk, tx)
+
+	return
+}
+
+// SignProgram signs the passed data for the src address
+func (pqw *ParquetWallet) SignProgram(data []byte, src types.Digest, pw []byte) (sprog []byte, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	// Fetch the required key
+	sk, err := pqw.fetchSecretKey(types.Digest(src))
+	if err != nil {
+		return
+	}
+
+	sprog, err = crypto.SignBytes(sk, data)
+
+	return
+}
+
+// MultisigSignTransaction starts a multisig signature or adds a signature to a
+// partially signed multisig transaction signature of the passed transaction
+// using the key
+func (pqw *ParquetWallet) MultisigSignTransaction(tx types.Transaction, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte, signer types.Digest) (sig types.MultisigSig, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	if partial.Version == 0 && partial.Threshold == 0 && len(partial.Subsigs) == 0 {
+		// We weren't given a partial multisig, so create a new one
+
+		// Look up the preimage in the database
+		var pks []ed25519.PublicKey
+		var version, threshold uint8
+		version, threshold, pks, err = pqw.LookupMultisigPreimage(types.Digest(tx.Sender))
+		if err != nil {
+			return
+		}
+
+		// Fetch the required secret key (the secret key for the given public
+		// key)
+		var sk ed25519.PrivateKey
+		sk, err = pqw.fetchSecretKey(publicKeyToAddress(pk))
+		if err != nil {
+			return
+		}
+
+		// Create multisig account for signing the transaction
+		ma := crypto.MultisigAccount{
+			Version:   version,
+			Threshold: threshold,
+			Pks:       pks,
+		}
+
+		// Sign transaction
+		var stx []byte // Signed transaction bytes
+		_, stx, err = crypto.SignMultisigTransaction(sk, ma, tx)
+		if err != nil {
+			return
+		}
+
+		// Create new a partial multisig
+
+		subsigs := make([]types.MultisigSubsig, len(pks))
+
+		// Convert signed transaction bytes from a []byte to a
+		// [ed25519.SignatureSize]byte subsignature so it can be placed into the
+		// collection of subsigs
+		subsig := [ed25519.SignatureSize]byte{}
+		copy(subsig[:], stx)
+
+		// Insert the subsig into the collection of subsigs. The index of the
+		// subsig within the subsigs slice must match the index of the
+		// corresponding public key within the public keys slice
+		for i, multisigPk := range pks {
+			if pk.Equal(multisigPk) {
+				subsigs[i] = types.MultisigSubsig{Key: pk, Sig: subsig}
+			}
+		}
+
+		sig = types.MultisigSig{
+			Version:   version,
+			Threshold: threshold,
+			Subsigs:   subsigs,
+		}
+
+		return
+	}
+
+	// We were given a partial multisig, so add to it
+
+	// Convert partial multisig to a partial multisig "account"
+	var ma crypto.MultisigAccount
+	ma, err = crypto.MultisigAccountFromSig(partial)
+	if err != nil {
+		return
+	}
+
+	// Check preimage matches tx src address
+	var addr types.Address
+	addr, err = ma.Address()
+	if err != nil {
+		return
+	}
+
+	// Convert from `Address` to `Digest`
+	multisigAddr := types.Digest(addr)
+
+	// Check that the multisig address equals to either sender or signer
+	if multisigAddr != types.Digest(tx.Sender) && multisigAddr != signer {
+		err = errMsigWrongAddr
+		return
+	}
+
+	// Check that key is one of the ones in the preimage
+	err = errMsigWrongKey
+	for _, subsig := range partial.Subsigs {
+		if pk.Equal(subsig.Key) {
+			err = nil
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+
+	// Fetch the required secret key
+	sk, err := pqw.fetchSecretKey(publicKeyToAddress(pk))
+	if err != nil {
+		return
+	}
+
+	// Sign transaction
+	var stx []byte // Signed transaction bytes
+	_, stx, err = crypto.SignMultisigTransaction(sk, ma, tx)
+	if err != nil {
+		return
+	}
+
+	// Create new partial multisig with new signature added
+
+	subsigs := partial.Subsigs
+
+	// Convert signed transaction bytes from a []byte to a
+	// [ed25519.SignatureSize]byte subsignature so it can be placed into the
+	// collection of subsigs
+	subsig := [ed25519.SignatureSize]byte{}
+	copy(subsig[:], stx)
+
+	// Insert the subsig into the collection of subsigs. The index of the
+	// subsig within the subsigs slice must match the index of the
+	// corresponding public key within the public keys slice
+	for i, multisigPk := range ma.Pks {
+		if pk.Equal(multisigPk) {
+			subsigs[i] = types.MultisigSubsig{Key: pk, Sig: subsig}
+		}
+	}
+
+	sig = types.MultisigSig{
+		Version:   partial.Version,
+		Threshold: partial.Threshold,
+		Subsigs:   subsigs,
+	}
+
+	return
+}
+
+// MultisigSignProgram starts a multisig signature or adds a signature to a
+// partially signed multisig transaction signature of the passed transaction
+// using the key
+func (pqw *ParquetWallet) MultisigSignProgram(data []byte, src types.Digest, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte) (sig types.MultisigSig, err error) {
+	// Check the password
+	err = pqw.CheckPassword(pw)
+	if err != nil {
+		return
+	}
+
+	if partial.Version == 0 && partial.Threshold == 0 && len(partial.Subsigs) == 0 {
+		// We weren't given a partial multisig, so create a new one
+
+		// Look up the preimage in the database
+		var pks []ed25519.PublicKey
+		var version, threshold uint8
+		version, threshold, pks, err = pqw.LookupMultisigPreimage(src)
+		if err != nil {
+			return
+		}
+
+		// Fetch the required secret key
+		var sk ed25519.PrivateKey
+		sk, err = pqw.fetchSecretKey(publicKeyToAddress(pk))
+		if err != nil {
+			return
+		}
+
+		// Sign program
+		var sprog []byte // Signed program bytes
+		sprog, err = crypto.SignBytes(sk, data)
+		if err != nil {
+			return
+		}
+
+		// Create new a partial multisig
+
+		subsigs := make([]types.MultisigSubsig, len(pks))
+
+		// Convert signed program bytes from a []byte to a
+		// [ed25519.SignatureSize]byte subsignature so it can be placed into the
+		// collection of subsigs
+		subsig := [ed25519.SignatureSize]byte{}
+		copy(subsig[:], sprog)
+
+		// Insert the subsig into the collection of subsigs. The index of the
+		// subsig within the subsigs slice must match the index of the
+		// corresponding public key within the public keys slice
+		for i, multisigPk := range pks {
+			if pk.Equal(multisigPk) {
+				subsigs[i] = types.MultisigSubsig{Key: pk, Sig: subsig}
+			}
+		}
+
+		sig = types.MultisigSig{
+			Version:   version,
+			Threshold: threshold,
+			Subsigs:   subsigs,
+		}
+		return
+	}
+
+	// We were given a partial multisig, so add to it
+
+	// Convert partial multisig to a partial multisig "account"
+	var ma crypto.MultisigAccount
+	ma, err = crypto.MultisigAccountFromSig(partial)
+	if err != nil {
+		return
+	}
+
+	// Check preimage matches tx src address
+	var addr types.Address
+	addr, err = ma.Address()
+	if err != nil {
+		return
+	}
+	if types.Digest(addr) != src {
+		err = errMsigWrongAddr
+		return
+	}
+
+	// Check that key is one of the ones in the preimage
+	err = errMsigWrongKey
+	for _, subsig := range partial.Subsigs {
+		if pk.Equal(subsig.Key) {
+			err = nil
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+
+	// Fetch the required secret key
+	sk, err := pqw.fetchSecretKey(publicKeyToAddress(pk))
+	if err != nil {
+		return
+	}
+
+	// Sign program
+	var sprog []byte // Signed program bytes
+	sprog, err = crypto.SignBytes(sk, data)
+	if err != nil {
+		return
+	}
+
+	// Create new partial multisig with new signature merged into it
+
+	subsigs := partial.Subsigs
+
+	// Convert signed program bytes from a []byte to a
+	// [ed25519.SignatureSize]byte subsignature so it can be placed into the
+	// collection of subsigs
+	subsig := [ed25519.SignatureSize]byte{}
+	copy(subsig[:], sprog)
+
+	// Insert the subsig into the collection of subsigs. The index of the
+	// subsig within the subsigs slice must match the index of the
+	// corresponding public key within the public keys slice
+	for i, multisigPk := range ma.Pks {
+		if pk.Equal(multisigPk) {
+			subsigs[i] = types.MultisigSubsig{Key: pk, Sig: subsig}
+		}
+	}
+
+	sig = types.MultisigSig{
+		Version:   partial.Version,
+		Threshold: partial.Threshold,
+		Subsigs:   subsigs,
+	}
+
+	return
+}
+
+/*******************************************************************************
+ * Helpers
+ ******************************************************************************/
+
+// Initialize the codec
+func init() {
+	codecHandle = new(codec.MsgpackHandle)
+	codecHandle.ErrorIfNoField = true
+	codecHandle.ErrorIfNoArrayExpand = true
+	codecHandle.Canonical = true
+	codecHandle.RecursiveEmptyCheck = true
+	codecHandle.WriteExt = true
+	codecHandle.PositiveIntUnsigned = true
+}
+
+// parquetDbConnectionURL takes a path to a Parquet database on the filesystem and
+// constructs a proper connection URL from it with feature flags included
+func parquetDbConnectionURL(path string) string {
+	// Set flags on the database connection. For all options see:
+	// https://pkg.go.dev/modernc.org/sqlite#Driver.Open
+	return fmt.Sprintf("file:%s?%s", path, parquetWalletDBOptions)
+}
+
+// parquetWalletMetadataFromDB accepts a *sqlx.DB and extracts a wallet.Metadata from
+// it
+func parquetWalletMetadataFromDB(db *sqlx.DB) (metadata wallet.Metadata, err error) {
+	var driverName string
+	var walletID, walletName []byte
+	var driverVersion uint32
+
+	// Fetch the metadata to fill in a Metadata
+	metadataRow := db.QueryRow("SELECT driver_name, driver_version, wallet_id, wallet_name FROM metadata LIMIT 1")
+	err = metadataRow.Scan(&driverName, &driverVersion, &walletID, &walletName)
+	if err != nil {
+		err = errDatabase
+		return
+	}
+
+	// Ensure this database is the correct version + driver
+	if driverName != parquetWalletDriverName {
+		err = errWrongDriver
+		return
+	}
+	if driverVersion != parquetWalletDriverVersion {
+		err = errWrongDriverVer
+		return
+	}
+
+	// Build the Metadata
+	metadata = wallet.Metadata{
+		ID:                    walletID,
+		Name:                  walletName,
+		DriverName:            driverName,
+		DriverVersion:         driverVersion,
+		SupportsMnemonicUX:    parquetWalletHasMnemonicUX,
+		SupportsMasterKey:     parquetWalletHasMasterKey,
+		SupportedTransactions: parquetWalletSupportedTxs,
+	}
+
+	return
+}
+
+// parquetWalletMetadataFromDBPath accepts path to a sqlite wallet database and
+// returns a Metadata struct with information about it
+func parquetWalletMetadataFromDBPath(dbPath string) (metadata wallet.Metadata, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+	return parquetWalletMetadataFromDB(db)
+}
+
+// checkParquetDBError inspects an error from the database and interprets it as a
+// "duplicate key" error, a generic database error, or a nil error
+func checkParquetDBError(err error) error {
+	if err != nil {
+		if err.Error() == sqlite.ErrorCodeString[sqlite3.SQLITE_CONSTRAINT] {
+			// If it was a constraint error, that means we already have the key.
+			return errKeyExists
+		}
+		// Otherwise, return a generic database error
+		return errDatabase
+	}
+	return nil
+}
+
+// removeTempFile attempts to remove the temporary file used when modifying the
+// file with the given file name.
+func removeTempFile(originalFilename string) error {
+	// Check if temporary file exists
+	_, err := os.Stat(originalFilename + tempFileSuffix)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		// Could not access file some reason other than that it does not exist
+		// (e.g. permissions, drive failure)
+		return err
+	}
+
+	// Remove the original file
+	err = os.Remove(originalFilename)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Rename the temporary file
+	err = os.Rename(originalFilename+tempFileSuffix, originalFilename)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+/********** Wallet Driver Helpers **********/
+
+// potentialWalletPaths lists paths to plausible databases in the wallets
+// directory. This means things that aren't directories and that match the
+// parquetFilenameRegex
+func (parqwd *ParquetWalletDriver) potentialWalletPaths() (paths []string, err error) {
+	// List all files and folders in the wallets directory
+	wDir := parqwd.walletsDir()
+	files, err := os.ReadDir(wDir)
+	if err != nil {
+		return
+	}
+	for _, f := range files {
+		// Skip things that definitely aren't databases
+		if f.IsDir() || !parquetFilenameRegex.Match([]byte(f.Name())) {
+			continue
+		}
+		paths = append(paths, filepath.Join(wDir, f.Name()))
+	}
+	return
+}
+
+// findDBPathsById returns the paths to wallets with the specified id
+func (parqwd *ParquetWalletDriver) findDBPathsByID(id []byte) (paths []string, err error) {
+	return parqwd.findDBPathsByField("ID", id)
+}
+
+// findDBPathsByName returns the paths to wallets with the specified name
+func (parqwd *ParquetWalletDriver) findDBPathsByName(name []byte) (paths []string, err error) {
+	return parqwd.findDBPathsByField("Name", name)
+}
+
+// findDBPathsByField is a helper for findDBPathsByID and findDBPathsByName. It
+// iterates over potential wallet databases and searches for the given
+// testValue in the appropriate field
+func (parqwd *ParquetWalletDriver) findDBPathsByField(fieldName string, testValue []byte) (paths []string, err error) {
+	potentialPaths, err := parqwd.potentialWalletPaths()
+	if err != nil {
+		return nil, err
+	}
+	for _, path := range potentialPaths {
+		// Ignore errors in case people dumped non-database files into this directory
+		walletMetadata, err := parquetWalletMetadataFromDBPath(path)
+		if err != nil {
+			continue
+		}
+		// Fetch the appropriate field
+		var fieldValue []byte
+		switch fieldName {
+		case "ID":
+			fieldValue = walletMetadata.ID
+		case "Name":
+			fieldValue = walletMetadata.Name
+		default:
+			panic(fmt.Sprintf("unknown fieldName %s", fieldName))
+		}
+		// Check if there's a match
+		if bytes.Equal(fieldValue, testValue) {
+			paths = append(paths, path)
+		}
+	}
+	return paths, nil
+}
+
+// maybeMakeWalletsDir tries to create the wallets directory if it doesn't
+// already exist
+func (parqwd *ParquetWalletDriver) maybeMakeWalletsDir() error {
+	wDir := parqwd.walletsDir()
+	err := os.Mkdir(wDir, parquetWalletsDirPermissions)
+	if err != nil && !os.IsExist(err) {
+		return fmt.Errorf("couldn't create wallets directory at %s: %v", wDir, err)
+	}
+	return nil
+}
+
+// walletsDir returns the wallet directory specified in the config, if there
+// is one, otherwise it returns a subdirectory of the global kmd data dir
+func (parqwd *ParquetWalletDriver) walletsDir() string {
+	if parqwd.parquetCfg.WalletsDir != "" {
+		return parqwd.parquetCfg.WalletsDir
+	}
+	return filepath.Join(parqwd.globalCfg.DataDir, parquetWalletsDirName)
+}
+
+// idToPath turns a wallet id into a path to the corresponding wallet directory
+// to create
+func (parqwd *ParquetWalletDriver) idToPath(id []byte) string {
+	// wallet ID should already be safe, but filter it just in case
+	safeID := disallowedParquetFilenameRegex.ReplaceAll(id, []byte(""))
+	// The directory name for the wallet should be the wallet ID
+	return filepath.Join(parqwd.walletsDir(), string(safeID))
+}
+
+// fetchWalletLocked is the guts of FetchWallet. Precondition: we must hold
+// swd.mux
+func (parqwd *ParquetWalletDriver) fetchWalletLocked(id []byte) (sqWallet wallet.Wallet, err error) {
+	// We want to allow users to drop in database files from other systems and
+	// potentially rename the file, so we iterate over the wallet files instead
+	// of looking up what we would have named them to begin with.
+	dbPaths, err := parqwd.findDBPathsByID(id)
+	if err != nil {
+		return
+	}
+
+	// Do we have this wallet?
+	if len(dbPaths) == 0 {
+		err = errWalletNotFound
+		return
+	}
+
+	// Ensure only one wallet has this ID
+	if len(dbPaths) > 1 {
+		err = errIDConflict
+		return
+	}
+
+	// Connect to the database
+	dbPath := dbPaths[0]
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	// Fill in the wallet details
+	sqWallet = &ParquetWallet{
+		masterEncryptionKey: nil,
+		masterDerivationKey: nil,
+		dbPath:              dbPath,
+		cfg:                 parqwd.parquetCfg,
+	}
+	return
+}
+
+// addParquetWalletMetadata adds the given data to the metadatas file for the
+// Parquet wallet driver
+func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWalletMetadata) error {
+	// Create the temporary database
+	db, err := sqlx.Connect("duckdb", "")
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// Run the schema for creating the metadatas schema in temporary database
+	_, err = db.Exec(parquetCreateMetadatasTblSchema)
+	if err != nil {
+		return err
+	}
+
+	// Store the metadata row in the temporary database
+	_, err = db.Exec(
+		"INSERT INTO metadatas (driver_name, driver_version, wallet_id, wallet_name, mep_encrypted, mdk_encrypted, max_key_idx_encrypted) VALUES(?, ?, ?, ?, ?, ?, ?)",
+		parquetWalletDriverName,
+		parquetWalletDriverVersion,
+		metadata.WalletId,
+		metadata.WalletName,
+		metadata.MEPEncrypted,
+		metadata.MDKEncrypted,
+		metadata.MaxKeyIdxEncrypted,
+	)
+	if err != nil {
+		return err
+	}
+
+	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+
+	// Check if metadatas file exists
+	_, err = os.Stat(metadatasPath)
+	if err != nil && !os.IsNotExist(err) {
+		// Some unexpected error
+		return err
+	}
+
+	// Write the metadata in the temporary table into the file
+	if !os.IsNotExist(err) { // If metadatas file exists
+		var retrievedWalletId string
+
+		// Check if metadata is already stored in the file
+		row := db.QueryRow(
+			fmt.Sprintf("SELECT wallet_id from read_parquet('%s') WHERE wallet_id = ?", metadatasPath),
+			metadata.WalletId,
+		)
+		scanErr := row.Scan(&retrievedWalletId)
+		if scanErr != sql.ErrNoRows {
+			return errSameID
+		}
+
+		// Combine the metadatas within the file with the new metadata
+		_, err = db.Exec(fmt.Sprintf("COPY (FROM read_parquet('%s') UNION FROM metadatas) TO '%s' (FORMAT parquet)",
+			metadatasPath, metadatasPath+tempFileSuffix,
+		))
+		if err != nil {
+			return err
+		}
+
+		err = removeTempFile(metadatasPath)
+		if err != nil {
+			return err
+		}
+	} else { // Metadatas file does not exist
+		// Create a new file and write the metadata into it
+		_, err = db.Exec(fmt.Sprintf("COPY metadatas TO '%s' (FORMAT parquet)", metadatasPath))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+/********** Wallet Helpers **********/
+
+// decryptAndGetMasterKey fetches the master key from the metadata table and
+// attempts to decrypt it with the passed password
+func (pqw *ParquetWallet) decryptAndGetMasterKey(pw []byte) ([]byte, error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		return nil, errDatabaseConnect
+	}
+	defer db.Close()
+
+	var encryptedMEPBlob []byte
+	err = db.Get(&encryptedMEPBlob, "SELECT mep_encrypted FROM metadata LIMIT 1")
+	if err != nil {
+		return nil, errDatabase
+	}
+
+	mep, err := decryptBlobWithPassword(encryptedMEPBlob, PTMasterKey, pw)
+	if err != nil {
+		return nil, err
+	}
+
+	return mep, nil
+}
+
+// decryptAndGetMasterDerivationKey fetches the mdk from the metadata table and
+// attempts to decrypt it with the master password
+func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		return nil, errDatabaseConnect
+	}
+	defer db.Close()
+
+	var encryptedMDKBlob []byte
+	err = db.Get(&encryptedMDKBlob, "SELECT mdk_encrypted FROM metadata LIMIT 1")
+	if err != nil {
+		return nil, errDatabase
+	}
+
+	mdk, err := decryptBlobWithPassword(encryptedMDKBlob, PTMasterDerivationKey, pw)
+	if err != nil {
+		return nil, err
+	}
+
+	return mdk, nil
+}
+
+// fetchSecretKey retrieves the private key for a given public key
+func (pqw *ParquetWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateKey, err error) {
+	// Connect to the database
+	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	if err != nil {
+		err = errDatabaseConnect
+		return
+	}
+	defer db.Close()
+
+	var skCandidate ed25519.PrivateKey
+	var blob []byte
+
+	// Fetch the encrypted secret key from the database
+	err = db.Get(&blob, "SELECT secret_key_encrypted FROM keys WHERE address=?", addr[:])
+	if err != nil {
+		err = errKeyNotFound
+		return
+	}
+
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Decrypt the secret key
+	skEncoded, err := decryptBlobWithPassword(blob, PTSecretKey, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Decode the secret key candidate
+	err = msgpackDecode(skEncoded, &skCandidate)
+	if err != nil {
+		return
+	}
+
+	// Extract the public key from the candidate secret key
+	derivedPK := skCandidate.Public().(ed25519.PublicKey)
+
+	// Convert the derived public key to an address
+	derivedAddr := publicKeyToAddress(derivedPK)
+
+	// Ensure the derived address matches the one we used to look the key up
+	if addr != derivedAddr {
+		err = errTampering
+		return
+	}
+
+	// The candidate looks good, return it
+	sk = skCandidate
+	return
+}
+
+// generateKeyTxLocked is a helper for GenerateKey that accepts a locked tx,
+// computes the next key that should be generated, inserts it, and returns
+// its address
+func (pqw *ParquetWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err error) {
+	// Fetch the encrypted highest index
+	var encryptedHighestIndexBlob []byte
+	err = tx.Get(&encryptedHighestIndexBlob, "SELECT max_key_idx_encrypted FROM metadata LIMIT 1")
+	if err != nil {
+		err = errDatabase
+		return
+	}
+
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Decrypt the highest index
+	highestIndexBlob, err := decryptBlobWithPassword(encryptedHighestIndexBlob, PTMaxKeyIdx, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Decode the highest index
+	var highestIndex uint64
+	err = msgpackDecode(highestIndexBlob, &highestIndex)
+	if err != nil {
+		return
+	}
+
+	// nextIndex is the index of the next key we should generate
+	nextIndex := highestIndex + 1
+
+	var genPK ed25519.PublicKey
+	var genSK ed25519.PrivateKey
+	var genAddr types.Digest
+
+	// We may have to bump nextIndex if the user has manually imported the next
+	// key we were going to generate (thus we didn't see it in the search for the
+	// highest-derived key above)
+	for {
+		// Honestly, if you could get 2**63 - 1 keys into this database, I'd be impressed
+		if nextIndex == parquetIntOverflow {
+			err = errTooManyKeys
+			return
+		}
+
+		// Decrypt the key stored in enclave into a local copy
+		var mdkBuf *memguard.LockedBuffer
+		mdkBuf, err = pqw.masterDerivationKey.Open()
+		if err != nil {
+			return addr, err
+		}
+		defer mdkBuf.Destroy() // Destroy the copy when we return
+
+		// Compute the secret key and public key for nextIndex
+		genPK, genSK, err = extractKeyWithIndex(mdkBuf.Bytes(), nextIndex)
+		if err != nil {
+			return
+		}
+
+		// Convert the public key into an address
+		genAddr = publicKeyToAddress(genPK)
+
+		// Check that we don't already have this PK in the database
+		var cnt int
+		err = tx.Get(&cnt, "SELECT COUNT(1) FROM keys WHERE address=?", genAddr[:])
+		if err != nil {
+			err = errDatabase
+			return
+		}
+
+		if cnt == 0 {
+			// Good, key didn't exist. Break from loop
+			break
+		}
+
+		// Uh oh, user already imported this key manually. Bump nextIndex
+		nextIndex++
+	}
+
+	// Encrypt the encoded secret key
+	skEncrypted, err := encryptBlobWithKey(msgpackEncode(genSK), PTSecretKey, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Insert the key into the database
+	_, err = tx.Exec("INSERT INTO keys (address, secret_key_encrypted, key_idx) VALUES(?, ?, ?)", genAddr[:], skEncrypted, nextIndex)
+	if err != nil {
+		return
+	}
+
+	// Encrypt the new max key index
+	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(nextIndex), PTMaxKeyIdx, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Update the metadata row
+	_, err = tx.Exec("UPDATE metadata SET max_key_idx_encrypted = ?", encryptedIdxBlob)
+	if err != nil {
+		return
+	}
+
+	// Return the generated public key
+	return genAddr, nil
+}

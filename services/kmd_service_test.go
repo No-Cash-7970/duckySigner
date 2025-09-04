@@ -332,6 +332,15 @@ func createKmdService(walletDirName string) KMDService {
 						ScryptP: 1,
 					},
 				},
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+					WalletsDir:   walletDirName,
+					UnsafeScrypt: true, // For testing purposes only
+					ScryptParams: config.ScryptParams{
+						ScryptN: 2,
+						ScryptR: 1,
+						ScryptP: 1,
+					},
+				},
 				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},

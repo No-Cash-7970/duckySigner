@@ -46,8 +46,9 @@ type KMDConfig struct {
 
 // DriverConfig contains config info specific to each wallet driver
 type DriverConfig struct {
-	SQLiteWalletDriverConfig SQLiteWalletDriverConfig `json:"sqlite"`
-	LedgerWalletDriverConfig LedgerWalletDriverConfig `json:"ledger"`
+	SQLiteWalletDriverConfig  SQLiteWalletDriverConfig  `json:"sqlite"`
+	LedgerWalletDriverConfig  LedgerWalletDriverConfig  `json:"ledger"`
+	ParquetWalletDriverConfig ParquetWalletDriverConfig `json:"parquet"`
 }
 
 // SQLiteWalletDriverConfig is configuration specific to the SQLiteWalletDriver
@@ -60,6 +61,13 @@ type SQLiteWalletDriverConfig struct {
 // LedgerWalletDriverConfig is configuration specific to the LedgerWalletDriver
 type LedgerWalletDriverConfig struct {
 	Disable bool `json:"disable"`
+}
+
+// ParquetWalletDriverConfig is configuration specific to the ParquetWalletDriver
+type ParquetWalletDriverConfig struct {
+	WalletsDir   string       `json:"wallets_dir"`
+	UnsafeScrypt bool         `json:"allow_unsafe_scrypt"`
+	ScryptParams ScryptParams `json:"scrypt"`
 }
 
 // ScryptParams stores the parameters used for key derivation. This allows
@@ -77,6 +85,13 @@ func defaultConfig(dataDir string) KMDConfig {
 		SessionLifetimeSecs: defaultSessionLifetimeSecs,
 		DriverConfig: DriverConfig{
 			SQLiteWalletDriverConfig: SQLiteWalletDriverConfig{
+				ScryptParams: ScryptParams{
+					ScryptN: defaultScryptN,
+					ScryptR: defaultScryptR,
+					ScryptP: defaultScryptP,
+				},
+			},
+			ParquetWalletDriverConfig: ParquetWalletDriverConfig{
 				ScryptParams: ScryptParams{
 					ScryptN: defaultScryptN,
 					ScryptR: defaultScryptR,

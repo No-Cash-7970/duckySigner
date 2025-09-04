@@ -29,8 +29,9 @@ import (
 )
 
 var walletDrivers = map[string]Driver{
-	sqliteWalletDriverName: &SQLiteWalletDriver{},
-	ledgerWalletDriverName: &LedgerWalletDriver{},
+	sqliteWalletDriverName:  &SQLiteWalletDriver{},
+	ledgerWalletDriverName:  &LedgerWalletDriver{},
+	parquetWalletDriverName: &ParquetWalletDriver{},
 }
 
 // Driver is the interface that all wallet drivers must expose in order to be
