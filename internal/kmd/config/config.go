@@ -53,6 +53,7 @@ type DriverConfig struct {
 
 // SQLiteWalletDriverConfig is configuration specific to the SQLiteWalletDriver
 type SQLiteWalletDriverConfig struct {
+	Disable      bool         `json:"disable"`
 	WalletsDir   string       `json:"wallets_dir"`
 	UnsafeScrypt bool         `json:"allow_unsafe_scrypt"`
 	ScryptParams ScryptParams `json:"scrypt"`
@@ -65,6 +66,7 @@ type LedgerWalletDriverConfig struct {
 
 // ParquetWalletDriverConfig is configuration specific to the ParquetWalletDriver
 type ParquetWalletDriverConfig struct {
+	Disable      bool         `json:"disable"`
 	WalletsDir   string       `json:"wallets_dir"`
 	UnsafeScrypt bool         `json:"allow_unsafe_scrypt"`
 	ScryptParams ScryptParams `json:"scrypt"`

@@ -35,7 +35,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 							UnsafeScrypt: true, // For testing purposes only
 							ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},
 						},
-						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true},
+						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true},
 						LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 					},
 				}, logger)
@@ -46,29 +46,86 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("returns no wallet metadatas and does not generate a `metadatas.parquet` file if there are no wallets", func() {
-				Expect(parquetDriver.ListWalletMetadatas()).To(BeEmpty(), "Returns no wallets")
-
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+				Expect(parquetDriver.ListWalletMetadatas()).To(BeEmpty(), "Returns no wallet metadatas")
 				_, err := os.Stat(walletDirName + "/" + driver.ParquetMetadatasFile)
 				Expect(err).To(MatchError(os.ErrNotExist), "No `metadatas.parquet` file was generated")
 			})
 
-			PIt("returns the wallet metadatas of the wallets in the wallet directory if `metadatas.parquet` file exists", func() {
-				By("Creating 2 wallets")
-				// TODO
+			It("returns the wallet metadatas of the wallets in the wallet directory if `metadatas.parquet` file exists", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating 2 wallets (which generates a metadatas file)")
+				walletId1 := "000"
+				walletId2 := "001"
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId1),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+				err = parquetDriver.CreateWallet(
+					[]byte("Bar"),
+					[]byte(walletId2),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing wallets")
-				// TODO
+				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
+
+				By("Checking `metadatas.parquet` file")
+				db, err := sql.Open("duckdb", "")
+				Expect(err).ToNot(HaveOccurred())
+				defer db.Close()
+
+				rows, err := db.Query(
+					"SELECT wallet_id FROM read_parquet('" + walletDirName + "/" + driver.ParquetMetadatasFile + "')",
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				var metaWalletId string
+
+				// Get first wallet metadata
+				rows.Next()
+				err = rows.Scan(&metaWalletId)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(metaWalletId).To(Equal(walletId1), "The first wallet is in the metadatas")
+				// Get second wallet metadata
+				rows.Next()
+				err = rows.Scan(&metaWalletId)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(metaWalletId).To(Equal(walletId2), "The second wallet is in the metadatas")
+				rows.Close()
 			})
 
-			PIt("generates a `metadatas.parquet` file containing the metadata of each wallet if the file does not exist", func() {
+			It("generates a `metadatas.parquet` file containing the metadata of each wallet if the file does not exist", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that multiple wallets have been created
+
 				By("Removing the generated `metadatas.parquet` file")
-				// TODO
+				err := os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
+				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing wallets")
-				// TODO
+				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
 
 				By("Checking if a new `metadatas.parquet` file was generated")
-				//
+				_, err = os.Stat(walletDirName + "/" + driver.ParquetMetadatasFile)
+				Expect(err).ToNot(HaveOccurred(), "A new `metadatas.parquet` file was generated")
+			})
+
+			It("skips listing directories that are not wallets", func() {
+				By("Creating a new directory within the wallets directory")
+				err := os.Mkdir(walletDirName+"/not_a_wallet", 0700)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Listing wallets")
+				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
 			})
 		})
 
@@ -99,6 +156,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("fails if wallet name is too long", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
 				err := parquetDriver.CreateWallet(
 					[]byte("Foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"),
 					[]byte("abc123"),
@@ -109,6 +168,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("fails if wallet ID is too long", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
 				err := parquetDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte("000000000000000000000000000000000000000000000000000000000000000000000"),
@@ -119,6 +180,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("creates a new wallet with the given name and ID if there are NO existing wallets", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
 				walletId := "0000000000"
 				walletName := "Foo"
 
@@ -148,6 +212,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				By("Checking if wallet is added to metadatas file")
 				db, err := sql.Open("duckdb", "")
 				Expect(err).ToNot(HaveOccurred())
+				defer db.Close()
+
 				row := db.QueryRow(
 					"FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
 					walletId,
@@ -181,6 +247,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("fails if directory for wallet already exists", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet with a certain ID has been created
+
 				walletId := "0000000000"
 
 				By("Attempting to create a new wallet using same wallet ID")
@@ -194,6 +263,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("creates a new wallet with the given name and ID if it does not exist and there are other wallets", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet with a certain ID has been created
+
 				walletId := "1111111111"
 				walletName := "Bar"
 
@@ -223,6 +295,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				By("Checking if wallet is added to metadatas file")
 				db, err := sql.Open("duckdb", "")
 				Expect(err).ToNot(HaveOccurred())
+				defer db.Close()
+
 				row := db.QueryRow(
 					"FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
 					walletId,
