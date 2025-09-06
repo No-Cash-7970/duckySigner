@@ -15,31 +15,31 @@
       "relationships" : [ {
         "description" : "Uses",
         "destinationId" : "2",
-        "id" : "16",
-        "sourceId" : "1",
-        "tags" : "Relationship"
-      }, {
-        "description" : "Interacts with",
-        "destinationId" : "11",
         "id" : "17",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
-        "description" : "Also interacts with",
+        "description" : "Interacts with",
         "destinationId" : "12",
-        "id" : "21",
+        "id" : "18",
+        "sourceId" : "1",
+        "tags" : "Relationship"
+      }, {
+        "description" : "Also interacts with",
+        "destinationId" : "13",
+        "id" : "22",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
         "description" : "Signs using",
-        "destinationId" : "15",
-        "id" : "27",
+        "destinationId" : "16",
+        "id" : "28",
         "sourceId" : "1",
         "tags" : "Relationship"
       }, {
         "description" : "Interfaces with",
         "destinationId" : "3",
-        "id" : "29",
+        "id" : "30",
         "sourceId" : "1",
         "tags" : "Relationship"
       } ],
@@ -56,32 +56,32 @@
         "relationships" : [ {
           "description" : "Requests input from",
           "destinationId" : "1",
-          "id" : "30",
+          "id" : "31",
           "sourceId" : "3",
           "tags" : "Relationship"
         }, {
           "description" : "Send user response to",
           "destinationId" : "4",
-          "id" : "34",
+          "id" : "35",
           "sourceId" : "3",
           "tags" : "Relationship",
           "technology" : "Event"
         }, {
           "description" : "Manages user's Algorand accounts using",
           "destinationId" : "5",
-          "id" : "36",
+          "id" : "37",
           "sourceId" : "3",
           "tags" : "Relationship"
         }, {
           "description" : "Manages user preferences using",
-          "destinationId" : "9",
-          "id" : "44",
+          "destinationId" : "10",
+          "id" : "45",
           "sourceId" : "3",
           "tags" : "Relationship"
         }, {
           "description" : "Manages dApp connect sessions using",
           "destinationId" : "7",
-          "id" : "48",
+          "id" : "49",
           "sourceId" : "3",
           "tags" : "Relationship"
         } ],
@@ -97,20 +97,20 @@
         "relationships" : [ {
           "description" : "Request action from user through",
           "destinationId" : "3",
-          "id" : "35",
+          "id" : "36",
           "sourceId" : "4",
           "tags" : "Relationship",
           "technology" : "Event"
         }, {
           "description" : "Accesses user preferences through",
-          "destinationId" : "9",
-          "id" : "46",
+          "destinationId" : "10",
+          "id" : "47",
           "sourceId" : "4",
           "tags" : "Relationship"
         }, {
           "description" : "Manages dApp connect sessions through",
           "destinationId" : "7",
-          "id" : "50",
+          "id" : "51",
           "sourceId" : "4",
           "tags" : "Relationship"
         } ],
@@ -126,26 +126,26 @@
         "relationships" : [ {
           "description" : "Provides data about user's Algorand accounts to",
           "destinationId" : "4",
-          "id" : "37",
+          "id" : "38",
           "sourceId" : "5",
           "tags" : "Relationship"
         }, {
           "description" : "Provides data about user's Algorand accounts to",
           "destinationId" : "3",
-          "id" : "38",
+          "id" : "39",
           "sourceId" : "5",
           "tags" : "Relationship"
         }, {
           "description" : "Stores private keys into & retrieves the from",
           "destinationId" : "6",
-          "id" : "39",
+          "id" : "40",
           "sourceId" : "5",
           "tags" : "Relationship",
           "technology" : "With password from user"
         }, {
           "description" : "Sends signing request to",
-          "destinationId" : "15",
-          "id" : "40",
+          "destinationId" : "16",
+          "id" : "41",
           "sourceId" : "5",
           "tags" : "Relationship"
         } ],
@@ -170,19 +170,26 @@
         "relationships" : [ {
           "description" : "Provides data about dApp connect sessions to",
           "destinationId" : "3",
-          "id" : "49",
+          "id" : "50",
           "sourceId" : "7",
           "tags" : "Relationship"
         }, {
           "description" : "Provides data about dApp connect sessions to",
           "destinationId" : "4",
-          "id" : "51",
+          "id" : "52",
           "sourceId" : "7",
           "tags" : "Relationship"
         }, {
           "description" : "Stores & retrieves session keys and data from",
           "destinationId" : "8",
-          "id" : "52",
+          "id" : "53",
+          "sourceId" : "7",
+          "tags" : "Relationship",
+          "technology" : "With password from user"
+        }, {
+          "description" : "Stores & retrieves session confirmation keys and data from",
+          "destinationId" : "9",
+          "id" : "54",
           "sourceId" : "7",
           "tags" : "Relationship",
           "technology" : "With password from user"
@@ -198,9 +205,18 @@
         },
         "tags" : "Element,Container,Database"
       }, {
-        "description" : "Manages the user's wallet settings & the settings store",
+        "description" : "Storage for keys used to create encrypted confirmation tokens",
         "documentation" : { },
         "id" : "9",
+        "name" : "DApp Connect Session Confirmation Keystore",
+        "properties" : {
+          "structurizr.dsl.identifier" : "confirmkeystore"
+        },
+        "tags" : "Element,Container,Database"
+      }, {
+        "description" : "Manages the user's wallet settings & the settings store",
+        "documentation" : { },
+        "id" : "10",
         "name" : "Settings Manager",
         "properties" : {
           "structurizr.dsl.identifier" : "settingsmanager"
@@ -208,14 +224,14 @@
         "relationships" : [ {
           "description" : "Provides data about user's preferences to",
           "destinationId" : "3",
-          "id" : "45",
-          "sourceId" : "9",
+          "id" : "46",
+          "sourceId" : "10",
           "tags" : "Relationship"
         }, {
           "description" : "Stores & retrieves user preferences from",
-          "destinationId" : "10",
-          "id" : "47",
-          "sourceId" : "9",
+          "destinationId" : "11",
+          "id" : "48",
+          "sourceId" : "10",
           "tags" : "Relationship",
           "technology" : "With password from user"
         } ],
@@ -223,7 +239,7 @@
       }, {
         "description" : "Storage for the user's wallet settings",
         "documentation" : { },
-        "id" : "10",
+        "id" : "11",
         "name" : "Settings Store",
         "properties" : {
           "structurizr.dsl.identifier" : "settingsstore"
@@ -240,28 +256,28 @@
       },
       "relationships" : [ {
         "description" : "Pull blockchain data using",
-        "destinationId" : "14",
-        "id" : "26",
+        "destinationId" : "15",
+        "id" : "27",
         "sourceId" : "2",
         "tags" : "Relationship"
       }, {
         "description" : "Requests input from",
         "destinationId" : "1",
-        "id" : "31",
-        "linkedRelationshipId" : "30",
+        "id" : "32",
+        "linkedRelationshipId" : "31",
         "sourceId" : "2"
       }, {
         "description" : "Sends signing request to",
-        "destinationId" : "15",
-        "id" : "41",
-        "linkedRelationshipId" : "40",
+        "destinationId" : "16",
+        "id" : "42",
+        "linkedRelationshipId" : "41",
         "sourceId" : "2"
       } ],
       "tags" : "Element,Software System"
     }, {
       "description" : "Typical web app using Algorand",
       "documentation" : { },
-      "id" : "11",
+      "id" : "12",
       "location" : "Unspecified",
       "name" : "DApp #1",
       "properties" : {
@@ -270,27 +286,27 @@
       "relationships" : [ {
         "description" : "Responds to",
         "destinationId" : "1",
-        "id" : "18",
-        "sourceId" : "11",
+        "id" : "19",
+        "sourceId" : "12",
         "tags" : "Relationship"
       }, {
         "description" : "Communicates with",
         "destinationId" : "2",
-        "id" : "19",
-        "sourceId" : "11",
+        "id" : "20",
+        "sourceId" : "12",
         "tags" : "Relationship",
         "technology" : "HTTP/2"
       }, {
         "description" : "Interacts with",
-        "destinationId" : "14",
-        "id" : "20",
-        "sourceId" : "11",
+        "destinationId" : "15",
+        "id" : "21",
+        "sourceId" : "12",
         "tags" : "Relationship"
       }, {
         "description" : "Makes requests to",
         "destinationId" : "4",
-        "id" : "32",
-        "sourceId" : "11",
+        "id" : "33",
+        "sourceId" : "12",
         "tags" : "Relationship",
         "technology" : "HTTP/2"
       } ],
@@ -298,7 +314,7 @@
     }, {
       "description" : "Another app using Algorand, but is not in the browser",
       "documentation" : { },
-      "id" : "12",
+      "id" : "13",
       "location" : "Unspecified",
       "name" : "DApp #2",
       "properties" : {
@@ -307,27 +323,27 @@
       "relationships" : [ {
         "description" : "Also responds to",
         "destinationId" : "1",
-        "id" : "22",
-        "sourceId" : "12",
+        "id" : "23",
+        "sourceId" : "13",
         "tags" : "Relationship"
       }, {
         "description" : "Also communicates with",
         "destinationId" : "2",
-        "id" : "23",
-        "sourceId" : "12",
+        "id" : "24",
+        "sourceId" : "13",
         "tags" : "Relationship",
         "technology" : "HTTP/2"
       }, {
         "description" : "Also interacts with",
-        "destinationId" : "14",
-        "id" : "24",
-        "sourceId" : "12",
+        "destinationId" : "15",
+        "id" : "25",
+        "sourceId" : "13",
         "tags" : "Relationship"
       }, {
         "description" : "Also makes requests to",
         "destinationId" : "4",
-        "id" : "33",
-        "sourceId" : "12",
+        "id" : "34",
+        "sourceId" : "13",
         "tags" : "Relationship",
         "technology" : "HTTP/2"
       } ],
@@ -335,7 +351,7 @@
     }, {
       "description" : "Blockchain network",
       "documentation" : { },
-      "id" : "13",
+      "id" : "14",
       "location" : "Unspecified",
       "name" : "Algorand",
       "properties" : {
@@ -344,7 +360,7 @@
       "tags" : "Element,Software System,Algorand,External"
     }, {
       "documentation" : { },
-      "id" : "14",
+      "id" : "15",
       "location" : "Unspecified",
       "name" : "Algorand Node",
       "properties" : {
@@ -352,16 +368,16 @@
       },
       "relationships" : [ {
         "description" : "Connected to",
-        "destinationId" : "13",
-        "id" : "25",
-        "sourceId" : "14",
+        "destinationId" : "14",
+        "id" : "26",
+        "sourceId" : "15",
         "tags" : "Relationship"
       } ],
       "tags" : "Element,Software System,AlgoNode,External"
     }, {
       "description" : "Hardware wallet device",
       "documentation" : { },
-      "id" : "15",
+      "id" : "16",
       "location" : "Unspecified",
       "name" : "Ledger Device",
       "properties" : {
@@ -370,21 +386,21 @@
       "relationships" : [ {
         "description" : "Requests approval to sign from",
         "destinationId" : "1",
-        "id" : "28",
-        "sourceId" : "15",
+        "id" : "29",
+        "sourceId" : "16",
         "tags" : "Relationship"
       }, {
         "description" : "Sends signed data to",
         "destinationId" : "5",
-        "id" : "42",
-        "sourceId" : "15",
+        "id" : "43",
+        "sourceId" : "16",
         "tags" : "Relationship"
       }, {
         "description" : "Sends signed data to",
         "destinationId" : "2",
-        "id" : "43",
-        "linkedRelationshipId" : "42",
-        "sourceId" : "15"
+        "id" : "44",
+        "linkedRelationshipId" : "43",
+        "sourceId" : "16"
       } ],
       "tags" : "Element,Software System,Database,External"
     } ]
@@ -432,8 +448,8 @@
         "vertices" : false
       },
       "dimensions" : {
-        "height" : 4058,
-        "width" : 4187
+        "height" : 2858,
+        "width" : 5379
       },
       "elements" : [ {
         "id" : "1",
@@ -441,7 +457,7 @@
         "y" : 929
       }, {
         "id" : "3",
-        "x" : 3425,
+        "x" : 2921,
         "y" : 929
       }, {
         "id" : "4",
@@ -449,7 +465,7 @@
         "y" : 2229
       }, {
         "id" : "5",
-        "x" : 3117,
+        "x" : 3075,
         "y" : 1579
       }, {
         "id" : "6",
@@ -457,30 +473,34 @@
         "y" : 2229
       }, {
         "id" : "7",
-        "x" : 2896,
-        "y" : 2829
+        "x" : 3825,
+        "y" : 1579
       }, {
         "id" : "8",
-        "x" : 2896,
-        "y" : 3429
+        "x" : 3867,
+        "y" : 2229
       }, {
         "id" : "9",
-        "x" : 3050,
-        "y" : 329
+        "x" : 4617,
+        "y" : 2229
       }, {
         "id" : "10",
-        "x" : 2675,
-        "y" : 929
+        "x" : 2921,
+        "y" : 329
       }, {
         "id" : "11",
+        "x" : 3671,
+        "y" : 929
+      }, {
+        "id" : "12",
         "x" : 1708,
         "y" : 1579
       }, {
-        "id" : "12",
+        "id" : "13",
         "x" : 208,
         "y" : 1529
       }, {
-        "id" : "15",
+        "id" : "16",
         "x" : 958,
         "y" : 1579
       } ],
@@ -489,57 +509,55 @@
       "order" : 3,
       "paperSize" : "A2_Landscape",
       "relationships" : [ {
-        "id" : "17"
-      }, {
         "id" : "18"
       }, {
-        "id" : "21"
+        "id" : "19"
       }, {
         "id" : "22"
       }, {
-        "id" : "27"
+        "id" : "23"
       }, {
         "id" : "28"
       }, {
-        "id" : "29",
-        "vertices" : [ {
-          "x" : 2337,
-          "y" : 779
-        }, {
-          "x" : 3125,
-          "y" : 779
-        } ]
+        "id" : "29"
       }, {
         "id" : "30",
         "vertices" : [ {
-          "x" : 3125,
-          "y" : 779
+          "x" : 1837,
+          "y" : 1079
         }, {
-          "x" : 2337,
-          "y" : 779
+          "x" : 2492,
+          "y" : 1079
         } ]
       }, {
-        "id" : "32"
+        "id" : "31",
+        "vertices" : [ {
+          "x" : 2492,
+          "y" : 1079
+        }, {
+          "x" : 1837,
+          "y" : 1079
+        } ]
       }, {
-        "id" : "33",
+        "id" : "33"
+      }, {
+        "id" : "34",
         "vertices" : [ {
           "x" : 808,
           "y" : 1929
         } ]
       }, {
-        "id" : "34",
-        "vertices" : [ {
-          "x" : 2817,
-          "y" : 1529
-        } ]
-      }, {
         "id" : "35",
         "vertices" : [ {
-          "x" : 3117,
+          "x" : 2775,
           "y" : 1529
         } ]
       }, {
-        "id" : "36"
+        "id" : "36",
+        "vertices" : [ {
+          "x" : 3075,
+          "y" : 1529
+        } ]
       }, {
         "id" : "37"
       }, {
@@ -547,62 +565,60 @@
       }, {
         "id" : "39"
       }, {
-        "id" : "40",
+        "id" : "40"
+      }, {
+        "id" : "41",
         "vertices" : [ {
-          "x" : 2721,
+          "x" : 2700,
           "y" : 1379
         }, {
           "x" : 1708,
           "y" : 1379
         } ]
       }, {
-        "id" : "42",
+        "id" : "43",
         "vertices" : [ {
           "x" : 1708,
           "y" : 1379
         }, {
-          "x" : 2721,
+          "x" : 2700,
           "y" : 1379
         } ]
-      }, {
-        "id" : "44"
       }, {
         "id" : "45"
       }, {
-        "id" : "46",
+        "id" : "46"
+      }, {
+        "id" : "47",
         "vertices" : [ {
-          "x" : 2525,
-          "y" : 1229
+          "x" : 2692,
+          "y" : 1529
         }, {
-          "x" : 2525,
+          "x" : 2771,
           "y" : 929
         } ]
       }, {
-        "id" : "47"
+        "id" : "48"
       }, {
-        "id" : "48",
-        "vertices" : [ {
-          "x" : 3567,
-          "y" : 1529
-        }, {
-          "x" : 3567,
-          "y" : 2529
-        } ]
-      }, {
-        "id" : "49",
-        "vertices" : [ {
-          "x" : 3867,
-          "y" : 2529
-        }, {
-          "x" : 3867,
-          "y" : 1529
-        } ]
+        "id" : "49"
       }, {
         "id" : "50"
       }, {
-        "id" : "51"
+        "id" : "51",
+        "vertices" : [ {
+          "x" : 3825,
+          "y" : 1929
+        } ]
       }, {
-        "id" : "52"
+        "id" : "52",
+        "vertices" : [ {
+          "x" : 3525,
+          "y" : 1929
+        } ]
+      }, {
+        "id" : "53"
+      }, {
+        "id" : "54"
       } ],
       "softwareSystemId" : "2"
     } ],
@@ -619,126 +635,130 @@
       "description" : "DApp establishes connect session with wallet",
       "dimensions" : {
         "height" : 2758,
-        "width" : 1754
+        "width" : 2504
       },
       "elementId" : "2",
       "elements" : [ {
         "id" : "1",
-        "x" : 1079,
+        "x" : 1829,
         "y" : 929
       }, {
         "id" : "3",
-        "x" : 329,
+        "x" : 1079,
         "y" : 329
       }, {
         "id" : "4",
-        "x" : 329,
+        "x" : 1079,
         "y" : 929
       }, {
         "id" : "7",
-        "x" : 329,
+        "x" : 1079,
         "y" : 1529
       }, {
         "id" : "8",
         "x" : 329,
         "y" : 2129
       }, {
-        "id" : "11",
+        "id" : "9",
         "x" : 1079,
+        "y" : 2129
+      }, {
+        "id" : "12",
+        "x" : 1829,
         "y" : 1529
       } ],
       "externalBoundariesVisible" : false,
       "key" : "DAppConnectSessionEstablishment",
       "order" : 4,
-      "paperSize" : "A4_Portrait",
+      "paperSize" : "A3_Portrait",
       "relationships" : [ {
         "description" : "Needs to connect to wallet within",
-        "id" : "17",
+        "id" : "18",
         "order" : "1",
         "response" : false
       }, {
         "description" : "Sends request to initialize session to",
-        "id" : "32",
+        "id" : "33",
         "order" : "2",
         "response" : false
       }, {
         "description" : "Generates confirmation key pair using",
-        "id" : "50",
+        "id" : "51",
         "order" : "3",
         "response" : false
       }, {
         "description" : "Stores generated key pair into",
-        "id" : "52",
+        "id" : "54",
         "order" : "4",
         "response" : false
       }, {
         "description" : "Responds with confirmation token, code and data to",
-        "id" : "32",
+        "id" : "33",
         "order" : "5",
         "response" : true
       }, {
         "description" : "Displays confirmation code to",
-        "id" : "18",
+        "id" : "19",
         "order" : "6",
         "response" : false
       }, {
         "description" : "Sends request to confirm session to",
-        "id" : "32",
+        "id" : "33",
         "order" : "7",
         "response" : false
       }, {
         "description" : "Attempts to get confirmation key using",
-        "id" : "50",
+        "id" : "51",
         "order" : "8",
         "response" : false
       }, {
         "description" : "Retrieves confirmation key from",
-        "id" : "52",
+        "id" : "54",
         "order" : "9",
         "response" : false
       }, {
         "description" : "Returns with confirmation key to",
-        "id" : "51",
+        "id" : "52",
         "order" : "10",
         "response" : false
       }, {
         "description" : "Request for user approval through",
-        "id" : "35",
+        "id" : "36",
         "order" : "11",
         "response" : false
       }, {
         "description" : "Asks for approval from",
-        "id" : "30",
+        "id" : "31",
         "order" : "12",
         "response" : false
       }, {
         "description" : "Approves connection by entering wallet password & confirmation code into",
-        "id" : "29",
+        "id" : "30",
         "order" : "13",
         "response" : false
       }, {
         "description" : "Forwards user approval to",
-        "id" : "34",
+        "id" : "35",
         "order" : "14",
         "response" : false
       }, {
         "description" : "Extracts session key pair from confirmation token using",
-        "id" : "50",
+        "id" : "51",
         "order" : "15",
         "response" : false
       }, {
         "description" : "Stores generated key pair into",
-        "id" : "52",
+        "id" : "53",
         "order" : "16",
         "response" : false
       }, {
         "description" : "Responds with session ID & data to",
-        "id" : "32",
+        "id" : "33",
         "order" : "17",
         "response" : true
       }, {
         "description" : "Shows it is connected to wallet to",
-        "id" : "18",
+        "id" : "19",
         "order" : "18",
         "response" : false
       } ]
@@ -775,7 +795,7 @@
         "x" : 329,
         "y" : 1529
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 1079,
         "y" : 929
       } ],
@@ -785,32 +805,32 @@
       "paperSize" : "A4_Portrait",
       "relationships" : [ {
         "description" : "Initiates session termination within",
-        "id" : "17",
+        "id" : "18",
         "order" : "1",
         "response" : false
       }, {
         "description" : "Sends request to terminate session to",
-        "id" : "32",
+        "id" : "33",
         "order" : "2",
         "response" : false
       }, {
         "description" : "Removes session data for dApp using",
-        "id" : "50",
+        "id" : "51",
         "order" : "3",
         "response" : false
       }, {
         "description" : "Delete session data from",
-        "id" : "52",
+        "id" : "53",
         "order" : "4",
         "response" : false
       }, {
         "description" : "Responds with success message to",
-        "id" : "32",
+        "id" : "33",
         "order" : "5",
         "response" : true
       }, {
         "description" : "Deletes its session data & shows it is disconnected from wallet to",
-        "id" : "18",
+        "id" : "19",
         "order" : "6",
         "response" : false
       } ]
@@ -835,7 +855,7 @@
         "x" : 208,
         "y" : 208
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 208,
         "y" : 808
       } ],
@@ -845,12 +865,12 @@
       "paperSize" : "A6_Portrait",
       "relationships" : [ {
         "description" : "Initiates session termination within",
-        "id" : "17",
+        "id" : "18",
         "order" : "1",
         "response" : false
       }, {
         "description" : "Deletes its session data & shows it is disconnected from wallet to",
-        "id" : "18",
+        "id" : "19",
         "order" : "2",
         "response" : false
       } ]
@@ -897,32 +917,32 @@
       "paperSize" : "A4_Portrait",
       "relationships" : [ {
         "description" : "Initiates termination of session with dApp within",
-        "id" : "29",
+        "id" : "30",
         "order" : "1",
         "response" : false
       }, {
         "description" : "Forwards request to terminate dApp's session to",
-        "id" : "34",
+        "id" : "35",
         "order" : "2",
         "response" : false
       }, {
         "description" : "Removes session data for dApp using",
-        "id" : "50",
+        "id" : "51",
         "order" : "3",
         "response" : false
       }, {
         "description" : "Delete session data from",
-        "id" : "52",
+        "id" : "53",
         "order" : "4",
         "response" : false
       }, {
         "description" : "Responds with success message to",
-        "id" : "35",
+        "id" : "36",
         "order" : "5",
         "response" : false
       }, {
         "description" : "Shows it is disconnected from dApp to",
-        "id" : "30",
+        "id" : "31",
         "order" : "6",
         "response" : false
       } ]
@@ -963,11 +983,11 @@
         "x" : 329,
         "y" : 1529
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 1783,
         "y" : 1529
       }, {
-        "id" : "14",
+        "id" : "15",
         "x" : 1783,
         "y" : 2129
       } ],
@@ -977,57 +997,57 @@
       "paperSize" : "A3_Portrait",
       "relationships" : [ {
         "description" : "Needs to sign a transaction within",
-        "id" : "17",
+        "id" : "18",
         "order" : "1",
         "response" : false
       }, {
         "description" : "Sends request to sign transaction to",
-        "id" : "32",
+        "id" : "33",
         "order" : "2",
         "response" : false
       }, {
         "description" : "Forwards request to sign transaction to",
-        "id" : "35",
+        "id" : "36",
         "order" : "3",
         "response" : false
       }, {
         "description" : "Asks for approval to sign transaction from",
-        "id" : "30",
+        "id" : "31",
         "order" : "4",
         "response" : false
       }, {
         "description" : "Approves signing transaction using",
-        "id" : "29",
+        "id" : "30",
         "order" : "5",
         "response" : false
       }, {
         "description" : "Attempt to sign transaction using",
-        "id" : "36",
+        "id" : "37",
         "order" : "6",
         "response" : false
       }, {
         "description" : "Retrieves key for signing from",
-        "id" : "39",
+        "id" : "40",
         "order" : "7",
         "response" : false
       }, {
         "description" : "Signs transaction & returns signed transaction data to",
-        "id" : "38",
+        "id" : "39",
         "order" : "8",
         "response" : false
       }, {
         "description" : "Forwards signed transaction data to",
-        "id" : "34",
+        "id" : "35",
         "order" : "9",
         "response" : false
       }, {
         "description" : "Responds with signed transaction data to",
-        "id" : "32",
+        "id" : "33",
         "order" : "10",
         "response" : true
       }, {
         "description" : "Sends signed transaction using",
-        "id" : "20",
+        "id" : "21",
         "order" : "11",
         "response" : false
       } ]
@@ -1064,15 +1084,15 @@
         "x" : 1079,
         "y" : 929
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 704,
         "y" : 1529
       }, {
-        "id" : "14",
+        "id" : "15",
         "x" : 704,
         "y" : 2129
       }, {
-        "id" : "15",
+        "id" : "16",
         "x" : 1641,
         "y" : 1529
       } ],
@@ -1082,7 +1102,7 @@
       "paperSize" : "A3_Portrait",
       "relationships" : [ {
         "description" : "Needs to sign a transaction within",
-        "id" : "17",
+        "id" : "18",
         "order" : "1",
         "response" : false,
         "vertices" : [ {
@@ -1091,57 +1111,57 @@
         } ]
       }, {
         "description" : "Sends request to sign transaction to",
-        "id" : "32",
+        "id" : "33",
         "order" : "2",
         "response" : false
       }, {
         "description" : "Forwards request to sign transaction to",
-        "id" : "35",
+        "id" : "36",
         "order" : "3",
         "response" : false
       }, {
         "description" : "Sends unsigned transaction data to",
-        "id" : "36",
+        "id" : "37",
         "order" : "4",
         "response" : false
       }, {
         "description" : "Forward unsigned transaction data to",
-        "id" : "40",
+        "id" : "41",
         "order" : "5",
         "response" : false
       }, {
         "description" : "Asks for approval to sign transaction from",
-        "id" : "30",
+        "id" : "31",
         "order" : "6",
         "response" : false
       }, {
         "description" : "Signs transaction using",
-        "id" : "27",
+        "id" : "28",
         "order" : "7",
         "response" : false
       }, {
         "description" : "Sends signed transaction data to",
-        "id" : "42",
+        "id" : "43",
         "order" : "8",
         "response" : false
       }, {
         "description" : "Forwards signed transaction data to",
-        "id" : "38",
+        "id" : "39",
         "order" : "9",
         "response" : false
       }, {
         "description" : "Forwards signed transaction data to",
-        "id" : "34",
+        "id" : "35",
         "order" : "10",
         "response" : false
       }, {
         "description" : "Responds with signed transaction data to",
-        "id" : "32",
+        "id" : "33",
         "order" : "11",
         "response" : true
       }, {
         "description" : "Sends signed transaction using",
-        "id" : "20",
+        "id" : "21",
         "order" : "12",
         "response" : false
       } ]
@@ -1169,19 +1189,19 @@
         "x" : 1787,
         "y" : 1508
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 208,
         "y" : 858
       }, {
-        "id" : "12",
+        "id" : "13",
         "x" : 958,
         "y" : 808
       }, {
-        "id" : "14",
+        "id" : "15",
         "x" : 958,
         "y" : 2108
       }, {
-        "id" : "15",
+        "id" : "16",
         "x" : 2242,
         "y" : 2108
       } ],
@@ -1190,19 +1210,17 @@
       "order" : 2,
       "paperSize" : "A3_Landscape",
       "relationships" : [ {
-        "id" : "16"
-      }, {
         "id" : "17"
       }, {
         "id" : "18"
       }, {
-        "id" : "19",
+        "id" : "19"
+      }, {
+        "id" : "20",
         "vertices" : [ {
           "x" : 808,
           "y" : 1208
         } ]
-      }, {
-        "id" : "20"
       }, {
         "id" : "21"
       }, {
@@ -1212,9 +1230,11 @@
       }, {
         "id" : "24"
       }, {
-        "id" : "26"
+        "id" : "25"
       }, {
-        "id" : "27",
+        "id" : "27"
+      }, {
+        "id" : "28",
         "vertices" : [ {
           "x" : 2033,
           "y" : 808
@@ -1223,7 +1243,7 @@
           "y" : 1508
         } ]
       }, {
-        "id" : "28",
+        "id" : "29",
         "vertices" : [ {
           "x" : 2537,
           "y" : 1508
@@ -1232,11 +1252,11 @@
           "y" : 808
         } ]
       }, {
-        "id" : "31"
+        "id" : "32"
       }, {
-        "id" : "41"
+        "id" : "42"
       }, {
-        "id" : "43"
+        "id" : "44"
       } ],
       "softwareSystemId" : "2"
     } ],
@@ -1264,23 +1284,23 @@
         "x" : 1787,
         "y" : 1508
       }, {
-        "id" : "11",
+        "id" : "12",
         "x" : 208,
         "y" : 858
       }, {
-        "id" : "12",
+        "id" : "13",
         "x" : 958,
         "y" : 808
       }, {
-        "id" : "13",
+        "id" : "14",
         "x" : 958,
         "y" : 2708
       }, {
-        "id" : "14",
+        "id" : "15",
         "x" : 958,
         "y" : 2108
       }, {
-        "id" : "15",
+        "id" : "16",
         "x" : 2242,
         "y" : 2108
       } ],
@@ -1289,19 +1309,17 @@
       "order" : 1,
       "paperSize" : "A3_Portrait",
       "relationships" : [ {
-        "id" : "16"
-      }, {
         "id" : "17"
       }, {
         "id" : "18"
       }, {
-        "id" : "19",
+        "id" : "19"
+      }, {
+        "id" : "20",
         "vertices" : [ {
           "x" : 808,
           "y" : 1208
         } ]
-      }, {
-        "id" : "20"
       }, {
         "id" : "21"
       }, {
@@ -1315,7 +1333,9 @@
       }, {
         "id" : "26"
       }, {
-        "id" : "27",
+        "id" : "27"
+      }, {
+        "id" : "28",
         "vertices" : [ {
           "x" : 2033,
           "y" : 808
@@ -1324,7 +1344,7 @@
           "y" : 1508
         } ]
       }, {
-        "id" : "28",
+        "id" : "29",
         "vertices" : [ {
           "x" : 2537,
           "y" : 1508
@@ -1333,11 +1353,11 @@
           "y" : 808
         } ]
       }, {
-        "id" : "31"
+        "id" : "32"
       }, {
-        "id" : "41"
+        "id" : "42"
       }, {
-        "id" : "43"
+        "id" : "44"
       } ]
     } ]
   }
