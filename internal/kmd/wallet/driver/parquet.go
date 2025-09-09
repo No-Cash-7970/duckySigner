@@ -121,6 +121,8 @@ type ParquetWallet struct {
 	walletPasswordHashed bool
 	dbPath               string
 	cfg                  config.ParquetWalletDriverConfig
+	id                   string
+	walletsPath          string
 }
 
 type ParquetWalletMetadata struct {
@@ -132,6 +134,10 @@ type ParquetWalletMetadata struct {
 	MDKEncrypted       []byte `json:"mdk_encrypted"`
 	MaxKeyIdxEncrypted []byte `json:"max_key_idx_encrypted"`
 }
+
+/*******************************************************************************
+ * Wallet Driver
+ ******************************************************************************/
 
 // InitWithConfig accepts a driver configuration so that the Parquet driver
 // knows where to read and write its wallet databases
@@ -373,12 +379,54 @@ func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byt
 	return nil
 }
 
-// FetchWallet looks up a wallet by ID and returns it, failing if there's more
-// than one wallet with the given ID
-func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (sqWallet wallet.Wallet, err error) {
-	parqwd.mux.Lock()
-	defer parqwd.mux.Unlock()
-	return parqwd.fetchWalletLocked(id)
+// FetchWallet looks up a wallet by ID and returns it. The wallet returned by
+// this function in uninitialized and will need to be initialized before using
+// most of the wallet function.
+func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error) {
+	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+
+	// Check if metadatas file exists
+	_, err := os.Stat(metadatasPath)
+	if err != nil {
+		return &ParquetWallet{}, errWalletNotFound
+	}
+
+	// Open database
+	db, err := sqlx.Connect("duckdb", "")
+	if err != nil {
+		return &ParquetWallet{}, err
+	}
+	defer db.Close()
+
+	// Get wallet metadata from database
+	row := db.QueryRow(
+		fmt.Sprintf("FROM read_parquet('%s') where wallet_id = ?", metadatasPath),
+		id,
+	)
+	retrievedMetadata := ParquetWalletMetadata{}
+	err = row.Scan(
+		&retrievedMetadata.DriverName,
+		&retrievedMetadata.DriverVersion,
+		&retrievedMetadata.WalletId,
+		&retrievedMetadata.WalletName,
+		&retrievedMetadata.MEPEncrypted,
+		&retrievedMetadata.MDKEncrypted,
+		&retrievedMetadata.MaxKeyIdxEncrypted,
+	)
+	if err == sql.ErrNoRows {
+		return &ParquetWallet{}, errWalletNotFound
+	}
+	if err != nil {
+		// Some unexpected error occurred
+		return &ParquetWallet{}, err
+	}
+
+	// Fill in the wallet details
+	return &ParquetWallet{
+		id:          string(id),
+		walletsPath: parqwd.walletsDir(),
+		cfg:         parqwd.parquetCfg,
+	}, nil
 }
 
 // RenameWallet renames the wallet with the given id to newName. It does not
@@ -429,17 +477,60 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 	return nil
 }
 
-// Metadata builds a wallet.Metadata from our metadata table
-func (pqw *ParquetWallet) Metadata() (meta wallet.Metadata, err error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+/*******************************************************************************
+ * Wallet
+ ******************************************************************************/
+
+// Metadata builds a wallet.Metadata from the wallet's metadata in the metadatas
+// file
+func (pqw *ParquetWallet) Metadata() (wallet.Metadata, error) {
+	metadatasPath := pqw.walletsPath + "/" + ParquetMetadatasFile
+
+	// Check if metadatas file exists
+	_, err := os.Stat(metadatasPath)
 	if err != nil {
-		err = errDatabaseConnect
-		return
+		return wallet.Metadata{}, errWalletNotFound
+	}
+
+	// Open database
+	db, err := sqlx.Connect("duckdb", "")
+	if err != nil {
+		return wallet.Metadata{}, err
 	}
 	defer db.Close()
 
-	return parquetWalletMetadataFromDB(db)
+	// Get wallet metadata from database
+	row := db.QueryRow(
+		fmt.Sprintf("FROM read_parquet('%s') where wallet_id = ?", metadatasPath),
+		pqw.id,
+	)
+	retrievedMetadata := ParquetWalletMetadata{}
+	err = row.Scan(
+		&retrievedMetadata.DriverName,
+		&retrievedMetadata.DriverVersion,
+		&retrievedMetadata.WalletId,
+		&retrievedMetadata.WalletName,
+		&retrievedMetadata.MEPEncrypted,
+		&retrievedMetadata.MDKEncrypted,
+		&retrievedMetadata.MaxKeyIdxEncrypted,
+	)
+	if err == sql.ErrNoRows {
+		return wallet.Metadata{}, errWalletNotFound
+	}
+	if err != nil {
+		// Some unexpected error occurred
+		return wallet.Metadata{}, err
+	}
+
+	return wallet.Metadata{
+		ID:                    []byte(retrievedMetadata.WalletId),
+		Name:                  []byte(retrievedMetadata.WalletName),
+		DriverName:            retrievedMetadata.DriverName,
+		DriverVersion:         uint32(retrievedMetadata.DriverVersion),
+		SupportsMnemonicUX:    parquetWalletHasMnemonicUX,
+		SupportsMasterKey:     parquetWalletHasMasterKey,
+		SupportedTransactions: parquetWalletSupportedTxs,
+	}, nil
 }
 
 // Init attempts to decrypt the master encrypt password and master derivation

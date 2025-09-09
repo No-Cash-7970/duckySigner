@@ -24,22 +24,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			var parquetDriver driver.ParquetWalletDriver
 
 			BeforeAll(func() {
-				logger := logging.New()
-				logger.SetLevel(logging.InfoLevel)
-
-				parquetDriver.InitWithConfig(config.KMDConfig{
-					SessionLifetimeSecs: 3600,
-					DriverConfig: config.DriverConfig{
-						ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
-							WalletsDir:   walletDirName,
-							UnsafeScrypt: true, // For testing purposes only
-							ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},
-						},
-						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true},
-						LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
-					},
-				}, logger)
-
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -134,22 +119,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			var parquetDriver driver.ParquetWalletDriver
 
 			BeforeAll(func() {
-				logger := logging.New()
-				logger.SetLevel(logging.InfoLevel)
-
-				parquetDriver.InitWithConfig(config.KMDConfig{
-					SessionLifetimeSecs: 3600,
-					DriverConfig: config.DriverConfig{
-						ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
-							WalletsDir:   walletDirName,
-							UnsafeScrypt: true, // For testing purposes only
-							ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},
-						},
-						SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true},
-						LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
-					},
-				}, logger)
-
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -336,129 +306,234 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("FetchWallet()", func() {
-			It("", func() {
-				//
-			})
-		})
+		Describe("FetchWallet()", Ordered, func() {
+			const walletDirName = ".test_pq_fetch_wallet"
+			var parquetDriver driver.ParquetWalletDriver
 
-		PDescribe("Metadata()", func() {
-			It("", func() {
-				//
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
 			})
-		})
 
-		PDescribe("()", func() {
-			It("", func() {
-				//
+			It("fails when there is no metadatas file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+				By("Attempting to fetch wallet with an ID")
+				_, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).To(MatchError("wallet not found"))
+			})
+
+			It("returns wallet with the given ID", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				walletId := "000"
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking fetched wallet's metadata")
+				metadata, err := wallet.Metadata()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(metadata.ID).To(Equal([]byte("000")))
+			})
+
+			It("fails when a wallet with the given ID does not exist", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+				By("Attempting to fetch wallet with a different ID")
+				_, err := parquetDriver.FetchWallet([]byte("111"))
+				Expect(err).To(MatchError("wallet not found"))
 			})
 		})
 	})
 
-	PDescribe("ParquetWallet", func() {
-		Describe("Init()", func() {
-			It("", func() {
-				//
+	Describe("ParquetWallet", Ordered, func() {
+
+		Describe("Metadata()", func() {
+			const walletDirName = ".test_pq_wallet_metadata"
+			var parquetDriver driver.ParquetWalletDriver
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("returns the wallet's metadata if it is in the metadatas file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				walletId := "000"
+				walletName := "Foo"
+				err := parquetDriver.CreateWallet(
+					[]byte(walletName),
+					[]byte(walletId),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Getting the wallet's metadata")
+				metadata, err := wallet.Metadata()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(metadata.ID).To(Equal([]byte(walletId)))
+				Expect(metadata.Name).To(Equal([]byte(walletName)))
+				Expect(metadata.DriverName).To(Equal("parquet"))
+			})
+
+			It("fails if the wallet's metadata is not in the metadatas file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Remove metadatas file")
+				err = os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Getting the wallet's metadata")
+				_, err = wallet.Metadata()
+				Expect(err).To(MatchError("wallet not found"))
 			})
 		})
 
 		Describe("CheckPassword()", func() {
+			PIt("does not return error if the given wallet password is correct", func() {
+				//
+			})
+
+			PIt("returns error if the given wallet password is incorrect", func() {
+				//
+			})
+		})
+
+		PDescribe("ExportMasterDerivationKey()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ExportMasterDerivationKey()", func() {
+		PDescribe("ListKeys()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("Metadata()", func() {
+		PDescribe("ImportKey()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ListKeys()", func() {
+		PDescribe("ExportKey()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ImportKey()", func() {
+		PDescribe("GenerateKey()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ExportKey()", func() {
+		PDescribe("DeleteKey()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("GenerateKey()", func() {
+		PDescribe("ImportMultisigAddr()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("DeleteKey()", func() {
+		PDescribe("LookupMultisigPreimage()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ImportMultisigAddr()", func() {
+		PDescribe("ListMultisigAddrs()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("LookupMultisigPreimage()", func() {
+		PDescribe("DeleteMultisigAddr()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("ListMultisigAddrs()", func() {
+		PDescribe("SignTransaction()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("DeleteMultisigAddr()", func() {
+		PDescribe("MultisigSignTransaction()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("SignTransaction()", func() {
+		PDescribe("SignProgram()", func() {
 			It("", func() {
 				//
 			})
 		})
 
-		Describe("MultisigSignTransaction()", func() {
-			It("", func() {
-				//
-			})
-		})
-
-		Describe("SignProgram()", func() {
-			It("", func() {
-				//
-			})
-		})
-
-		Describe("MultisigSignProgram()", func() {
+		PDescribe("MultisigSignProgram()", func() {
 			It("", func() {
 				//
 			})
 		})
 	})
 })
+
+// setupParquetWalletDriver configures and initializes the given parquet driver
+// for use in a test
+func setupParquetWalletDriver(parquetDriver *driver.ParquetWalletDriver, walletDirName string) {
+	logger := logging.New()
+	logger.SetLevel(logging.InfoLevel)
+
+	err := parquetDriver.InitWithConfig(config.KMDConfig{
+		SessionLifetimeSecs: 3600,
+		DriverConfig: config.DriverConfig{
+			ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+				WalletsDir:   walletDirName,
+				UnsafeScrypt: true, // For testing purposes only
+				ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},
+			},
+			SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true},
+			LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+		},
+	}, logger)
+
+	Expect(err).NotTo(HaveOccurred())
+}
 
 // createKmdServiceCleanup is a helper function that cleans up the directory
 // with specified by walletDirName, which was created for an instance of the
