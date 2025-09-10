@@ -43,8 +43,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating 2 wallets (which generates a metadatas file)")
-				walletId1 := "000"
-				walletId2 := "001"
+				const walletId1 = "000"
+				const walletId2 = "001"
 				err := parquetDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId1),
@@ -326,7 +326,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 
 			It("renames the wallet to the new name", func() {
 				By("Creating a wallet")
-				walletId := "000"
+				const walletId = "000"
 				err := parquetDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
@@ -336,7 +336,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Renaming the wallet")
-				newWalletName := "my new name"
+				const newWalletName = "my new name"
 				err = parquetDriver.RenameWallet(
 					[]byte(newWalletName),
 					[]byte("000"),
@@ -401,7 +401,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("fails if the directory for the wallet does not have a metadata.json file", func() {
-				walletId := "fff"
+				const walletId = "fff"
 				By("Creating a new directory within the wallets directory")
 				err := os.Mkdir(walletDirName+"/"+walletId, 0700)
 				Expect(err).ToNot(HaveOccurred())
@@ -457,7 +457,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 
 			It("returns wallet with the given ID", func() {
 				By("Creating a wallet")
-				walletId := "000"
+				const walletId = "000"
 				err := parquetDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
@@ -510,8 +510,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				walletId := "000"
-				walletName := "Foo"
+				const walletId = "000"
+				const walletName = "Foo"
 				err := parquetDriver.CreateWallet(
 					[]byte(walletName),
 					[]byte(walletId),
@@ -554,6 +554,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			const walletDirName = ".test_pq_wallet_ck_pw"
 			var parquetDriver driver.ParquetWalletDriver
 
+			const walletId = "000"
+			const walletPassword = "password"
+
 			BeforeAll(func() {
 				setupParquetWalletDriver(&parquetDriver, walletDirName)
 				DeferCleanup(func() {
@@ -563,22 +566,22 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 
 			It("does not return error if the given wallet password is correct", func() {
 				By("Creating a wallet")
-				walletId := "000"
-				walletName := "Foo"
 				err := parquetDriver.CreateWallet(
-					[]byte(walletName),
+					[]byte("Foo"),
 					[]byte(walletId),
-					[]byte("password"),
+					[]byte(walletPassword),
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking the given password")
-				err = wallet.CheckPassword([]byte("password"))
+				err = wallet.CheckPassword([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred(), "The password is correct")
 			})
 
@@ -586,19 +589,67 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that a wallet has been created
 
-				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking the given password")
-				err = wallet.CheckPassword([]byte("password"))
-				Expect(err).ToNot(HaveOccurred(), "The password is correct")
+				err = wallet.CheckPassword([]byte("not the password"))
+				Expect(err).To(HaveOccurred(), "The password is incorrect")
 			})
 		})
 
-		PDescribe("ExportMasterDerivationKey()", func() {
-			It("", func() {
-				//
+		Describe("ExportMasterDerivationKey()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_export_mdk"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("returns master derivation key when given the correct password", func() {
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Exporting the MDK with the correct password")
+				mdk, err := wallet.ExportMasterDerivationKey([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(mdk).ToNot(BeEmpty(), "Returns MDK")
+			})
+
+			It("fails if given password is incorrect", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export MDK with an incorrect password")
+				_, err = wallet.ExportMasterDerivationKey([]byte("wrong password"))
+				Expect(err).To(HaveOccurred(), "Exporting MDK failed because password is incorrect")
 			})
 		})
 
