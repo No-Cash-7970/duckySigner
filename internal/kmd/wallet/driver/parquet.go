@@ -121,7 +121,8 @@ type ParquetWallet struct {
 	dbPath               string
 	cfg                  config.ParquetWalletDriverConfig
 	id                   string
-	walletsPath          string
+	// The parent directory of the wallet where wallets are stored
+	walletsPath string
 }
 
 type ParquetWalletMetadata struct {
@@ -185,7 +186,7 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 	_, statErr := os.Stat(metadatasPath)
 
 	// Open database
-	db, err := sqlx.Connect("duckdb", "")
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		return []wallet.Metadata{}, err
 	}
@@ -395,7 +396,7 @@ func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error)
 	}
 
 	// Open database
-	db, err := sqlx.Connect("duckdb", "")
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		return &ParquetWallet{}, err
 	}
@@ -486,7 +487,7 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 	}
 
 	// Open database
-	db, err := sqlx.Connect("duckdb", "")
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		return err
 	}
@@ -539,7 +540,7 @@ func (pqw *ParquetWallet) Metadata() (wallet.Metadata, error) {
 	}
 
 	// Open database
-	db, err := sqlx.Connect("duckdb", "")
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		return wallet.Metadata{}, err
 	}
@@ -1379,7 +1380,7 @@ func (parqwd *ParquetWalletDriver) idToPath(id []byte) string {
 // Parquet wallet driver
 func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWalletMetadata) error {
 	// Create the temporary database
-	db, err := sqlx.Connect("duckdb", "")
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
 		return err
 	}
@@ -1421,7 +1422,8 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 
 		// Check if metadata is already stored in the file
 		row := db.QueryRow(
-			fmt.Sprintf("SELECT wallet_id from read_parquet('%s') WHERE wallet_id = ?", metadatasPath),
+			fmt.Sprintf("SELECT wallet_id from read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
+				metadatasPath),
 			metadata.WalletId,
 		)
 		scanErr := row.Scan(&retrievedWalletId)
@@ -1455,20 +1457,25 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 
 /********** Wallet Helpers **********/
 
-// decryptAndGetMasterKey fetches the master key from the metadata table and
+// decryptAndGetMasterKey fetches the master key from the metadatas file and
 // attempts to decrypt it with the passed password
 func (pqw *ParquetWallet) decryptAndGetMasterKey(pw []byte) ([]byte, error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		return nil, errDatabaseConnect
+		return nil, err
 	}
 	defer db.Close()
 
 	var encryptedMEPBlob []byte
-	err = db.Get(&encryptedMEPBlob, "SELECT mep_encrypted FROM metadata LIMIT 1")
+	row := db.QueryRow(
+		fmt.Sprintf("SELECT mep_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
+			pqw.walletsPath+"/"+ParquetMetadatasFile),
+		pqw.id,
+	)
+	err = row.Scan(&encryptedMEPBlob)
 	if err != nil {
-		return nil, errDatabase
+		return nil, err
 	}
 
 	mep, err := decryptBlobWithPassword(encryptedMEPBlob, PTMasterKey, pw)
@@ -1482,17 +1489,22 @@ func (pqw *ParquetWallet) decryptAndGetMasterKey(pw []byte) ([]byte, error) {
 // decryptAndGetMasterDerivationKey fetches the mdk from the metadata table and
 // attempts to decrypt it with the master password
 func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		return nil, errDatabaseConnect
+		return nil, err
 	}
 	defer db.Close()
 
 	var encryptedMDKBlob []byte
-	err = db.Get(&encryptedMDKBlob, "SELECT mdk_encrypted FROM metadata LIMIT 1")
+	row := db.QueryRow(
+		fmt.Sprintf("SELECT mdk_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
+			pqw.walletsPath+"/"+ParquetMetadatasFile),
+		pqw.id,
+	)
+	err = row.Scan(&encryptedMDKBlob)
 	if err != nil {
-		return nil, errDatabase
+		return nil, err
 	}
 
 	mdk, err := decryptBlobWithPassword(encryptedMDKBlob, PTMasterDerivationKey, pw)

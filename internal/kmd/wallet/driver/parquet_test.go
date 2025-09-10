@@ -550,13 +550,49 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("CheckPassword()", func() {
-			PIt("does not return error if the given wallet password is correct", func() {
-				//
+		Describe("CheckPassword()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_ck_pw"
+			var parquetDriver driver.ParquetWalletDriver
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
 			})
 
-			PIt("returns error if the given wallet password is incorrect", func() {
-				//
+			It("does not return error if the given wallet password is correct", func() {
+				By("Creating a wallet")
+				walletId := "000"
+				walletName := "Foo"
+				err := parquetDriver.CreateWallet(
+					[]byte(walletName),
+					[]byte(walletId),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking the given password")
+				err = wallet.CheckPassword([]byte("password"))
+				Expect(err).ToNot(HaveOccurred(), "The password is correct")
+			})
+
+			It("returns error if the given wallet password is incorrect", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Fetching the wallet")
+				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking the given password")
+				err = wallet.CheckPassword([]byte("password"))
+				Expect(err).ToNot(HaveOccurred(), "The password is correct")
 			})
 		})
 
