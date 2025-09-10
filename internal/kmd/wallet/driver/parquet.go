@@ -123,6 +123,8 @@ type ParquetWallet struct {
 	id                   string
 	// The parent directory of the wallet where wallets are stored
 	walletsPath string
+	// If the wallet has been initialized
+	initialized bool
 }
 
 type ParquetWalletMetadata struct {
@@ -604,12 +606,19 @@ func (pqw *ParquetWallet) Init(pw []byte) error {
 	}
 	pqw.walletPasswordHash = fastHashWithSalt(pw, pqw.walletPasswordSalt[:])
 	pqw.walletPasswordHashed = true
+
+	pqw.initialized = true
+
 	return nil
 }
 
 // CheckPassword checks that the database can be decrypted with the password.
 // It's the same as Init but doesn't store the decrypted key
 func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
+	if !pqw.initialized {
+		return fmt.Errorf("wallet not initialized")
+	}
+
 	if pqw.walletPasswordHashed {
 		// Check against pre-computed password hash
 		pwhash := fastHashWithSalt(pw, pqw.walletPasswordSalt[:])
@@ -653,6 +662,10 @@ func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
 
 // ExportMasterDerivationKey decrypts the encrypted MDK and returns it
 func (pqw *ParquetWallet) ExportMasterDerivationKey(pw []byte) (mdk types.MasterDerivationKey, err error) {
+	if !pqw.initialized {
+		return mdk, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
@@ -668,6 +681,7 @@ func (pqw *ParquetWallet) ExportMasterDerivationKey(pw []byte) (mdk types.Master
 
 	// Copy master derivation key into the result
 	copy(mdk[:], mdkBuf.Bytes())
+
 	return
 }
 
