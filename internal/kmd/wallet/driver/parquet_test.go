@@ -110,7 +110,8 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing wallets")
-				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
+				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2),
+					"Returns 2 wallet metadatas")
 			})
 		})
 
@@ -300,9 +301,138 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("RenameWallet()", func() {
-			It("", func() {
-				//
+		Describe("RenameWallet()", Ordered, func() {
+			const walletDirName = ".test_pq_rename_wallet"
+			var parquetDriver driver.ParquetWalletDriver
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("fails when there is no metadatas file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+				By("Attempting to rename wallet with the given ID")
+				err := parquetDriver.RenameWallet(
+					[]byte("my new name"),
+					[]byte("000"),
+					[]byte("password"),
+				)
+				Expect(err).To(MatchError("wallet not found"))
+			})
+
+			It("renames the wallet to the new name", func() {
+				By("Creating a wallet")
+				walletId := "000"
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte("password"),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Renaming the wallet")
+				newWalletName := "my new name"
+				err = parquetDriver.RenameWallet(
+					[]byte(newWalletName),
+					[]byte("000"),
+					[]byte("password"),
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking if the wallet has new name in the metadatas file")
+				db, err := sql.Open("duckdb", "")
+				Expect(err).ToNot(HaveOccurred())
+				defer db.Close()
+
+				row := db.QueryRow(
+					"SELECT wallet_name FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
+					walletId,
+				)
+				var retrievedWalletName string
+				err = row.Scan(&retrievedWalletName)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(retrievedWalletName).To(Equal(newWalletName),
+					"The wallet is renamed in the wallet's metadata file")
+
+				By("Checking if the wallet's metadata file has the new name")
+				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.ParquetWalletMetadataFile)
+				Expect(err).ToNot(HaveOccurred())
+
+				metadata := driver.ParquetWalletMetadata{}
+				err = json.Unmarshal(metadataFileContents, &metadata)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(metadata.WalletName).To(Equal(newWalletName),
+					"The wallet is renamed in the metadatas file")
+			})
+
+			It("does not fail if the given password is incorrect", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+				By("Attempting to rename wallet with the given ID with an incorrect password")
+				err := parquetDriver.RenameWallet(
+					[]byte("another new name"),
+					[]byte("000"),
+					[]byte("not the password"),
+				)
+				Expect(err).ToNot(HaveOccurred(),
+					"Renaming the wallet succeeds despite having the wrong password")
+			})
+
+			It("fails when a wallet with the given ID does not exist in the metadatas file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Remove metadatas file")
+				err := os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to rename wallet with the given ID")
+				err = parquetDriver.RenameWallet(
+					[]byte("my new name"),
+					[]byte("000"),
+					[]byte("password"),
+				)
+				Expect(err).To(MatchError("wallet not found"))
+			})
+
+			It("fails if the directory for the wallet does not have a metadata.json file", func() {
+				walletId := "fff"
+				By("Creating a new directory within the wallets directory")
+				err := os.Mkdir(walletDirName+"/"+walletId, 0700)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to rename wallet with the given ID")
+				err = parquetDriver.RenameWallet(
+					[]byte("my new name"),
+					[]byte(walletId),
+					[]byte("password"),
+				)
+				Expect(err).To(MatchError("wallet not found"))
+			})
+
+			It("fails if the new name is too long", func() {
+				By("Attempting to rename wallet with the given ID")
+				err := parquetDriver.RenameWallet(
+					[]byte("looooooooooooooooooooooooooooooooooooooooooooooooooooooooong new name"),
+					[]byte("000"),
+					[]byte("password"),
+				)
+				Expect(err.Error()).To(ContainSubstring("wallet name too long"))
+			})
+
+			It("fails if no ID is given", func() {
+				By("Attempting to rename wallet with no ID")
+				err := parquetDriver.RenameWallet(
+					[]byte("looooooooooooooooooooooooooooooooooooooooooooooooooooooooong new name"),
+					[]byte{},
+					[]byte("password"),
+				)
+				Expect(err.Error()).To(ContainSubstring("no ID is given"))
 			})
 		})
 
@@ -326,9 +456,6 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 
 			It("returns wallet with the given ID", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that no wallets have been created yet
-
 				By("Creating a wallet")
 				walletId := "000"
 				err := parquetDriver.CreateWallet(
@@ -355,6 +482,12 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				By("Attempting to fetch wallet with a different ID")
 				_, err := parquetDriver.FetchWallet([]byte("111"))
 				Expect(err).To(MatchError("wallet not found"))
+			})
+
+			It("fails if no ID is given", func() {
+				By("Attempting to fetch wallet with no ID")
+				_, err := parquetDriver.FetchWallet([]byte{})
+				Expect(err.Error()).To(ContainSubstring("no ID is given"))
 			})
 		})
 	})

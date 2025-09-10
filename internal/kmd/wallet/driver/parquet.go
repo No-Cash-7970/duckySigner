@@ -5,7 +5,6 @@
 package driver
 
 import (
-	"bytes"
 	"crypto/ed25519"
 	"crypto/subtle"
 	"database/sql"
@@ -383,6 +382,10 @@ func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byt
 // this function in uninitialized and will need to be initialized before using
 // most of the wallet function.
 func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error) {
+	if len(id) == 0 {
+		return &ParquetWallet{}, fmt.Errorf("no ID is given")
+	}
+
 	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
 
 	// Check if metadatas file exists
@@ -429,49 +432,92 @@ func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error)
 	}, nil
 }
 
-// RenameWallet renames the wallet with the given id to newName. It does not
-// rename the database file itself, because doing so safely is tricky
+// RenameWallet renames the wallet with the given id to newName. The given
+// password is ignored, so the wallet can be successfully renamed if password is
+// incorrect. The password can be left empty.
 func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []byte) error {
-	// Grab a lock so our duplicate names check can't race
-	parqwd.mux.Lock()
-	defer parqwd.mux.Unlock()
+	if len(id) == 0 {
+		return fmt.Errorf("no ID is given")
+	}
 
-	// Ensure a wallet with this name doesn't already exist
-	sameNameDBPaths, err := parqwd.findDBPathsByName(newName)
+	if len(newName) > parquetMaxWalletNameLen {
+		return errNameTooLong
+	}
+
+	walletMetadataPath := parqwd.walletsDir() + "/" + string(id) + "/" + ParquetWalletMetadataFile
+
+	// Load wallet's metadata file
+	metadataFileContents, err := os.ReadFile(walletMetadataPath)
+	if os.IsNotExist(err) {
+		// The directory is not a valid wallet
+		return errWalletNotFound
+	}
 	if err != nil {
+		// An unexpected error occurred
 		return err
 	}
-	if len(sameNameDBPaths) != 0 {
-		return errSameName
-	}
-
-	// Fetch the wallet
-	curWallet, err := parqwd.fetchWalletLocked(id)
-	if err != nil {
-		return err
-	}
-	sqWallet, ok := curWallet.(*ParquetWallet)
-	if !ok {
-		return errSQLiteWrongType
-	}
-
-	// Check the password
-	err = sqWallet.CheckPassword(pw)
+	metadata := ParquetWalletMetadata{}
+	err = json.Unmarshal(metadataFileContents, &metadata)
 	if err != nil {
 		return err
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(sqWallet.dbPath))
+	// Update the name within the metadata file
+	metadata.WalletName = string(newName)
+	updatedMetadataJson, err := json.Marshal(metadata)
 	if err != nil {
-		return errDatabaseConnect
+		return err
+	}
+	err = os.WriteFile(walletMetadataPath+tempFileSuffix, updatedMetadataJson, parquetWalletsDirPermissions)
+	if err != nil {
+		return err
+	}
+	err = removeTempFile(walletMetadataPath)
+	if err != nil {
+		return err
+	}
+
+	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+
+	// Check if metadatas file exists
+	_, err = os.Stat(metadatasPath)
+	if err != nil {
+		return errWalletNotFound
+	}
+
+	// Open database
+	db, err := sqlx.Connect("duckdb", "")
+	if err != nil {
+		return err
 	}
 	defer db.Close()
 
-	// Update the metadata row
-	_, err = db.Exec("UPDATE metadata SET wallet_name=? WHERE wallet_id=?", newName, id)
+	// Run the schema for creating the metadatas schema in temporary in-memory database
+	_, err = db.Exec(parquetCreateMetadatasTblSchema)
 	if err != nil {
-		return errDatabase
+		return err
+	}
+
+	// Load metadatas file into temporary in-memory table
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO metadatas FROM read_parquet('%s')", metadatasPath))
+	if err != nil {
+		return err
+	}
+
+	// Update wallet name
+	_, err = db.Exec("UPDATE metadatas SET wallet_name=? WHERE wallet_id=?", newName, id)
+	if err != nil {
+		return err
+	}
+
+	// Replace metadatas file
+	_, err = db.Exec(fmt.Sprintf("COPY metadatas TO '%s' (FORMAT parquet)", metadatasPath+tempFileSuffix))
+	if err != nil {
+		return err
+	}
+	err = removeTempFile(metadatasPath)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -1207,45 +1253,6 @@ func parquetDbConnectionURL(path string) string {
 	return fmt.Sprintf("file:%s?%s", path, parquetWalletDBOptions)
 }
 
-// parquetWalletMetadataFromDB accepts a *sqlx.DB and extracts a wallet.Metadata
-// from it
-func parquetWalletMetadataFromDB(db *sqlx.DB) (metadata wallet.Metadata, err error) {
-	var driverName string
-	var walletID, walletName []byte
-	var driverVersion uint32
-
-	// Fetch the metadata to fill in a Metadata
-	metadataRow := db.QueryRow("SELECT driver_name, driver_version, wallet_id, wallet_name FROM metadata LIMIT 1")
-	err = metadataRow.Scan(&driverName, &driverVersion, &walletID, &walletName)
-	if err != nil {
-		err = errDatabase
-		return
-	}
-
-	// Ensure this database is the correct version + driver
-	if driverName != parquetWalletDriverName {
-		err = errWrongDriver
-		return
-	}
-	if driverVersion != parquetWalletDriverVersion {
-		err = errWrongDriverVer
-		return
-	}
-
-	// Build the Metadata
-	metadata = wallet.Metadata{
-		ID:                    walletID,
-		Name:                  walletName,
-		DriverName:            driverName,
-		DriverVersion:         driverVersion,
-		SupportsMnemonicUX:    parquetWalletHasMnemonicUX,
-		SupportsMasterKey:     parquetWalletHasMasterKey,
-		SupportedTransactions: parquetWalletSupportedTxs,
-	}
-
-	return
-}
-
 // parquetWalletMetadataFromPath accepts path to a directory for a wallet and
 // returns a Metadata struct with information about it
 func parquetWalletMetadataFromPath(walletPath string) (metadata ParquetWalletMetadata, err error) {
@@ -1339,48 +1346,6 @@ func (parqwd *ParquetWalletDriver) potentialWalletPaths() (paths []string, err e
 	return
 }
 
-// findDBPathsById returns the paths to wallets with the specified id
-func (parqwd *ParquetWalletDriver) findDBPathsByID(id []byte) (paths []string, err error) {
-	return parqwd.findDBPathsByField("ID", id)
-}
-
-// findDBPathsByName returns the paths to wallets with the specified name
-func (parqwd *ParquetWalletDriver) findDBPathsByName(name []byte) (paths []string, err error) {
-	return parqwd.findDBPathsByField("Name", name)
-}
-
-// findDBPathsByField is a helper for findDBPathsByID and findDBPathsByName. It
-// iterates over potential wallet databases and searches for the given
-// testValue in the appropriate field
-func (parqwd *ParquetWalletDriver) findDBPathsByField(fieldName string, testValue []byte) (paths []string, err error) {
-	potentialPaths, err := parqwd.potentialWalletPaths()
-	if err != nil {
-		return nil, err
-	}
-	for _, path := range potentialPaths {
-		// Ignore errors in case people dumped non-database files into this directory
-		walletMetadata, err := parquetWalletMetadataFromPath(path)
-		if err != nil {
-			continue
-		}
-		// Fetch the appropriate field
-		var fieldValue []byte
-		switch fieldName {
-		case "ID":
-			fieldValue = []byte(walletMetadata.WalletId)
-		case "Name":
-			fieldValue = []byte(walletMetadata.WalletName)
-		default:
-			panic(fmt.Sprintf("unknown fieldName %s", fieldName))
-		}
-		// Check if there's a match
-		if bytes.Equal(fieldValue, testValue) {
-			paths = append(paths, path)
-		}
-	}
-	return paths, nil
-}
-
 // maybeMakeWalletsDir tries to create the wallets directory if it doesn't
 // already exist
 func (parqwd *ParquetWalletDriver) maybeMakeWalletsDir() error {
@@ -1408,48 +1373,6 @@ func (parqwd *ParquetWalletDriver) idToPath(id []byte) string {
 	safeID := disallowedParquetFilenameRegex.ReplaceAll(id, []byte(""))
 	// The directory name for the wallet should be the wallet ID
 	return filepath.Join(parqwd.walletsDir(), string(safeID))
-}
-
-// fetchWalletLocked is the guts of FetchWallet. Precondition: we must hold
-// swd.mux
-func (parqwd *ParquetWalletDriver) fetchWalletLocked(id []byte) (sqWallet wallet.Wallet, err error) {
-	// We want to allow users to drop in database files from other systems and
-	// potentially rename the file, so we iterate over the wallet files instead
-	// of looking up what we would have named them to begin with.
-	dbPaths, err := parqwd.findDBPathsByID(id)
-	if err != nil {
-		return
-	}
-
-	// Do we have this wallet?
-	if len(dbPaths) == 0 {
-		err = errWalletNotFound
-		return
-	}
-
-	// Ensure only one wallet has this ID
-	if len(dbPaths) > 1 {
-		err = errIDConflict
-		return
-	}
-
-	// Connect to the database
-	dbPath := dbPaths[0]
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(dbPath))
-	if err != nil {
-		err = errDatabaseConnect
-		return
-	}
-	defer db.Close()
-
-	// Fill in the wallet details
-	sqWallet = &ParquetWallet{
-		masterEncryptionKey: nil,
-		masterDerivationKey: nil,
-		dbPath:              dbPath,
-		cfg:                 parqwd.parquetCfg,
-	}
-	return
 }
 
 // addParquetWalletMetadata adds the given data to the metadatas file for the
