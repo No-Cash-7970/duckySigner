@@ -8,6 +8,7 @@ import (
 	"crypto/ed25519"
 	"crypto/subtle"
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -48,6 +49,9 @@ const (
 	// ParquetWalletMetadataFile is the name of the metadata file is in each
 	// directory for a wallet
 	ParquetWalletMetadataFile = "metadata.json"
+	// ParquetWalletKeysFile is the name of the file that contains the wallet's
+	// keys
+	ParquetWalletKeysFile = "keys.parquet"
 
 	// tempFileSuffix is the suffix used to create a temporary file. The
 	// temporary file name is the original file name + this suffix.
@@ -65,6 +69,12 @@ var parquetWalletSupportedTxs = []types.TxType{
 var disallowedParquetFilenameRegex = regexp.MustCompile("[^a-zA-Z0-9_-]*")
 var parquetFilenameRegex = regexp.MustCompile(`^.*\.parquet$`)
 
+// addParquetKeySQL is the SQL statement for setting the Parquet file encryption
+// key within DuckDB. The file encryption key is used for encrypting and
+// decrypting all the Parquet files that are used as the database files.
+// Requires the file encryption key in Base64.
+const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
+
 var parquetCreateMetadatasTblSchema = `
 CREATE TABLE IF NOT EXISTS metadatas (
 	driver_name TEXT NOT NULL,
@@ -74,6 +84,13 @@ CREATE TABLE IF NOT EXISTS metadatas (
 	mep_encrypted BLOB NOT NULL,
 	mdk_encrypted BLOB NOT NULL,
 	max_key_idx_encrypted BLOB NOT NULL
+);
+`
+var parquetCreateKeysTblSchema = `
+CREATE TABLE IF NOT EXISTS keys (
+	address BLOB PRIMARY KEY,
+	secret_key_encrypted BLOB NOT NULL,
+	key_idx INT
 );
 `
 
@@ -238,7 +255,7 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 			return metadatas, err
 		}
 
-		// Run the schema for creating the metadatas schema in temporary database
+		// Run the schema for creating the metadatas table in temporary database
 		_, err = db.Exec(parquetCreateMetadatasTblSchema)
 		if err != nil {
 			return metadatas, err
@@ -495,7 +512,7 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 	}
 	defer db.Close()
 
-	// Run the schema for creating the metadatas schema in temporary in-memory database
+	// Run the schema for creating the metadatas table in temporary in-memory database
 	_, err = db.Exec(parquetCreateMetadatasTblSchema)
 	if err != nil {
 		return err
@@ -634,6 +651,10 @@ func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
 
 // ListKeys lists all the addresses in the wallet
 func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
+	if !pqw.initialized {
+		return addrs, fmt.Errorf("wallet not initialized")
+	}
+
 	// Connect to the database
 	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
 	if err != nil {
@@ -741,41 +762,243 @@ func (pqw *ParquetWallet) ExportKey(addr types.Digest, pw []byte) (sk ed25519.Pr
 
 // GenerateKey generates a key from system entropy and imports it
 func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, err error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
-	if err != nil {
-		err = errDatabaseConnect
-		return
+	if !pqw.initialized {
+		return addr, fmt.Errorf("wallet not initialized")
 	}
-	defer db.Close()
 
-	// The sqlite wallet has SupportsMnemonicUX = false, meaning we don't know how to
-	// show mnemonics to the user
+	metadatasPath := pqw.walletsPath + "/" + ParquetMetadatasFile
+	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+	walletMetadataPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMetadataFile
+
+	// The parquet wallet has SupportsMnemonicUX = false, meaning we don't know
+	// how to show mnemonics to the user
 	if displayMnemonic {
 		err = errNoMnemonicUX
 		return
 	}
 
-	// Begin an exclusive database transaction (we set _txlock=exclusive on the
-	// database connection string)
-	tx, err := db.Beginx()
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		err = errDatabase
+		return addr, err
+	}
+	defer db.Close()
+
+	// Run the schema for creating the metadatas table in temporary database
+	_, err = db.Exec(parquetCreateMetadatasTblSchema)
+	if err != nil {
+		return addr, err
+	}
+
+	// Run the schema for creating the keys table in temporary database
+	_, err = db.Exec(parquetCreateKeysTblSchema)
+	if err != nil {
+		return addr, err
+	}
+
+	// Fetch the encrypted highest index
+	var encryptedHighestIndexBlob []byte
+	row := db.QueryRow(
+		fmt.Sprintf("SELECT max_key_idx_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
+			metadatasPath),
+		pqw.id,
+	)
+	err = row.Scan(&encryptedHighestIndexBlob)
+	if err != nil {
+		return addr, err
+	}
+
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Decrypt the highest index
+	highestIndexBlob, err := decryptBlobWithPassword(encryptedHighestIndexBlob, PTMaxKeyIdx, mekBuf.Bytes())
+	if err != nil {
 		return
 	}
 
-	// Generate and insert the next key
-	addr, err = pqw.generateKeyTxLocked(tx)
+	// Decode the highest index
+	var highestIndex uint64
+	err = msgpackDecode(highestIndexBlob, &highestIndex)
 	if err != nil {
-		// Rollback in case any part of the tx failed
-		tx.Rollback()
 		return
 	}
 
-	// Commit the transaction
-	err = tx.Commit()
+	// nextIndex he index of the next key we should generate
+	nextIndex := highestIndex + 1
+
+	var genPK ed25519.PublicKey
+	var genSK ed25519.PrivateKey
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
 	if err != nil {
-		err = errDatabase
+		return
+	}
+
+	// We may have to bump nextIndex if the user has manually imported the next
+	// key we were going to generate (thus we didn't see it in the search for the
+	// highest-derived key above)
+	for {
+		// Honestly, if you could get 2**63 - 1 keys into this database, I'd be impressed
+		if nextIndex == parquetIntOverflow {
+			err = errTooManyKeys
+			return
+		}
+
+		// Decrypt the key stored in enclave into a local copy
+		var mdkBuf *memguard.LockedBuffer
+		mdkBuf, err = pqw.masterDerivationKey.Open()
+		if err != nil {
+			return addr, err
+		}
+		defer mdkBuf.Destroy() // Destroy the copy when we return
+
+		// Compute the secret key and public key for nextIndex
+		genPK, genSK, err = extractKeyWithIndex(mdkBuf.Bytes(), nextIndex)
+		if err != nil {
+			return
+		}
+
+		// Convert the public key into an address
+		addr = publicKeyToAddress(genPK)
+
+		// Check that we don't already have this PK in the database
+		var cnt int
+		row := db.QueryRow(
+			fmt.Sprintf(
+				"SELECT COUNT(1) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE wallet_id = ? LIMIT 1",
+				keysPath),
+			pqw.id,
+		)
+		err = row.Scan(&encryptedHighestIndexBlob)
+
+		if cnt == 0 {
+			// Good, key didn't exist. Break from loop
+			break
+		}
+
+		// Uh oh, user already imported this key manually. Bump nextIndex
+		nextIndex++
+	}
+
+	// Encrypt the encoded secret key
+	skEncrypted, err := encryptBlobWithKey(msgpackEncode(genSK), PTSecretKey, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Add new key into temporary keys table
+	_, err = db.Exec(
+		"INSERT INTO keys (address, secret_key_encrypted, key_idx) VALUES(?, ?, ?)",
+		addr[:], skEncrypted, nextIndex,
+	)
+	if err != nil {
+		return
+	}
+
+	// Check if keys file exists
+	_, keysStatErr := os.Stat(keysPath)
+
+	if os.IsNotExist(keysStatErr) { // The file does not exist
+		// Create keys file and add key
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY keys TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			keysPath,
+		))
+		if err != nil {
+			return
+		}
+	} else { // The file exists
+		if keysStatErr != nil {
+			// Some other error occurred
+			return addr, keysStatErr
+		}
+
+		// Combine the sessions within the file with the new session
+		// NOTE: The keys file is updated this way to reduce the amount of data
+		// that can end up on disk unencrypted due to memory swapping/paging.
+		// From what I understand, DuckDB reads files in a stream and does not
+		// try to load all file contents into memory.
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY ((FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) UNION FROM keys) ORDER BY key_idx, address) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			keysPath, keysPath+tempFileSuffix,
+		))
+		if err != nil {
+			return
+		}
+
+		err = removeTempFile(keysPath)
+		if err != nil {
+			return
+		}
+	}
+
+	// Encrypt the new max key index
+	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(nextIndex), PTMaxKeyIdx, mekBuf.Bytes())
+	if err != nil {
+		return
+	}
+
+	// Load wallet's metadata file
+	metadataFileContents, err := os.ReadFile(walletMetadataPath)
+	if os.IsNotExist(err) {
+		// The directory is not a valid wallet
+		return
+	}
+	if err != nil {
+		// An unexpected error occurred
+		return
+	}
+	metadata := ParquetWalletMetadata{}
+	err = json.Unmarshal(metadataFileContents, &metadata)
+	if err != nil {
+		return
+	}
+
+	// Update the name within the metadata file
+	metadata.MaxKeyIdxEncrypted = encryptedIdxBlob
+	updatedMetadataJson, err := json.Marshal(metadata)
+	if err != nil {
+		return
+	}
+	err = os.WriteFile(walletMetadataPath+tempFileSuffix, updatedMetadataJson, parquetWalletsDirPermissions)
+	if err != nil {
+		return
+	}
+	err = removeTempFile(walletMetadataPath)
+	if err != nil {
+		return
+	}
+
+	// Load metadatas file into temporary in-memory table
+	_, err = db.Exec(fmt.Sprintf("INSERT INTO metadatas FROM read_parquet('%s')", metadatasPath))
+	if err != nil {
+		return
+	}
+
+	// Update wallet name
+	_, err = db.Exec(
+		"UPDATE metadatas SET max_key_idx_encrypted=? WHERE wallet_id=?",
+		encryptedIdxBlob, pqw.id,
+	)
+	if err != nil {
+		return
+	}
+
+	// Replace metadatas file
+	_, err = db.Exec(fmt.Sprintf("COPY metadatas TO '%s' (FORMAT parquet)", metadatasPath+tempFileSuffix))
+	if err != nil {
+		return
+	}
+	err = removeTempFile(metadatasPath)
+	if err != nil {
 		return
 	}
 
@@ -1400,7 +1623,7 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 	}
 	defer db.Close()
 
-	// Run the schema for creating the metadatas schema in temporary database
+	// Run the schema for creating the metadatas table in temporary database
 	_, err = db.Exec(parquetCreateMetadatasTblSchema)
 	if err != nil {
 		return err
@@ -1583,115 +1806,4 @@ func (pqw *ParquetWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateK
 	// The candidate looks good, return it
 	sk = skCandidate
 	return
-}
-
-// generateKeyTxLocked is a helper for GenerateKey that accepts a locked tx,
-// computes the next key that should be generated, inserts it, and returns
-// its address
-func (pqw *ParquetWallet) generateKeyTxLocked(tx *sqlx.Tx) (addr types.Digest, err error) {
-	// Fetch the encrypted highest index
-	var encryptedHighestIndexBlob []byte
-	err = tx.Get(&encryptedHighestIndexBlob, "SELECT max_key_idx_encrypted FROM metadata LIMIT 1")
-	if err != nil {
-		err = errDatabase
-		return
-	}
-
-	// Decrypt the master encryption key stored in enclave into a local copy
-	mekBuf, err := pqw.masterEncryptionKey.Open()
-	if err != nil {
-		return
-	}
-	defer mekBuf.Destroy() // Destroy the copy when we return
-
-	// Decrypt the highest index
-	highestIndexBlob, err := decryptBlobWithPassword(encryptedHighestIndexBlob, PTMaxKeyIdx, mekBuf.Bytes())
-	if err != nil {
-		return
-	}
-
-	// Decode the highest index
-	var highestIndex uint64
-	err = msgpackDecode(highestIndexBlob, &highestIndex)
-	if err != nil {
-		return
-	}
-
-	// nextIndex is the index of the next key we should generate
-	nextIndex := highestIndex + 1
-
-	var genPK ed25519.PublicKey
-	var genSK ed25519.PrivateKey
-	var genAddr types.Digest
-
-	// We may have to bump nextIndex if the user has manually imported the next
-	// key we were going to generate (thus we didn't see it in the search for the
-	// highest-derived key above)
-	for {
-		// Honestly, if you could get 2**63 - 1 keys into this database, I'd be impressed
-		if nextIndex == parquetIntOverflow {
-			err = errTooManyKeys
-			return
-		}
-
-		// Decrypt the key stored in enclave into a local copy
-		var mdkBuf *memguard.LockedBuffer
-		mdkBuf, err = pqw.masterDerivationKey.Open()
-		if err != nil {
-			return addr, err
-		}
-		defer mdkBuf.Destroy() // Destroy the copy when we return
-
-		// Compute the secret key and public key for nextIndex
-		genPK, genSK, err = extractKeyWithIndex(mdkBuf.Bytes(), nextIndex)
-		if err != nil {
-			return
-		}
-
-		// Convert the public key into an address
-		genAddr = publicKeyToAddress(genPK)
-
-		// Check that we don't already have this PK in the database
-		var cnt int
-		err = tx.Get(&cnt, "SELECT COUNT(1) FROM keys WHERE address=?", genAddr[:])
-		if err != nil {
-			err = errDatabase
-			return
-		}
-
-		if cnt == 0 {
-			// Good, key didn't exist. Break from loop
-			break
-		}
-
-		// Uh oh, user already imported this key manually. Bump nextIndex
-		nextIndex++
-	}
-
-	// Encrypt the encoded secret key
-	skEncrypted, err := encryptBlobWithKey(msgpackEncode(genSK), PTSecretKey, mekBuf.Bytes())
-	if err != nil {
-		return
-	}
-
-	// Insert the key into the database
-	_, err = tx.Exec("INSERT INTO keys (address, secret_key_encrypted, key_idx) VALUES(?, ?, ?)", genAddr[:], skEncrypted, nextIndex)
-	if err != nil {
-		return
-	}
-
-	// Encrypt the new max key index
-	encryptedIdxBlob, err := encryptBlobWithKey(msgpackEncode(nextIndex), PTMaxKeyIdx, mekBuf.Bytes())
-	if err != nil {
-		return
-	}
-
-	// Update the metadata row
-	_, err = tx.Exec("UPDATE metadata SET max_key_idx_encrypted = ?", encryptedIdxBlob)
-	if err != nil {
-		return
-	}
-
-	// Return the generated public key
-	return genAddr, nil
 }
