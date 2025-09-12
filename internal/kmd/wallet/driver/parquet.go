@@ -746,12 +746,17 @@ func (pqw *ParquetWallet) ExportMasterDerivationKey(pw []byte) (mdk types.Master
 // ImportKey imports a keypair into the wallet, deriving the public key from
 // the passed secret key
 func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest, err error) {
+	if !pqw.initialized {
+		return addr, fmt.Errorf("wallet not initialized")
+	}
+
 	// Extract the seed from the secret key so that we don't trust the public part
 	seed := rawSK.Seed()
 
 	// Convert the seed to an sk/pk pair
 	sk := ed25519.NewKeyFromSeed(seed[:])
 	pk := sk.Public().(ed25519.PublicKey)
+	addr = publicKeyToAddress(pk)
 
 	// Decrypt the master encryption key stored in enclave into a local copy
 	mekBuf, err := pqw.masterEncryptionKey.Open()
@@ -766,21 +771,91 @@ func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest
 		return
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		err = errDatabaseConnect
 		return
 	}
 	defer db.Close()
 
-	// Insert the pk, e(sk) into the database
-	addr = publicKeyToAddress(pk)
-	_, err = db.Exec("INSERT INTO keys (address, secret_key_encrypted) VALUES(?, ?)", addr[:], skEncrypted)
-	err = checkParquetDBError(err)
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
 	if err != nil {
 		return
 	}
+
+	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+
+	// Check if keys file exists
+	_, keysFileStatErr := os.Stat(keysPath)
+
+	if keysFileStatErr != nil {
+		if !os.IsNotExist(keysFileStatErr) {
+			// An unexpected error occurred
+			return addr, keysFileStatErr
+		}
+	} else { // Keys file exists
+		// Check if the key is already stored in keys file
+		var cnt int
+		row := db.QueryRow(
+			fmt.Sprintf(
+				"SELECT COUNT(1) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address = ? LIMIT 1",
+				keysPath),
+			addr[:],
+		)
+		err = row.Scan(&cnt)
+		if err != nil {
+			return
+		}
+		if cnt != 0 {
+			return addr, errKeyExists
+		}
+	}
+
+	// Run the schema for creating the keys table in temporary database
+	_, err = db.Exec(parquetCreateKeysTblSchema)
+	if err != nil {
+		return
+	}
+
+	// Insert the pk, e(sk) into the temporary database
+	_, err = db.Exec("INSERT INTO keys (address, secret_key_encrypted) VALUES(?, ?)", addr[:], skEncrypted)
+	if err != nil {
+		return
+	}
+
+	// Write imported key to file
+	if os.IsNotExist(keysFileStatErr) { // The file does not exist
+		// Create keys file and add key
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY keys TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			keysPath,
+		))
+		if err != nil {
+			return
+		}
+	} else { // The file exists
+		// Combine the sessions within the file with the new session
+		// NOTE: The keys file is updated this way to reduce the amount of data
+		// that can end up on disk unencrypted due to memory swapping/paging.
+		// From what I understand, DuckDB reads files in a stream and does not
+		// try to load all file contents into memory.
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY ((FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) UNION FROM keys) ORDER BY key_idx, address) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			keysPath, keysPath+tempFileSuffix,
+		))
+		if err != nil {
+			return
+		}
+
+		err = removeTempFile(keysPath)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -910,11 +985,11 @@ func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, 
 		var cnt int
 		row := db.QueryRow(
 			fmt.Sprintf(
-				"SELECT COUNT(1) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE wallet_id = ? LIMIT 1",
+				"SELECT COUNT(1) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address = ? LIMIT 1",
 				keysPath),
-			pqw.id,
+			addr[:],
 		)
-		err = row.Scan(&encryptedHighestIndexBlob)
+		err = row.Scan(&cnt)
 
 		if cnt == 0 {
 			// Good, key didn't exist. Break from loop

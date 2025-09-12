@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/algorand/go-algorand-sdk/v2/mnemonic"
 	algoTypes "github.com/algorand/go-algorand-sdk/v2/types"
 	logging "github.com/sirupsen/logrus"
 
@@ -715,9 +716,127 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("ImportKey()", func() {
-			It("", func() {
-				//
+		Describe("ImportKey()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_import_key"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("imports the key when there are no keys in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				addr, err := wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(algoTypes.Address(addr).String()).To(Equal(acctAddr),
+					"Imported key has correct address")
+
+				By("Checking if new key was added to the file")
+				addrs, err := wallet.ListKeys()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(1), "New key was added to the keys file")
+			})
+
+			It("imports the key when there is at least one key in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with one key within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				const testAcctAddr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+				const testAcctMnemonic = "sugar bronze century excuse animal jacket what rail biology symbol want craft annual soul increase question army win execute slim girl chief exhaust abstract wink"
+				sk, err := mnemonic.ToPrivateKey(testAcctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				addr, err := wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(algoTypes.Address(addr).String()).To(Equal(testAcctAddr),
+					"Imported key has correct address")
+
+				By("Checking if new key was added to the file")
+				addrs, err := wallet.ListKeys()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(2), "New key was added to the keys file")
+			})
+
+			It("imports the key when there is at least one generated (indexed) key in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with 2 keys within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Generating a key")
+				_, err = wallet.GenerateKey(false)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				const testAcctAddr = "DEEZK32T3M7W5HAG5LNPOQK2E7LNOBLEBKI42L5HYVD4Z3JRLIZSLJ2OEU"
+				const testAcctMnemonic = "rapid wire salon common praise rifle sunset save hurdle dawn mail average process icon just tooth fiction home kiwi tuna example stage reflect absent typical"
+				sk, err := mnemonic.ToPrivateKey(testAcctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				addr, err := wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(algoTypes.Address(addr).String()).To(Equal(testAcctAddr),
+					"Imported key has correct address")
+
+				By("Checking if new key was added to the file")
+				addrs, err := wallet.ListKeys()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(4), "New key was added to the keys file")
+			})
+
+			It("fails to import key if it already exists in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to import a key that is already in wallet")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ImportKey(sk)
+				Expect(err).To(MatchError("key already exists in wallet"), "Duplicate key is not accepted")
 			})
 		})
 
@@ -741,7 +860,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				})
 			})
 
-			It("generates a new key when there are no keys", func() {
+			It("generates a new key when there are no keys in the wallet", func() {
 				By("Creating a wallet")
 				err := parquetDriver.CreateWallet(
 					[]byte("Foo"),
@@ -767,7 +886,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred(), "The keys file was created")
 			})
 
-			It("generates a new key when there is at least one key", func() {
+			It("generates a new key when there is at least one key in the wallet", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that a wallet has been created
 
