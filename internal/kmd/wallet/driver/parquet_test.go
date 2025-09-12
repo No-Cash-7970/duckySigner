@@ -840,9 +840,109 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("ExportKey()", func() {
-			It("", func() {
-				//
+		Describe("ExportKey()", func() {
+			const walletDirName = ".test_pq_wallet_export_key"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("fails if there are no keys stored in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a key")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ExportKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).To(MatchError("key does not exist in this wallet"), "Key export failed")
+			})
+
+			It("returns the key for the given address if it is stored in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with no keys within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Exporting a key")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				exportedKey, err := wallet.ExportKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(mnemonic.FromPrivateKey(exportedKey)).To(Equal(acctMnemonic),
+					"The correct key was exported")
+			})
+
+			It("fails if given the wrong password", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a key with the wrong password")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ExportKey(algoTypes.Digest(decodedAcctAddr), []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Key export failed")
+			})
+
+			It("fails if the key for the given address is not stored in the non-empty wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a key that is not in the wallet")
+				const testAcctAddr = "DEEZK32T3M7W5HAG5LNPOQK2E7LNOBLEBKI42L5HYVD4Z3JRLIZSLJ2OEU"
+				decodedAcctAddr, err := algoTypes.DecodeAddress(testAcctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ExportKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).To(MatchError("key does not exist in this wallet"), "Key export failed")
 			})
 		})
 

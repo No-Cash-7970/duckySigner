@@ -743,7 +743,7 @@ func (pqw *ParquetWallet) ExportMasterDerivationKey(pw []byte) (mdk types.Master
 	return
 }
 
-// ImportKey imports a keypair into the wallet, deriving the public key from
+// ImportKey imports a key pair into the wallet, deriving the public key from
 // the passed secret key
 func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest, err error) {
 	if !pqw.initialized {
@@ -1866,23 +1866,20 @@ func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, e
 
 // fetchSecretKey retrieves the private key for a given public key
 func (pqw *ParquetWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateKey, err error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+
+	// Check if keys file exists
+	_, err = os.Stat(keysPath)
 	if err != nil {
-		err = errDatabaseConnect
+		return nil, errKeyNotFound
+	}
+
+	// Open database
+	db, err := sql.Open("duckdb", "")
+	if err != nil {
 		return
 	}
 	defer db.Close()
-
-	var skCandidate ed25519.PrivateKey
-	var blob []byte
-
-	// Fetch the encrypted secret key from the database
-	err = db.Get(&blob, "SELECT secret_key_encrypted FROM keys WHERE address=?", addr[:])
-	if err != nil {
-		err = errKeyNotFound
-		return
-	}
 
 	// Decrypt the master encryption key stored in enclave into a local copy
 	mekBuf, err := pqw.masterEncryptionKey.Open()
@@ -1890,6 +1887,32 @@ func (pqw *ParquetWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateK
 		return
 	}
 	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	var skCandidate ed25519.PrivateKey
+	var blob []byte
+
+	// Fetch the encrypted secret key from the database
+	row := db.QueryRow(
+		fmt.Sprintf("SELECT secret_key_encrypted FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address=?",
+			keysPath),
+		addr[:],
+	)
+	err = row.Scan(&blob)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errKeyNotFound
+		}
+		// Some unexpected error occurred
+		return nil, err
+	}
 
 	// Decrypt the secret key
 	skEncoded, err := decryptBlobWithPassword(blob, PTSecretKey, mekBuf.Bytes())
