@@ -655,26 +655,63 @@ func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
 		return addrs, fmt.Errorf("wallet not initialized")
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
-	if err != nil {
-		return nil, errDatabaseConnect
-	}
-	defer db.Close()
+	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
 
-	var addrByteSlices [][]byte
-	var tmp types.Digest
-	// We can't select directly into a types.Digest array, unfortunately.
-	// Instead, we select into a slice of byte slices, and then convert each of
-	// those slices into a types.Digest.
-	err = db.Select(&addrByteSlices, "SELECT address FROM keys")
+	// Check if keys file exists
+	_, err = os.Stat(keysPath)
+	if os.IsNotExist(err) {
+		return addrs, nil
+	}
 	if err != nil {
-		err = errDatabase
+		// Some unexpected error occurred
 		return
 	}
 
-	for _, byteSlice := range addrByteSlices {
-		copy(tmp[:], byteSlice)
+	// Open database
+	db, err := sql.Open("duckdb", "")
+	if err != nil {
+		return
+	}
+	defer db.Close()
+
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	// Get all stored addresses
+	rows, err := db.Query(fmt.Sprintf(
+		"SELECT address FROM read_parquet('%s', encryption_config = {footer_key: 'key'})",
+		keysPath,
+	))
+	if err != nil {
+		return
+	}
+
+	for rows.Next() {
+		// We can't select directly into a types.Digest array, unfortunately.
+		// Instead, we select into a slice of byte slices, and then convert each
+		// of those slices into a types.Digest.
+
+		var retrievedAddr []byte
+		var tmp types.Digest
+
+		err = rows.Scan(&retrievedAddr)
+		if err != nil {
+			return
+		}
+
+		copy(tmp[:], retrievedAddr)
 		addrs = append(addrs, tmp)
 	}
 

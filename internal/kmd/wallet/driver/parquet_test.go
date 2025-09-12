@@ -653,9 +653,65 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("ListKeys()", func() {
-			It("", func() {
-				//
+		Describe("ListKeys()", func() {
+			const walletDirName = ".test_pq_wallet_list_keys"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("returns no addresses if there are no keys stored", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Listing all keys")
+				addrs, err := wallet.ListKeys()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(0), "No addresses were returned")
+			})
+
+			It("returns all keys stored within the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Generating 2 keys")
+				_, err = wallet.GenerateKey(false)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.GenerateKey(false)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Listing all keys")
+				addrs, err := wallet.ListKeys()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(2), "All keys were returned")
 			})
 		})
 
@@ -711,7 +767,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred(), "The keys file was created")
 			})
 
-			PIt("generates a new key when there is at least one key", func() {
+			It("generates a new key when there is at least one key", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that a wallet has been created
 
@@ -727,9 +783,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(newAddr).To(HaveLen(32))
 
 				By("Checking if new key was added to the file")
-				keys, err := wallet.ListKeys()
+				addrs, err := wallet.ListKeys()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(keys).To(HaveLen(2), "New key was added to the keys file")
+				Expect(addrs).To(HaveLen(2), "New key was added to the keys file")
 			})
 		})
 
