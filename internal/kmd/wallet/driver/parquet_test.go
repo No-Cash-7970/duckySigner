@@ -1008,9 +1008,110 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("DeleteKey()", func() {
-			It("", func() {
-				//
+		Describe("DeleteKey()", func() {
+			const walletDirName = ".test_pq_wallet_del_key"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("fails if there is no keys file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to delete a key")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).To(HaveOccurred())
+			})
+
+			It("removes the key for the given address", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with no keys within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Deleting a key")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking if key has been removed")
+				_, err = wallet.ExportKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).To(HaveOccurred(), "Key was removed")
+			})
+
+			It("fails if given the wrong password", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a key with the wrong password")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Key deletion failed")
+			})
+
+			It("does not fail if key to be removed is not in wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to delete a key that is not in the wallet")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 

@@ -1125,18 +1125,51 @@ func (pqw *ParquetWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
 		return
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+
+	// Check if keys file exists
+	_, err = os.Stat(keysPath)
 	if err != nil {
-		return errDatabaseConnect
+		return err
+	}
+
+	// Open database
+	db, err := sql.Open("duckdb", "")
+	if err != nil {
+		return
 	}
 	defer db.Close()
 
-	// Delete the key
-	_, err = db.Exec("DELETE FROM keys WHERE address=?", addr[:])
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
 	if err != nil {
-		err = errDatabase
+		return
 	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	// Delete the key
+	_, err = db.Exec(
+		fmt.Sprintf(
+			"COPY (FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address != ?) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			keysPath, keysPath+tempFileSuffix),
+		addr[:],
+	)
+	if err != nil {
+		return
+	}
+	err = removeTempFile(keysPath)
+	if err != nil {
+		return
+	}
+
 	return
 }
 
