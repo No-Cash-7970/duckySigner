@@ -25,7 +25,6 @@ import (
 	"github.com/algorand/go-codec/codec"
 	"github.com/algorand/go-deadlock"
 	"github.com/awnumar/memguard"
-	"github.com/jmoiron/sqlx"
 	_ "github.com/marcboeker/go-duckdb/v2"
 	logging "github.com/sirupsen/logrus"
 )
@@ -119,7 +118,6 @@ type ParquetWallet struct {
 	walletPasswordSalt   [saltLen]byte
 	walletPasswordHash   types.Digest
 	walletPasswordHashed bool
-	dbPath               string
 	cfg                  config.ParquetWalletDriverConfig
 	id                   string
 	// The parent directory of the wallet where wallets are stored
@@ -1279,19 +1277,40 @@ func (pqw *ParquetWallet) ImportMultisigAddr(version, threshold uint8, pks []ed2
 // LookupMultisigPreimage exports the preimage of a multisig address: version,
 // threshold, public keys
 func (pqw *ParquetWallet) LookupMultisigPreimage(addr types.Digest) (version, threshold uint8, pks []ed25519.PublicKey, err error) {
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		err = errDatabaseConnect
 		return
 	}
 	defer db.Close()
 
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
+	if err != nil {
+		return
+	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	var msigAddrsPath = pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
 	var pksCandidate []ed25519.PublicKey
 	var versionCandidate, thresholdCandidate int
 	var pksBlob []byte
 
-	row := db.QueryRow("SELECT version, threshold, pks FROM msig_addrs WHERE address=?", addr[:])
+	row := db.QueryRow(
+		fmt.Sprintf(
+			"SELECT version, threshold, pks FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address = ? LIMIT 1",
+			msigAddrsPath),
+		addr[:],
+	)
 	err = row.Scan(&versionCandidate, &thresholdCandidate, &pksBlob)
 	if err != nil {
 		err = errMsigDataNotFound
@@ -1314,28 +1333,67 @@ func (pqw *ParquetWallet) LookupMultisigPreimage(addr types.Digest) (version, th
 	version = uint8(versionCandidate)
 	threshold = uint8(thresholdCandidate)
 	pks = pksCandidate
+
 	return
 }
 
 // DeleteMultisigAddr deletes the multisig address and preimage from the database
 func (pqw *ParquetWallet) DeleteMultisigAddr(addr types.Digest, pw []byte) (err error) {
+	if !pqw.initialized {
+		return fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
 		return
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	msigAddrsPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+
+	// Check if keys file exists
+	_, err = os.Stat(msigAddrsPath)
 	if err != nil {
-		return errDatabaseConnect
+		return err
+	}
+
+	// Open database
+	db, err := sql.Open("duckdb", "")
+	if err != nil {
+		return
 	}
 	defer db.Close()
 
-	_, err = db.Exec("DELETE FROM msig_addrs WHERE address=?", addr[:])
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
 	if err != nil {
-		err = errDatabase
+		return
 	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	// Delete the key
+	_, err = db.Exec(
+		fmt.Sprintf(
+			"COPY (FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address != ?) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			msigAddrsPath, msigAddrsPath+tempFileSuffix),
+		addr[:],
+	)
+	if err != nil {
+		return
+	}
+	err = removeTempFile(msigAddrsPath)
+	if err != nil {
+		return
+	}
+
 	return
 }
 

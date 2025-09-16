@@ -494,9 +494,9 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 		})
 	})
 
-	Describe("ParquetWallet", Ordered, func() {
+	Describe("ParquetWallet", func() {
 
-		Describe("Metadata()", func() {
+		Describe("Metadata()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_metadata"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -655,7 +655,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("ListKeys()", func() {
+		Describe("ListKeys()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_list_keys"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -841,7 +841,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("ExportKey()", func() {
+		Describe("ExportKey()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_export_key"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -947,7 +947,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("GenerateKey()", func() {
+		Describe("GenerateKey()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_gen_key"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -1009,7 +1009,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("DeleteKey()", func() {
+		Describe("DeleteKey()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_del_key"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -1116,7 +1116,7 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		Describe("ImportMultisigAddr()", func() {
+		Describe("ImportMultisigAddr()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_import_msig"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -1154,14 +1154,14 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
 				Expect(err).ToNot(HaveOccurred())
-				multisigAcct, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
+				msigAcct, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
 				Expect(err).ToNot(HaveOccurred())
-				multisigAddr, err := multisigAcct.Address()
+				msigAddr, err := msigAcct.Address()
 				Expect(err).ToNot(HaveOccurred())
 
-				addr, err := wallet.ImportMultisigAddr(multisigAcct.Version, multisigAcct.Threshold, multisigAcct.Pks)
+				addr, err := wallet.ImportMultisigAddr(msigAcct.Version, msigAcct.Threshold, msigAcct.Pks)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(algoTypes.Address(addr).String()).To(Equal(multisigAddr.String()),
+				Expect(algoTypes.Address(addr).String()).To(Equal(msigAddr.String()),
 					"Imported multisig address")
 
 				By("Checking if new multisig address was added to the file")
@@ -1186,14 +1186,14 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
 				Expect(err).ToNot(HaveOccurred())
-				multisigAcct, err := crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
+				msigAcct, err := crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
 				Expect(err).ToNot(HaveOccurred())
-				multisigAddr, err := multisigAcct.Address()
+				msigAddr, err := msigAcct.Address()
 				Expect(err).ToNot(HaveOccurred())
 
-				addr, err := wallet.ImportMultisigAddr(multisigAcct.Version, multisigAcct.Threshold, multisigAcct.Pks)
+				addr, err := wallet.ImportMultisigAddr(msigAcct.Version, msigAcct.Threshold, msigAcct.Pks)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(algoTypes.Address(addr).String()).To(Equal(multisigAddr.String()),
+				Expect(algoTypes.Address(addr).String()).To(Equal(msigAddr.String()),
 					"Imported multisig address")
 
 				By("Checking if new key was added to the file")
@@ -1218,22 +1218,128 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
 				Expect(err).ToNot(HaveOccurred())
-				multisigAcct, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
+				msigAcct, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
 				Expect(err).ToNot(HaveOccurred())
 
-				_, err = wallet.ImportMultisigAddr(multisigAcct.Version, multisigAcct.Threshold, multisigAcct.Pks)
+				_, err = wallet.ImportMultisigAddr(msigAcct.Version, msigAcct.Threshold, msigAcct.Pks)
 				Expect(err).To(MatchError("multisignature address already exists in wallet"),
 					"Duplicate multisig address is not accepted")
 			})
 		})
 
-		PDescribe("LookupMultisigPreimage()", func() {
-			It("", func() {
-				//
+		Describe("LookupMultisigPreimage()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_multisig_lookup"
+			var parquetDriver driver.ParquetWalletDriver
+			var msigAcct crypto.MultisigAccount
+			var msigAddr algoTypes.Address
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				// Create multisig account
+				addr1, err := algoTypes.DecodeAddress("RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A")
+				Expect(err).ToNot(HaveOccurred())
+				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
+				Expect(err).ToNot(HaveOccurred())
+				msigAcct, err = crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
+				Expect(err).ToNot(HaveOccurred())
+				msigAddr, err = msigAcct.Address()
+				Expect(err).ToNot(HaveOccurred())
+
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("fails if there are no multisig addresses stored in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to look up a multisignature preimage (version, threshold, public keys)")
+				decodedAcctAddr, err := algoTypes.DecodeAddress(msigAddr.String())
+				Expect(err).ToNot(HaveOccurred())
+				_, _, _, err = wallet.LookupMultisigPreimage(algoTypes.Digest(decodedAcctAddr))
+				Expect(err.Error()).To(ContainSubstring("does not exist in this wallet"), "Lookup failed")
+			})
+
+			It("returns the multisig preimage for the given address if it is stored in the wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with no keys within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a multisig address")
+				_, err = wallet.ImportMultisigAddr(msigAcct.Version, msigAcct.Threshold, msigAcct.Pks)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Looking up a multisig preimage")
+				version, threshold, pks, err := wallet.LookupMultisigPreimage(algoTypes.Digest(msigAddr))
+				Expect(err).ToNot(HaveOccurred())
+				Expect(version).To(Equal(msigAcct.Version), "Returned the correct version")
+				Expect(threshold).To(Equal(msigAcct.Threshold), "Returned the correct threshold")
+				Expect(pks).To(HaveLen(2), "Returned the correct number of public keys")
+			})
+
+			It("fails if the given address is not a multisig address", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with one multisig
+				// address within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to look up with an non-multisig address")
+				decodedAcctAddr, err := algoTypes.DecodeAddress("DEEZK32T3M7W5HAG5LNPOQK2E7LNOBLEBKI42L5HYVD4Z3JRLIZSLJ2OEU")
+				Expect(err).ToNot(HaveOccurred())
+				_, _, _, err = wallet.LookupMultisigPreimage(algoTypes.Digest(decodedAcctAddr))
+				Expect(err).To(HaveOccurred(), "Lookup failed")
+			})
+
+			It("fails if the key for the given address is not stored in the non-empty wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with one multisig
+				// address within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a key that is not in the wallet")
+				const testAcctAddr = "GQ3QPLJL4VKVGQCHPXT5UZTNZIJAGVJPXUHCJLRWQMFRVL4REVW7LJ3FGY"
+				decodedAcctAddr, err := algoTypes.DecodeAddress(testAcctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				_, _, _, err = wallet.LookupMultisigPreimage(algoTypes.Digest(decodedAcctAddr))
+				Expect(err.Error()).To(ContainSubstring("does not exist in this wallet"), "Lookup failed")
 			})
 		})
 
-		Describe("ListMultisigAddrs()", func() {
+		Describe("ListMultisigAddrs()", Ordered, func() {
 			const walletDirName = ".test_pq_wallet_list_msigs"
 			var parquetDriver driver.ParquetWalletDriver
 
@@ -1289,14 +1395,14 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
 				Expect(err).ToNot(HaveOccurred())
 
-				multisigAcct1, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
+				msigAcct1, err := crypto.MultisigAccountWithParams(1, 1, []algoTypes.Address{addr1, addr2})
 				Expect(err).ToNot(HaveOccurred())
-				_, err = wallet.ImportMultisigAddr(multisigAcct1.Version, multisigAcct1.Threshold, multisigAcct1.Pks)
+				_, err = wallet.ImportMultisigAddr(msigAcct1.Version, msigAcct1.Threshold, msigAcct1.Pks)
 				Expect(err).ToNot(HaveOccurred())
 
-				multisigAcct2, err := crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
+				msigAcct2, err := crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
 				Expect(err).ToNot(HaveOccurred())
-				_, err = wallet.ImportMultisigAddr(multisigAcct2.Version, multisigAcct2.Threshold, multisigAcct2.Pks)
+				_, err = wallet.ImportMultisigAddr(msigAcct2.Version, msigAcct2.Threshold, msigAcct2.Pks)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing all multisig addresses")
@@ -1306,9 +1412,109 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("DeleteMultisigAddr()", func() {
-			It("", func() {
-				//
+		Describe("DeleteMultisigAddr()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_del_msig"
+			var parquetDriver driver.ParquetWalletDriver
+			var msigAcct crypto.MultisigAccount
+			var msigAddr algoTypes.Address
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				// Create multisig account
+				addr1, err := algoTypes.DecodeAddress("RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A")
+				Expect(err).ToNot(HaveOccurred())
+				addr2, err := algoTypes.DecodeAddress("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
+				Expect(err).ToNot(HaveOccurred())
+				msigAcct, err = crypto.MultisigAccountWithParams(1, 2, []algoTypes.Address{addr1, addr2})
+				Expect(err).ToNot(HaveOccurred())
+				msigAddr, err = msigAcct.Address()
+				Expect(err).ToNot(HaveOccurred())
+
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("fails if there is no keys file", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that no wallets have been created yet
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to delete a multisig address")
+				err = wallet.DeleteMultisigAddr(algoTypes.Digest(msigAddr), []byte(walletPassword))
+				Expect(err).To(HaveOccurred())
+			})
+
+			It("removes the given multisig address", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with no keys within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a multisignature address")
+				addr, err := wallet.ImportMultisigAddr(msigAcct.Version, msigAcct.Threshold, msigAcct.Pks)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Deleting a multisig address")
+				err = wallet.DeleteMultisigAddr(algoTypes.Digest(addr), []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking if multisig address has been removed")
+				_, _, _, err = wallet.LookupMultisigPreimage(algoTypes.Digest(addr))
+				Expect(err).To(HaveOccurred(), "Key was removed")
+			})
+
+			It("fails if given the wrong password", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one
+				// multisig address within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to export a multisig address with the wrong password")
+				err = wallet.DeleteMultisigAddr(algoTypes.Digest(msigAddr), []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Key deletion failed")
+			})
+
+			It("does not fail if multisig address to be removed is not in wallet", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one
+				// multisig address within it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to delete a multisig address that is not in the wallet")
+				err = wallet.DeleteMultisigAddr(algoTypes.Digest(msigAddr), []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 
