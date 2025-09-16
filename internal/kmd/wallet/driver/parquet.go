@@ -28,8 +28,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/marcboeker/go-duckdb/v2"
 	logging "github.com/sirupsen/logrus"
-	"modernc.org/sqlite"
-	sqlite3 "modernc.org/sqlite/lib"
 )
 
 const (
@@ -52,6 +50,9 @@ const (
 	// ParquetWalletKeysFile is the name of the file that contains the wallet's
 	// keys
 	ParquetWalletKeysFile = "keys.parquet"
+	// ParquetWalletMsigAddrsFile is the name of the file that contains the
+	// wallet's multisignature addresses
+	ParquetWalletMsigAddrsFile = "msig_addrs.parquet"
 
 	// tempFileSuffix is the suffix used to create a temporary file. The
 	// temporary file name is the original file name + this suffix.
@@ -67,7 +68,6 @@ var parquetWalletSupportedTxs = []types.TxType{
 	types.AssetTransferTx,
 }
 var disallowedParquetFilenameRegex = regexp.MustCompile("[^a-zA-Z0-9_-]*")
-var parquetFilenameRegex = regexp.MustCompile(`^.*\.parquet$`)
 
 // addParquetKeySQL is the SQL statement for setting the Parquet file encryption
 // key within DuckDB. The file encryption key is used for encrypting and
@@ -94,23 +94,7 @@ CREATE TABLE IF NOT EXISTS keys (
 );
 `
 
-var parquetWalletSchema = `
-CREATE TABLE IF NOT EXISTS metadata (
-	driver_name TEXT NOT NULL,
-	driver_version INT NOT NULL,
-	wallet_id TEXT NOT NULL UNIQUE,
-	wallet_name TEXT NOT NULL,
-	mep_encrypted BLOB NOT NULL,
-	mdk_encrypted BLOB NOT NULL,
-	max_key_idx_encrypted BLOB NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS keys (
-	address BLOB PRIMARY KEY,
-	secret_key_encrypted BLOB NOT NULL,
-	key_idx INT
-);
-
+var parquetCreateMsigAddrsTblSchema = `
 CREATE TABLE IF NOT EXISTS msig_addrs (
 	address BLOB PRIMARY KEY,
 	version INT NOT NULL,
@@ -837,11 +821,11 @@ func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest
 			return
 		}
 	} else { // The file exists
-		// Combine the sessions within the file with the new session
-		// NOTE: The keys file is updated this way to reduce the amount of data
-		// that can end up on disk unencrypted due to memory swapping/paging.
-		// From what I understand, DuckDB reads files in a stream and does not
-		// try to load all file contents into memory.
+		// Combine the keys within the file with the new key
+		// NOTE: The file is updated this way to reduce the amount of data that
+		// can end up on disk unencrypted due to memory swapping/paging. From
+		// what I understand, DuckDB reads files in a stream and does not try to
+		// load all file contents into memory.
 		_, err = db.Exec(fmt.Sprintf(
 			"COPY ((FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) UNION FROM keys) ORDER BY key_idx, address) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
 			keysPath, keysPath+tempFileSuffix,
@@ -861,11 +845,15 @@ func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest
 
 // ExportKey fetches the encrypted private key using the public key, decrypts
 // it, verifies that it matches the passed public key, and returns it
-func (pqw *ParquetWallet) ExportKey(addr types.Digest, pw []byte) (sk ed25519.PrivateKey, err error) {
+func (pqw *ParquetWallet) ExportKey(addr types.Digest, pw []byte) (ed25519.PrivateKey, error) {
+	if !pqw.initialized {
+		return nil, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
-	err = pqw.CheckPassword(pw)
+	err := pqw.CheckPassword(pw)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	// Export the key
@@ -1117,8 +1105,13 @@ func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, 
 	return addr, nil
 }
 
-// DeleteKey deletes the key corresponding to the passed public key from the wallet
+// DeleteKey deletes the key corresponding to the passed public key from the
+// wallet
 func (pqw *ParquetWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
+	if !pqw.initialized {
+		return fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
@@ -1176,24 +1169,110 @@ func (pqw *ParquetWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
 // ImportMultisigAddr imports a multisig address, taking in version, threshold,
 // and public keys
 func (pqw *ParquetWallet) ImportMultisigAddr(version, threshold uint8, pks []ed25519.PublicKey) (addr types.Digest, err error) {
+	if !pqw.initialized {
+		return addr, fmt.Errorf("wallet not initialized")
+	}
+
 	addr, err = kmdCrypto.MultisigAddrGen(version, threshold, pks)
 	if err != nil {
 		return
 	}
 
-	// Connect to the database
-	db, err := sqlx.Connect("sqlite", parquetDbConnectionURL(pqw.dbPath))
+	// Open database
+	db, err := sql.Open("duckdb", "")
 	if err != nil {
-		err = errDatabaseConnect
 		return
 	}
 	defer db.Close()
 
-	_, err = db.Exec("INSERT INTO msig_addrs (address, version, threshold, pks) VALUES (?, ?, ?, ?)", addr[:], version, threshold, msgpackEncode(pks))
-	err = checkParquetDBError(err)
+	// Decrypt the master encryption key stored in enclave into a local copy
+	mekBuf, err := pqw.masterEncryptionKey.Open()
 	if err != nil {
 		return
 	}
+	defer mekBuf.Destroy() // Destroy the copy when we return
+
+	// Add key for decrypting and encrypting encrypted parquet file
+	// NOTE: This PRAGMA statement does not work as a prepared statement, but
+	// there is no risk of SQL injection in this case
+	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(mekBuf.Bytes())))
+	if err != nil {
+		return
+	}
+
+	msigAddrsPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+
+	// Check if multisig addresses file exists
+	_, msigFileStatErr := os.Stat(msigAddrsPath)
+
+	if msigFileStatErr != nil {
+		if !os.IsNotExist(msigFileStatErr) {
+			// An unexpected error occurred
+			return addr, msigFileStatErr
+		}
+	} else { // Multisig addresses file exists
+		// Check if the multisig address is already stored in the file
+		var cnt int
+		row := db.QueryRow(
+			fmt.Sprintf(
+				"SELECT COUNT(1) FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE address = ? LIMIT 1",
+				msigAddrsPath),
+			addr[:],
+		)
+		err = row.Scan(&cnt)
+		if err != nil {
+			return
+		}
+		if cnt != 0 {
+			return addr, fmt.Errorf("multisignature address already exists in wallet")
+		}
+	}
+
+	// Run the schema for creating the multisig addresses table in temporary
+	// database
+	_, err = db.Exec(parquetCreateMsigAddrsTblSchema)
+	if err != nil {
+		return
+	}
+
+	// Insert multisig address into database
+	_, err = db.Exec("INSERT INTO msig_addrs (address, version, threshold, pks) VALUES (?, ?, ?, ?)",
+		addr[:], version, threshold, msgpackEncode(pks))
+	if err != nil {
+		return
+	}
+
+	// Write imported key to file
+	if os.IsNotExist(msigFileStatErr) { // The file does not exist
+		// Create multisig addresses file and add multisig address
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY msig_addrs TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			msigAddrsPath,
+		))
+		if err != nil {
+			return
+		}
+	} else { // The file exists
+		// Combine the multisig addresses within the file with the new multisig
+		// address
+		// NOTE: The file is updated this way to reduce the amount of data that
+		// can end up on disk unencrypted due to memory swapping/paging. From
+		// what I understand, DuckDB reads files in a stream and does not try to
+		// load all file contents into memory.
+		_, err = db.Exec(fmt.Sprintf(
+			"COPY ((FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) UNION FROM msig_addrs) ORDER BY address) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});",
+			msigAddrsPath, msigAddrsPath+tempFileSuffix,
+		))
+		if err != nil {
+			return
+		}
+
+		err = removeTempFile(msigAddrsPath)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -1653,20 +1732,6 @@ func parquetWalletMetadataFromPath(walletPath string) (metadata ParquetWalletMet
 	}
 
 	return
-}
-
-// checkParquetDBError inspects an error from the database and interprets it as a
-// "duplicate key" error, a generic database error, or a nil error
-func checkParquetDBError(err error) error {
-	if err != nil {
-		if err.Error() == sqlite.ErrorCodeString[sqlite3.SQLITE_CONSTRAINT] {
-			// If it was a constraint error, that means we already have the key.
-			return errKeyExists
-		}
-		// Otherwise, return a generic database error
-		return errDatabase
-	}
-	return nil
 }
 
 // removeTempFile attempts to remove the temporary file used when modifying the
