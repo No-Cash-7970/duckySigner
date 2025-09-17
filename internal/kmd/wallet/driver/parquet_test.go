@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("Parquet Wallet Driver", func() {
+var _ = Describe("Parquet Wallet Driver", func() {
 
 	Describe("ParquetWalletDriver", func() {
 
@@ -1631,23 +1631,35 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("MultisigSignTransaction()", func() {
-			It("", func() {
-				// TODO
-			})
-		})
+		// PDescribe("MultisigSignTransaction()", Ordered, func() {
+		// 	It("signs the given transaction", func() {
+		// 		// TODO
+		// 	})
 
-		PDescribe("SignProgram()", func() {
-			It("", func() {
-				// TODO
-			})
-		})
+		// 	It("fails if given the wrong password", func() {
+		// 		// TODO
+		// 	})
+		// })
 
-		PDescribe("MultisigSignProgram()", func() {
-			It("", func() {
-				// TODO
-			})
-		})
+		// PDescribe("SignProgram()", Ordered, func() {
+		// 	It("signs the given program", func() {
+		// 		// TODO
+		// 	})
+
+		// 	It("fails if given the wrong password", func() {
+		// 		// TODO
+		// 	})
+		// })
+
+		// PDescribe("MultisigSignProgram()", Ordered, func() {
+		// 	It("signs the given program", func() {
+		// 		// TODO
+		// 	})
+
+		// 	It("fails if given the wrong password", func() {
+		// 		// TODO
+		// 	})
+		// })
 	})
 })
 

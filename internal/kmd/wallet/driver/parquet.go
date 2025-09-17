@@ -1498,6 +1498,10 @@ func (pqw *ParquetWallet) SignTransaction(tx types.Transaction, pk ed25519.Publi
 
 // SignProgram signs the passed data for the src address
 func (pqw *ParquetWallet) SignProgram(data []byte, src types.Digest, pw []byte) (sprog []byte, err error) {
+	if !pqw.initialized {
+		return sprog, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
@@ -1519,6 +1523,10 @@ func (pqw *ParquetWallet) SignProgram(data []byte, src types.Digest, pw []byte) 
 // partially signed multisig transaction signature of the passed transaction
 // using the key
 func (pqw *ParquetWallet) MultisigSignTransaction(tx types.Transaction, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte, signer types.Digest) (sig types.MultisigSig, err error) {
+	if !pqw.initialized {
+		return sig, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
@@ -1668,6 +1676,10 @@ func (pqw *ParquetWallet) MultisigSignTransaction(tx types.Transaction, pk ed255
 // partially signed multisig transaction signature of the passed transaction
 // using the key
 func (pqw *ParquetWallet) MultisigSignProgram(data []byte, src types.Digest, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte) (sig types.MultisigSig, err error) {
+	if !pqw.initialized {
+		return sig, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
