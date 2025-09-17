@@ -92,7 +92,6 @@ CREATE TABLE IF NOT EXISTS keys (
 	key_idx INT
 );
 `
-
 var parquetCreateMsigAddrsTblSchema = `
 CREATE TABLE IF NOT EXISTS msig_addrs (
 	address BLOB PRIMARY KEY,
@@ -1337,7 +1336,7 @@ func (pqw *ParquetWallet) LookupMultisigPreimage(addr types.Digest) (version, th
 	return
 }
 
-// DeleteMultisigAddr deletes the multisig address and preimage from the database
+// DeleteMultisigAddr deletes the multisig address and preimage from the wallet
 func (pqw *ParquetWallet) DeleteMultisigAddr(addr types.Digest, pw []byte) (err error) {
 	if !pqw.initialized {
 		return fmt.Errorf("wallet not initialized")
@@ -1466,9 +1465,14 @@ func (pqw *ParquetWallet) ListMultisigAddrs() (addrs []types.Digest, err error) 
 	return
 }
 
-// SignTransaction signs the passed transaction with the private key whose public key is provided, or
-// if the provided public key is zero, inferring the required private key from the transaction itself
+// SignTransaction signs the passed transaction with the private key whose
+// public key is provided, or if the provided public key is zero, inferring the
+// required private key from the transaction itself
 func (pqw *ParquetWallet) SignTransaction(tx types.Transaction, pk ed25519.PublicKey, pw []byte) (stx []byte, err error) {
+	if !pqw.initialized {
+		return stx, fmt.Errorf("wallet not initialized")
+	}
+
 	// Check the password
 	err = pqw.CheckPassword(pw)
 	if err != nil {
@@ -1808,14 +1812,6 @@ func init() {
 	codecHandle.RecursiveEmptyCheck = true
 	codecHandle.WriteExt = true
 	codecHandle.PositiveIntUnsigned = true
-}
-
-// parquetDbConnectionURL takes a path to a Parquet database on the filesystem and
-// constructs a proper connection URL from it with feature flags included
-func parquetDbConnectionURL(path string) string {
-	// Set flags on the database connection. For all options see:
-	// https://pkg.go.dev/modernc.org/sqlite#Driver.Open
-	return fmt.Sprintf("file:%s?%s", path, parquetWalletDBOptions)
 }
 
 // parquetWalletMetadataFromPath accepts path to a directory for a wallet and

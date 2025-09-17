@@ -2,6 +2,7 @@ package driver_test
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"encoding/json"
 	"os"
 
@@ -1518,27 +1519,133 @@ var _ = FDescribe("Parquet Wallet Driver", func() {
 			})
 		})
 
-		PDescribe("SignTransaction()", func() {
-			It("", func() {
-				//
+		Describe("SignTransaction()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_sign_txn"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			const knownSignedTxnB64 = "gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ=="
+			var knownSignedTxn algoTypes.SignedTxn
+
+			var acctAddr algoTypes.Address
+			const acctAddrStr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
+
+			BeforeAll(func() {
+				var err error
+
+				// Decode string address to an Address
+				acctAddr, err = algoTypes.DecodeAddress(acctAddrStr)
+				Expect(err).ToNot(HaveOccurred())
+
+				// Convert Base64 encoded signed transaction into a SignedTxn struct
+				err = knownSignedTxn.FromBase64String(knownSignedTxnB64)
+				Expect(err).NotTo(HaveOccurred())
+
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+			})
+
+			It("signs the given transaction", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with no keys within it
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Importing a key")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Signing a transaction")
+				outputSignedTxn, err := wallet.SignTransaction(
+					knownSignedTxn.Txn,
+					acctAddr[:],
+					[]byte(walletPassword),
+				)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(base64.StdEncoding.EncodeToString(outputSignedTxn)).To(Equal(knownSignedTxnB64),
+					"Transaction was signed correctly")
+			})
+
+			It("fails if given the wrong password", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to sign a transaction with the wrong password")
+				_, err = wallet.SignTransaction(
+					knownSignedTxn.Txn,
+					acctAddr[:],
+					[]byte("not the password"),
+				)
+				Expect(err).To(HaveOccurred(), "Signing transaction failed")
+			})
+
+			It("fails if given the public key is not for an account the wallet has the key for", func() {
+				// NOTE: Because this `Describe` container is "Ordered", it is
+				// assumed that a wallet has been created with at least one key
+				// in it
+
+				By("Fetching the wallet and initializing it")
+				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to sign a transaction with an account not in wallet")
+				const testAcctAddrStr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+				testAcctAddr, err := algoTypes.DecodeAddress(testAcctAddrStr)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = wallet.SignTransaction(
+					knownSignedTxn.Txn,
+					testAcctAddr[:],
+					[]byte(walletPassword),
+				)
+				Expect(err).To(HaveOccurred(), "Signing transaction failed")
 			})
 		})
 
 		PDescribe("MultisigSignTransaction()", func() {
 			It("", func() {
-				//
+				// TODO
 			})
 		})
 
 		PDescribe("SignProgram()", func() {
 			It("", func() {
-				//
+				// TODO
 			})
 		})
 
 		PDescribe("MultisigSignProgram()", func() {
 			It("", func() {
-				//
+				// TODO
 			})
 		})
 	})
