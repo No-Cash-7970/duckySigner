@@ -35,13 +35,14 @@ func main() {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: uint64((1 * time.Hour).Seconds()),
 			DriverConfig: config.DriverConfig{
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
 					ScryptParams: config.ScryptParams{
 						ScryptN: 65536,
 						ScryptR: 1,
 						ScryptP: 32,
 					},
 				},
+				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true},
 				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},

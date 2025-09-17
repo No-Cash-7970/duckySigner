@@ -1677,7 +1677,7 @@ func setupParquetWalletDriver(parquetDriver *driver.ParquetWalletDriver, walletD
 				UnsafeScrypt: true, // For testing purposes only
 				ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},
 			},
-			SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true},
+			SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true, Disable: true},
 			LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 		},
 	}, logger)

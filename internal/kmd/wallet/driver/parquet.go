@@ -613,10 +613,6 @@ func (pqw *ParquetWallet) Init(pw []byte) error {
 // CheckPassword checks that the database can be decrypted with the password.
 // It's the same as Init but doesn't store the decrypted key
 func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
-	if !pqw.initialized {
-		return fmt.Errorf("wallet not initialized")
-	}
-
 	if pqw.walletPasswordHashed {
 		// Check against pre-computed password hash
 		pwhash := fastHashWithSalt(pw, pqw.walletPasswordSalt[:])

@@ -124,7 +124,7 @@ func (service *KMDService) ListWallets() ([]wallet.Metadata, error) {
 	return driver.ListWalletMetadatas()
 }
 
-// CreateWallet creates a new SQLite wallet with the given walletName and
+// CreateWallet creates a new Parquet wallet with the given walletName and
 // password
 func (service *KMDService) CreateWallet(walletName, password string) (newWalletData wallet.Metadata, err error) {
 	err = service.init()
@@ -138,20 +138,20 @@ func (service *KMDService) CreateWallet(walletName, password string) (newWalletD
 		return
 	}
 
-	// Get SQLite driver
-	sqliteDriver, err := driver.FetchWalletDriver("sqlite")
+	// Get Parquet driver
+	pqDriver, err := driver.FetchWalletDriver("parquet")
 	if err != nil {
 		return
 	}
 
 	// Create wallet
-	err = sqliteDriver.CreateWallet([]byte(walletName), walletID, []byte(password), types.MasterDerivationKey{})
+	err = pqDriver.CreateWallet([]byte(walletName), walletID, []byte(password), types.MasterDerivationKey{})
 	if err != nil {
 		return
 	}
 
 	// Get the newly created wallet
-	newWallet, err := sqliteDriver.FetchWallet(walletID)
+	newWallet, err := pqDriver.FetchWallet(walletID)
 	if err != nil {
 		return
 	}
@@ -181,12 +181,12 @@ func (service *KMDService) RenameWallet(walletID string, newName string, passwor
 		return err
 	}
 
-	sqliteDriver, err := driver.FetchWalletDriver("sqlite")
+	pqDriver, err := driver.FetchWalletDriver("parquet")
 	if err != nil {
 		return err
 	}
 
-	return sqliteDriver.RenameWallet([]byte(newName), []byte(walletID), []byte(password))
+	return pqDriver.RenameWallet([]byte(newName), []byte(walletID), []byte(password))
 }
 
 // ImportWalletMnemonic creates a new wallet with the given walletName and
@@ -203,8 +203,8 @@ func (service *KMDService) ImportWalletMnemonic(walletMnemonic, walletName, pass
 		return
 	}
 
-	// Get SQLite driver
-	sqliteDriver, err := driver.FetchWalletDriver("sqlite")
+	// Get Parquet driver
+	pqDriver, err := driver.FetchWalletDriver("parquet")
 	if err != nil {
 		return
 	}
@@ -216,13 +216,13 @@ func (service *KMDService) ImportWalletMnemonic(walletMnemonic, walletName, pass
 	}
 
 	// Create new wallet using imported wallet MDK
-	err = sqliteDriver.CreateWallet([]byte(walletName), walletID, []byte(password), mdk)
+	err = pqDriver.CreateWallet([]byte(walletName), walletID, []byte(password), mdk)
 	if err != nil {
 		return
 	}
 
 	// Get the newly created wallet
-	newWallet, err := sqliteDriver.FetchWallet(walletID)
+	newWallet, err := pqDriver.FetchWallet(walletID)
 	if err != nil {
 		return
 	}
@@ -304,12 +304,12 @@ func (service *KMDService) init() (err error) {
 
 // getWallet gets the wallet with the given walletID
 func (service *KMDService) getWallet(walletID string) (wallet.Wallet, error) {
-	sqliteDriver, err := driver.FetchWalletDriver("sqlite")
+	pqDriver, err := driver.FetchWalletDriver("parquet")
 	if err != nil {
 		return nil, err
 	}
 
-	return sqliteDriver.FetchWallet([]byte(walletID))
+	return pqDriver.FetchWallet([]byte(walletID))
 }
 
 /*

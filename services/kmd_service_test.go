@@ -15,7 +15,7 @@ import (
 )
 
 var _ = Describe("KmdService", func() {
-	Context("using SQLite", func() {
+	Context("using Parquet driver", func() {
 		// XXX: I shouldn't have to tell you this, but don't use the following
 		// mnemonics for anything other than testing purposes
 		const testWalletMnemonic = "increase document mandate absorb chapter valve apple amazing pipe hope impact travel away comfort two desk business robust brand sudden vintage scheme valve above inmate"
@@ -44,7 +44,7 @@ var _ = Describe("KmdService", func() {
 			By("Creating a new wallet")
 			newWalletInfoA, err := kmdService.CreateWallet("wallet_A", "passwordA")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(newWalletInfoA.DriverName).To(Equal("sqlite"))
+			Expect(newWalletInfoA.DriverName).To(Equal("parquet"))
 			Expect(newWalletInfoA.Name).To(BeEquivalentTo("wallet_A"), "1st wallet should have been created")
 
 			By("Not giving error if a given wallet password is correct")
@@ -58,7 +58,7 @@ var _ = Describe("KmdService", func() {
 			By("Creating another new wallet")
 			newWalletInfoB, err := kmdService.CreateWallet("wallet_B", "passwordB")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(newWalletInfoB.DriverName).To(Equal("sqlite"))
+			Expect(newWalletInfoB.DriverName).To(Equal("parquet"))
 			Expect(newWalletInfoB.Name).To(BeEquivalentTo("wallet_B"), "2nd wallet should have been created")
 
 			By("Listing multiple wallets")
@@ -69,7 +69,7 @@ var _ = Describe("KmdService", func() {
 			By("Retrieving information of a wallet with the given ID")
 			retrievedWalletInfoA, err := kmdService.GetWalletInfo(string(newWalletInfoA.ID))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(retrievedWalletInfoA.DriverName).To(Equal("sqlite"))
+			Expect(retrievedWalletInfoA.DriverName).To(Equal("parquet"))
 			Expect(retrievedWalletInfoA.Name).To(BeEquivalentTo("wallet_A"), "Should have the information of the correct wallet")
 
 			By("Renaming a wallet")
@@ -95,7 +95,7 @@ var _ = Describe("KmdService", func() {
 
 		It("can manage wallet sessions", func() {
 			By("Initializing KMD")
-			const walletDirName = ".test_sqlite_wallet_session"
+			const walletDirName = ".test_kmd_wallet_session"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(func() {
 				kmdService.CleanUp()
@@ -106,7 +106,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Session Mgmt Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -116,7 +116,7 @@ var _ = Describe("KmdService", func() {
 			By("Retrieving information of the wallet in the current session")
 			retrievedWalletInfo, err := kmdService.Session().GetWalletInfo()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(retrievedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(retrievedWalletInfo.DriverName).To(Equal("parquet"))
 			Expect(retrievedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Should have the information of the correct wallet")
 
 			By("Checking if session is for wallet with given (incorrect) ID")
@@ -160,7 +160,7 @@ var _ = Describe("KmdService", func() {
 
 		It("can import and export wallet mnemonics", func() {
 			By("Initializing KMD")
-			const walletDirName = ".test_sqlite_import_export"
+			const walletDirName = ".test_kmd_import_export"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(func() {
 				kmdService.CleanUp()
@@ -170,7 +170,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Import-Export Test Wallet", "password for imported wallet")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Import-Export Test Wallet"), "Wallet should have been imported")
 
 			By("Listing all wallets")
@@ -190,7 +190,7 @@ var _ = Describe("KmdService", func() {
 
 		It("can manage accounts in wallet", func() {
 			By("Initializing KMD")
-			const walletDirName = ".test_sqlite_wallet_accts"
+			const walletDirName = ".test_kmd_wallet_accts"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(func() {
 				kmdService.CleanUp()
@@ -201,7 +201,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Acct Mgmt Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Acct Mgmt Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -269,7 +269,7 @@ var _ = Describe("KmdService", func() {
 			const knownSignedTxnB64 = "gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ=="
 
 			By("Initializing KMD")
-			const walletDirName = ".test_sqlite_sign_txn"
+			const walletDirName = ".test_kmd_sign_txn"
 			kmdService := createKmdService(walletDirName)
 			DeferCleanup(func() {
 				kmdService.CleanUp()
@@ -280,7 +280,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Sign Txn Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("sqlite"))
+			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Sign Txn Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -323,15 +323,6 @@ func createKmdService(walletDirName string) KMDService {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
-					WalletsDir:   walletDirName,
-					UnsafeScrypt: true, // For testing purposes only
-					ScryptParams: config.ScryptParams{
-						ScryptN: 2,
-						ScryptR: 1,
-						ScryptP: 1,
-					},
-				},
 				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
 					WalletsDir:   walletDirName,
 					UnsafeScrypt: true, // For testing purposes only
@@ -341,6 +332,7 @@ func createKmdService(walletDirName string) KMDService {
 						ScryptP: 1,
 					},
 				},
+				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true, Disable: true},
 				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
