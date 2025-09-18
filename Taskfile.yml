@@ -16,6 +16,8 @@ tasks:
     summary: Builds the application
     cmds:
       - task: "{{OS}}:build"
+        vars:
+          CGO_ENABLED: 1
 
   build:prod:
     summary: Builds the application for production
