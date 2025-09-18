@@ -22,6 +22,7 @@
 # KMD
 **/kmd_config.json*
 **/sqlite_wallets
+**/parquet_wallets
 
 # Testing
 **/.test*
