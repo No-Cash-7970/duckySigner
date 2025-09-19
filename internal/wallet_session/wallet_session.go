@@ -213,4 +213,16 @@ func (session *WalletSession) SignTransaction(txB64, acctAddr string) (stxB64 st
 	return base64.StdEncoding.EncodeToString(stxBytes), nil
 }
 
+// GetMasterKey returns the wallet's master key
+func (session *WalletSession) GetMasterKey() (key []byte, err error) {
+	// Retrieve password from memory enclave
+	pwBuf, err := session.Password.Open()
+	if err != nil {
+		return
+	}
+	defer pwBuf.Destroy()
+
+	return (*session.Wallet).DecryptAndGetMasterKey(pwBuf.Bytes())
+}
+
 // TODO: ChangePassword(password string) error
