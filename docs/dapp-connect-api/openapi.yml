@@ -59,17 +59,17 @@ paths:
       operationId: sessionInit
       summary: Initialize a new session
       description: |-
-        A dApp must establish a connect session with server and receive a
+        A dApp must establish a connect session with the server and receive a
         session ID to be able to successfully send authenticated requests.
         Establishing a session consists of initializing a new session and then
         confirming that session.
 
         This operation initializes a new connect session for the dApp with the
-        given ID. Along with the *confirmation token* and *confirmation code*,
-        the server's response to a request to initialize a session includes a
-        *confirmation ID* that is needed to derive the *confirmation shared
-        secret key* used to send an authenticated request to confirm the
-        session.
+        given ID. The server's response to a successful request to initialize a
+        session includes a *confirmation token*, a *confirmation code* and a
+        *confirmation ID*. The *confirmation ID* will be needed to derive the
+        *confirmation shared secret key* that is used to send an authenticated
+        request to confirm the session.
       tags:
         - Session
         - All
