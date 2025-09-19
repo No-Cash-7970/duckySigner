@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"sync"
 
 	"duckysigner/internal/kmd/config"
 	kmdCrypto "duckysigner/internal/kmd/crypto"
@@ -23,7 +24,6 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/crypto"
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-codec/codec"
-	"github.com/algorand/go-deadlock"
 	"github.com/awnumar/memguard"
 	_ "github.com/marcboeker/go-duckdb/v2"
 	logging "github.com/sirupsen/logrus"
@@ -106,7 +106,8 @@ CREATE TABLE IF NOT EXISTS msig_addrs (
 type ParquetWalletDriver struct {
 	globalCfg  config.KMDConfig
 	parquetCfg config.ParquetWalletDriverConfig
-	mux        *deadlock.Mutex
+	// metadatasMutex is a mutex lock to handle races for the metadatas file
+	metadatasMutex *sync.RWMutex
 }
 
 // ParquetWallet represents a particular ParquetWallet under the
@@ -123,6 +124,9 @@ type ParquetWallet struct {
 	walletsPath string
 	// If the wallet has been initialized
 	initialized bool
+	// metadatasMutex is a mutex lock to handle races for the metadatas file.
+	// This should point to the same mutex lock used by the current instance of the driver
+	metadatasMutex *sync.RWMutex
 }
 
 type ParquetWalletMetadata struct {
@@ -164,9 +168,9 @@ func (parqwd *ParquetWalletDriver) InitWithConfig(cfg config.KMDConfig, log *log
 		return err
 	}
 
-	// Initialize lock. When creating a new wallet, this lock protects us from
-	// creating another with the same name or ID
-	parqwd.mux = &deadlock.Mutex{}
+	// Initialize lock. When creating a new wallet, data races caused by
+	// overwriting the metadatas file
+	parqwd.metadatasMutex = &sync.RWMutex{}
 
 	return nil
 }
@@ -181,6 +185,10 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 	}
 
 	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+
+	// Handle possible race over the metadatas file
+	parqwd.metadatasMutex.RLock()
+	defer parqwd.metadatasMutex.RUnlock()
 
 	// Check if metadatas file exists
 	_, statErr := os.Stat(metadatasPath)
@@ -294,7 +302,7 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 
 // CreateWallet creates a wallet with the given name and ID that will be
 // protected with the given password and Master Derivation Key (MDK). Providing
-// the MDK is optional. If an MDK is provided, then one will be generated.
+// the MDK is optional. If an MDK is not provided, then one will be generated.
 func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byte, mdk types.MasterDerivationKey) error {
 	if len(name) > parquetMaxWalletNameLen {
 		return errNameTooLong
@@ -389,6 +397,10 @@ func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error)
 
 	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
 
+	// Handle possible race over metadatas file
+	parqwd.metadatasMutex.RLock()
+	defer parqwd.metadatasMutex.RUnlock()
+
 	// Check if metadatas file exists
 	_, err := os.Stat(metadatasPath)
 	if err != nil {
@@ -427,9 +439,10 @@ func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error)
 
 	// Fill in the wallet details
 	return &ParquetWallet{
-		id:          string(id),
-		walletsPath: parqwd.walletsDir(),
-		cfg:         parqwd.parquetCfg,
+		id:             string(id),
+		walletsPath:    parqwd.walletsDir(),
+		cfg:            parqwd.parquetCfg,
+		metadatasMutex: parqwd.metadatasMutex,
 	}, nil
 }
 
@@ -479,6 +492,10 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 	}
 
 	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+
+	// Handle possible race over the metadatas file
+	parqwd.metadatasMutex.Lock()
+	defer parqwd.metadatasMutex.Unlock()
 
 	// Check if metadatas file exists
 	_, err = os.Stat(metadatasPath)
@@ -532,6 +549,10 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 // file
 func (pqw *ParquetWallet) Metadata() (wallet.Metadata, error) {
 	metadatasPath := pqw.walletsPath + "/" + ParquetMetadatasFile
+
+	// Handle possible race over the metadatas file
+	pqw.metadatasMutex.RLock()
+	defer pqw.metadatasMutex.RUnlock()
 
 	// Check if metadatas file exists
 	_, err := os.Stat(metadatasPath)
@@ -1054,6 +1075,10 @@ func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, 
 	if err != nil {
 		return
 	}
+
+	// Handle possible race over the metadatas file
+	pqw.metadatasMutex.Lock()
+	defer pqw.metadatasMutex.Unlock()
 
 	// Update the name within the metadata file
 	metadata.MaxKeyIdxEncrypted = encryptedIdxBlob
@@ -1963,6 +1988,10 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 
 	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
 
+	// Activate mutex lock to handle a race over the metadatas file
+	parqwd.metadatasMutex.Lock()
+	defer parqwd.metadatasMutex.Unlock()
+
 	// Check if metadatas file exists
 	_, err = os.Stat(metadatasPath)
 	if err != nil && !os.IsNotExist(err) {
@@ -2021,6 +2050,10 @@ func (pqw *ParquetWallet) DecryptAndGetMasterKey(pw []byte) ([]byte, error) {
 	}
 	defer db.Close()
 
+	// Handle possible race over the metadatas file
+	pqw.metadatasMutex.RLock()
+	defer pqw.metadatasMutex.RUnlock()
+
 	var encryptedMEPBlob []byte
 	row := db.QueryRow(
 		fmt.Sprintf("SELECT mep_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
@@ -2049,6 +2082,10 @@ func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, e
 		return nil, err
 	}
 	defer db.Close()
+
+	// Handle possible race over the metadatas file
+	pqw.metadatasMutex.RLock()
+	defer pqw.metadatasMutex.RUnlock()
 
 	var encryptedMDKBlob []byte
 	row := db.QueryRow(
