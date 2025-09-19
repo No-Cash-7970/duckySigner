@@ -19,6 +19,8 @@ type WalletSession struct {
 	Wallet *wallet.Wallet
 	// The wallet's Password (securely stored in a memory enclave)
 	Password *memguard.Enclave
+	// The file path where the session's wallet data is stored, if applicable
+	FilePath string
 	// The date-time when this wallet session expires
 	expiration time.Time
 }
