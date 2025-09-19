@@ -5,8 +5,10 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"net/http"
 
 	"github.com/awnumar/memguard"
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/wailsapp/wails/v3/pkg/application"
 )
@@ -24,6 +26,31 @@ const DCSessionInitUIPromptEventName string = "session_init_prompt"
 // forward the user's response to the dApp connect session initialization
 // request
 const DCSessionInitUIRespEventName string = "session_init_response"
+
+// CustomValidator is a custom validator to use with Echo to validate request
+// data
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+// Validate validates the given struct
+// Modified from: <https://echo.labstack.com/docs/request#validate-data>
+func (cv *CustomValidator) Validate(i any) error {
+	if err := cv.validator.Struct(i); err != nil {
+		// Optionally, you could return the error to give each route more
+		// control over the status code
+		return echo.NewHTTPError(http.StatusBadRequest, ApiError{
+			Name:    "validation_error",
+			Message: err.Error(),
+		})
+	}
+	return nil
+}
+
+// SetupCustomValidator sets up the custom validator for the given Echo instance
+func SetupCustomValidator(e *echo.Echo) {
+	e.Validator = &CustomValidator{validator: validator.New()}
+}
 
 // CreateDCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key
 // pair that is to be used for a connect session with a dApp. Sets the session
@@ -51,7 +78,7 @@ func ValidateDappID(dAppID string, curve ECDHCurve) (dappIdPk *ecdh.PublicKey, a
 	dappIdBytes, err := base64.StdEncoding.DecodeString(dAppID)
 	if err != nil {
 		apiErr = ApiError{
-			Name:    "invalid_dapp_id_b64",
+			Name:    "bad_dapp_id",
 			Message: "DApp ID is not a valid Base64 string",
 		}
 		return
@@ -63,8 +90,8 @@ func ValidateDappID(dAppID string, curve ECDHCurve) (dappIdPk *ecdh.PublicKey, a
 	// dappId, err := curve.NewPublicKey(dappIdBytes)
 	if err != nil {
 		apiErr = ApiError{
-			Name:    "invalid_dapp_id_pk",
-			Message: "DApp ID is invalid",
+			Name:    "bad_dapp_id",
+			Message: "DApp ID is not a valid public key",
 		}
 		return
 	}

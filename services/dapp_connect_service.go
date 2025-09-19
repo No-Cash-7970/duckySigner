@@ -85,6 +85,7 @@ func (dcs *DappConnectService) Start() bool {
 	if dcs.ECDHCurve == nil {
 		dcs.ECDHCurve = ecdh.X25519()
 	}
+	dc.SetupCustomValidator(dcs.echo)
 	dcs.setupServerRoutes(dcs.echo)
 
 	// Allow for the server to be gracefully stop if there was an interrupt
