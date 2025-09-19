@@ -56,8 +56,7 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 	service.session = &ws.WalletSession{
 		Wallet:   &fetchedWallet,
 		Password: memguard.NewEnclave([]byte(password)),
-		// This is the file path for a parquet wallet
-		FilePath: service.Config.DataDir + "/" + walletID,
+		FilePath: service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir + "/" + walletID,
 	}
 	service.session.SetExpiration(
 		time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second),
