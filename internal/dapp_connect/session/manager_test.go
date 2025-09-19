@@ -910,6 +910,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			By("Checking the newly created confirmation")
 			Expect(newConfirm.ID()).To(Equal(mockSk.PublicKey()), "Has correct confirmation ID")
 			Expect(newConfirm.Key()).To(Equal(mockSk), "Has correct confirmation key")
+			Expect(newConfirm.Code()).To(HaveLen(session.DefaultConfirmCodeLen))
 			Expect(newConfirm.Expiration()).To(
 				BeTemporally("~", time.Now().Add(session.DefaultConfirmLifetime), time.Second),
 				"Has correct expiry",

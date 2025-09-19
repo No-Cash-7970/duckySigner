@@ -1046,16 +1046,16 @@ func (sm *Manager) rowToSession(
 // generateConfirmationCode generates a confirmation using the confirmation code
 // settings in the session manager
 func (sm *Manager) generateConfirmationCode() (string, error) {
-	var code string
+	var code []byte
 
-	for range sm.confirmCodeCharset {
+	for i := 0; i < int(sm.confirmCodeLen); i++ {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(sm.confirmCodeCharset))))
 		if err != nil {
 			// Return partial code if there is an error
-			return code, err
+			return string(code), err
 		}
-		code = code + string(DefaultConfirmCodeCharset[n.Uint64()])
+		code = append(code, sm.confirmCodeCharset[n.Uint64()])
 	}
 
-	return code, nil
+	return string(code), nil
 }
