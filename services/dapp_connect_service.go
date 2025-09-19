@@ -169,8 +169,7 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 
 	e.POST("/session/init", handlers.SessionInitPost(
 		dcs.echo,
-		dcs.WailsApp,
-		dcs.UserResponseTimeout,
+		dcs.KMDService.Session(),
 		dcs.ECDHCurve,
 	))
 }
