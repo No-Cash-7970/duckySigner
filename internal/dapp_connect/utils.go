@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
-	"net/http"
 
 	"github.com/awnumar/memguard"
 	"github.com/go-playground/validator/v10"
@@ -37,19 +36,17 @@ type CustomValidator struct {
 // Modified from: <https://echo.labstack.com/docs/request#validate-data>
 func (cv *CustomValidator) Validate(i any) error {
 	if err := cv.validator.Struct(i); err != nil {
-		// Optionally, you could return the error to give each route more
-		// control over the status code
-		return echo.NewHTTPError(http.StatusBadRequest, ApiError{
-			Name:    "validation_error",
-			Message: err.Error(),
-		})
+		return err
 	}
+
 	return nil
 }
 
 // SetupCustomValidator sets up the custom validator for the given Echo instance
 func SetupCustomValidator(e *echo.Echo) {
-	e.Validator = &CustomValidator{validator: validator.New()}
+	e.Validator = &CustomValidator{
+		validator: validator.New(validator.WithRequiredStructEnabled()),
+	}
 }
 
 // CreateDCSessionKeyPair generates an Elliptic-curve Diffie–Hellman (ECDH) key

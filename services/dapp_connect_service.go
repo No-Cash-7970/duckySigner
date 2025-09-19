@@ -87,6 +87,7 @@ func (dcs *DappConnectService) Start() bool {
 	if dcs.ECDHCurve == nil {
 		dcs.ECDHCurve = ecdh.X25519()
 	}
+	// Set up other stuff
 	dc.SetupCustomValidator(dcs.echo)
 	dcs.setupServerRoutes(dcs.echo)
 
