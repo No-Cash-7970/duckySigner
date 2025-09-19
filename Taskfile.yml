@@ -84,8 +84,8 @@ tasks:
     deps:
       - task: common:go:mod:tidy
     cmds:
-      - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --trace -v
-      # - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --race --trace -v
+      - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --trace -v --output-interceptor-mode=none
+      # - go run github.com/onsi/ginkgo/v2/ginkgo watch -r -p --race --trace -v --output-interceptor-mode=none
 
   test:frontend:
     summary: Runs the frontend tests once
