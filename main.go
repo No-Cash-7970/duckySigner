@@ -55,6 +55,7 @@ func main() {
 	dcService := &services.DappConnectService{
 		HideServerBanner:    true,
 		UserResponseTimeout: 5 * time.Minute,
+		KMDService:          kmdService,
 	}
 	// Clean up dApp connect service when application terminates and we're
 	// returning from this main function

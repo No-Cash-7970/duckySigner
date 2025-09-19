@@ -47,6 +47,8 @@ type DappConnectService struct {
 	// testing.
 	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
 	ECDHCurve dc.ECDHCurve
+	// Instance of the KMD service that is being used to access the wallets
+	KMDService *KMDService
 
 	// Current Echo instance used to control the server
 	echo *echo.Echo
