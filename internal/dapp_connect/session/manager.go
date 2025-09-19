@@ -162,7 +162,8 @@ type Manager struct {
 
 // NewManager creates a new session manager using the given configuration for
 // creating sessions. The given ECDH curve will be used by this new session
-// manager to generate session keys.
+// manager to generate session keys. If the given session configuration is nil,
+// the default configuration will be used.
 func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 	var (
 		sessionLife        time.Duration
