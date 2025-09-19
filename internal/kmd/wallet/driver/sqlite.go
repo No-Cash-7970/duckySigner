@@ -608,9 +608,9 @@ func (sw *SQLiteWallet) Metadata() (meta wallet.Metadata, err error) {
 	return walletMetadataFromDB(db)
 }
 
-// decryptAndGetMasterKey fetches the master key from the metadata table and
+// DecryptAndGetMasterKey fetches the master key from the metadata table and
 // attempts to decrypt it with the passed password
-func (sw *SQLiteWallet) decryptAndGetMasterKey(pw []byte) ([]byte, error) {
+func (sw *SQLiteWallet) DecryptAndGetMasterKey(pw []byte) ([]byte, error) {
 	// Connect to the database
 	db, err := sqlx.Connect("sqlite", dbConnectionURL(sw.dbPath))
 	if err != nil {
@@ -660,7 +660,7 @@ func (sw *SQLiteWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, err
 // key, and store them in memory for subsequent operations
 func (sw *SQLiteWallet) Init(pw []byte) error {
 	// Decrypt the master password
-	masterEncryptionKey, err := sw.decryptAndGetMasterKey(pw)
+	masterEncryptionKey, err := sw.DecryptAndGetMasterKey(pw)
 	if err != nil {
 		return err
 	}
@@ -695,7 +695,7 @@ func (sw *SQLiteWallet) CheckPassword(pw []byte) error {
 		return errDecrypt
 	}
 
-	_, err := sw.decryptAndGetMasterKey(pw)
+	_, err := sw.DecryptAndGetMasterKey(pw)
 	return err
 }
 

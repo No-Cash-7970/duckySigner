@@ -584,7 +584,7 @@ func (pqw *ParquetWallet) Metadata() (wallet.Metadata, error) {
 // key, and store them in memory for subsequent operations
 func (pqw *ParquetWallet) Init(pw []byte) error {
 	// Decrypt the master password
-	masterEncryptionKey, err := pqw.decryptAndGetMasterKey(pw)
+	masterEncryptionKey, err := pqw.DecryptAndGetMasterKey(pw)
 	if err != nil {
 		return err
 	}
@@ -622,7 +622,7 @@ func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
 		return errDecrypt
 	}
 
-	_, err := pqw.decryptAndGetMasterKey(pw)
+	_, err := pqw.DecryptAndGetMasterKey(pw)
 	return err
 }
 
@@ -2011,9 +2011,9 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 
 /********** Wallet Helpers **********/
 
-// decryptAndGetMasterKey fetches the master key from the metadatas file and
+// DecryptAndGetMasterKey fetches the master key from the metadatas file and
 // attempts to decrypt it with the passed password
-func (pqw *ParquetWallet) decryptAndGetMasterKey(pw []byte) ([]byte, error) {
+func (pqw *ParquetWallet) DecryptAndGetMasterKey(pw []byte) ([]byte, error) {
 	// Open database
 	db, err := sql.Open("duckdb", "")
 	if err != nil {

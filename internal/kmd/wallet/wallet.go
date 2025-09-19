@@ -58,6 +58,8 @@ type Wallet interface {
 
 	SignProgram(program []byte, src types.Digest, pw []byte) ([]byte, error)
 	MultisigSignProgram(program []byte, src types.Digest, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte) (types.MultisigSig, error)
+
+	DecryptAndGetMasterKey(pw []byte) ([]byte, error)
 }
 
 // Metadata represents high-level information about a wallet, like its name, id

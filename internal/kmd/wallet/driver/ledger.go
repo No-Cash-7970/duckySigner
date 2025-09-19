@@ -428,6 +428,12 @@ func (lw *LedgerWallet) MultisigSignProgram(data []byte, src types.Digest, pk ed
 	return partial, nil
 }
 
+// DecryptAndGetMasterKey does not apply to the Ledger drive, so this function
+// will always return nil
+func (lw *LedgerWallet) DecryptAndGetMasterKey(pw []byte) ([]byte, error) {
+	return nil, nil
+}
+
 func uint64le(i uint64) []byte {
 	var buf [8]byte
 	binary.LittleEndian.PutUint64(buf[:], i)
