@@ -151,9 +151,9 @@ paths:
       operationId: sessionConfirm
       summary: Confirm an initialized session
       description: |-
-        To complete the establishment of a session, it needs to be confirmed
-        after it has been initialized. This requires authenticating using the
-        *confirmation ID* and the *confirmation shared secret key*. An
+        To complete the establishment of a session, the session needs to be
+        confirmed after it has been initialized. This requires authenticating
+        using the *confirmation ID* and the *confirmation shared secret key*. An
         initialized session can only be confirmed once.
 
         The user must approve the session within the wallet by entering the
