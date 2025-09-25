@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -228,15 +229,21 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		}
 	}
 
+	// The each part of the directory path must be escaped to prevent the
+	// directory name from being used for SQL injection
+	dataDirParts := strings.Split(filepath.FromSlash(dataDir), string(filepath.Separator))
+	var escapedDataDirParts []string
+	for _, part := range dataDirParts {
+		escapedDataDirParts = append(escapedDataDirParts, url.PathEscape(part))
+	}
+
 	return &Manager{
-		curve:           curve,
-		sessionLifetime: sessionLife,
-		confirmLifetime: confirmLife,
-		// URL encode directory and files names to prevent SQL injection. Leave
-		// "/" unescaped in data directory name.
-		dataDir:            strings.Join(strings.Split(url.QueryEscape(dataDir), "%2F"), "/"),
-		sessionsFile:       url.QueryEscape(sessionsFile),
-		confirmsFile:       url.QueryEscape(confirmsFile),
+		curve:              curve,
+		sessionLifetime:    sessionLife,
+		confirmLifetime:    confirmLife,
+		dataDir:            filepath.Join(escapedDataDirParts...),
+		sessionsFile:       url.PathEscape(sessionsFile),
+		confirmsFile:       url.PathEscape(confirmsFile),
 		confirmCodeCharset: confirmCodeCharset,
 		confirmCodeLen:     confirmCodeLen,
 	}
@@ -962,7 +969,7 @@ func (sm *Manager) OpenDb(fileEncKey []byte) (db *sql.DB, err error) {
 // the file exists. If the file does not exist, an os.ErrNotExist is returned as
 // the error.
 func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
-	filePath = sm.dataDir + "/" + sm.sessionsFile
+	filePath = filepath.Join(sm.dataDir, sm.sessionsFile)
 
 	// Ensure data directory exists
 	err = os.Mkdir(sm.dataDir, dataDirPermissions)
@@ -984,7 +991,7 @@ func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 // if the file exists. If the file does not exist, an os.ErrNotExist is returned
 // as the error.
 func (sm *Manager) getConfirmsFilePath() (filePath string, err error) {
-	filePath = sm.dataDir + "/" + sm.confirmsFile
+	filePath = filepath.Join(sm.dataDir, sm.confirmsFile)
 
 	// Ensure data directory exists
 	err = os.Mkdir(sm.dataDir, dataDirPermissions)
