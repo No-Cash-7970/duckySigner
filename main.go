@@ -42,7 +42,7 @@ func main() {
 						ScryptP: 32,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true},
+				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "parquet_wallets"},
 				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
