@@ -11,6 +11,7 @@ require (
 	github.com/algorand/go-deadlock v0.2.4
 	github.com/awnumar/memguard v0.23.0
 	github.com/go-playground/validator/v10 v10.27.0
+	github.com/hiyosi/hawk v1.0.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/karalabe/hid v1.0.0
 	github.com/labstack/echo/v4 v4.13.4
