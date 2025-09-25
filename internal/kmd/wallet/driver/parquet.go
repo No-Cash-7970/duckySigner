@@ -11,10 +11,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"sync"
 
 	"duckysigner/internal/kmd/config"
@@ -34,7 +36,6 @@ const (
 	parquetWalletDriverVersion   = 1
 	parquetWalletsDirName        = "parquet_wallets"
 	parquetWalletsDirPermissions = 0700
-	parquetWalletDBOptions       = "_pragma=secure_delete(1)&_txlock=exclusive"
 	parquetMaxWalletNameLen      = 64
 	parquetMaxWalletIDLen        = 64
 	parquetIntOverflow           = 1 << 63
@@ -184,7 +185,7 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 		return []wallet.Metadata{}, nil
 	}
 
-	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+	metadatasPath := filepath.Join(parqwd.walletsDir(), ParquetMetadatasFile)
 
 	// Handle possible race over the metadatas file
 	parqwd.metadatasMutex.RLock()
@@ -379,7 +380,11 @@ func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byt
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(walletPath+"/"+ParquetWalletMetadataFile, metadataJson, parquetWalletsDirPermissions)
+	err = os.WriteFile(
+		filepath.Join(walletPath, ParquetWalletMetadataFile),
+		metadataJson,
+		parquetWalletsDirPermissions,
+	)
 	if err != nil {
 		return err
 	}
@@ -395,7 +400,7 @@ func (parqwd *ParquetWalletDriver) FetchWallet(id []byte) (wallet.Wallet, error)
 		return &ParquetWallet{}, fmt.Errorf("no ID is given")
 	}
 
-	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+	metadatasPath := filepath.Join(parqwd.walletsDir(), ParquetMetadatasFile)
 
 	// Handle possible race over metadatas file
 	parqwd.metadatasMutex.RLock()
@@ -458,7 +463,7 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 		return errNameTooLong
 	}
 
-	walletMetadataPath := parqwd.walletsDir() + "/" + string(id) + "/" + ParquetWalletMetadataFile
+	walletMetadataPath := filepath.Join(parqwd.walletsDir(), string(id), ParquetWalletMetadataFile)
 
 	// Load wallet's metadata file
 	metadataFileContents, err := os.ReadFile(walletMetadataPath)
@@ -491,7 +496,7 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 		return err
 	}
 
-	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+	metadatasPath := filepath.Join(parqwd.walletsDir(), ParquetMetadatasFile)
 
 	// Handle possible race over the metadatas file
 	parqwd.metadatasMutex.Lock()
@@ -548,7 +553,7 @@ func (parqwd *ParquetWalletDriver) RenameWallet(newName []byte, id []byte, pw []
 // Metadata builds a wallet.Metadata from the wallet's metadata in the metadatas
 // file
 func (pqw *ParquetWallet) Metadata() (wallet.Metadata, error) {
-	metadatasPath := pqw.walletsPath + "/" + ParquetMetadatasFile
+	metadatasPath := filepath.Join(pqw.walletsPath, ParquetMetadatasFile)
 
 	// Handle possible race over the metadatas file
 	pqw.metadatasMutex.RLock()
@@ -653,7 +658,7 @@ func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
 		return addrs, fmt.Errorf("wallet not initialized")
 	}
 
-	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+	keysPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletKeysFile)
 
 	// Check if keys file exists
 	_, err = os.Stat(keysPath)
@@ -784,7 +789,7 @@ func (pqw *ParquetWallet) ImportKey(rawSK ed25519.PrivateKey) (addr types.Digest
 		return
 	}
 
-	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+	keysPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletKeysFile)
 
 	// Check if keys file exists
 	_, keysFileStatErr := os.Stat(keysPath)
@@ -880,9 +885,9 @@ func (pqw *ParquetWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, 
 		return addr, fmt.Errorf("wallet not initialized")
 	}
 
-	metadatasPath := pqw.walletsPath + "/" + ParquetMetadatasFile
-	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
-	walletMetadataPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMetadataFile
+	metadatasPath := filepath.Join(pqw.walletsPath, ParquetMetadatasFile)
+	keysPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletKeysFile)
+	walletMetadataPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletMetadataFile)
 
 	// The parquet wallet has SupportsMnemonicUX = false, meaning we don't know
 	// how to show mnemonics to the user
@@ -1136,7 +1141,7 @@ func (pqw *ParquetWallet) DeleteKey(addr types.Digest, pw []byte) (err error) {
 		return
 	}
 
-	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+	keysPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletKeysFile)
 
 	// Check if keys file exists
 	_, err = os.Stat(keysPath)
@@ -1218,7 +1223,7 @@ func (pqw *ParquetWallet) ImportMultisigAddr(version, threshold uint8, pks []ed2
 		return
 	}
 
-	msigAddrsPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+	msigAddrsPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletMsigAddrsFile)
 
 	// Check if multisig addresses file exists
 	_, msigFileStatErr := os.Stat(msigAddrsPath)
@@ -1320,7 +1325,7 @@ func (pqw *ParquetWallet) LookupMultisigPreimage(addr types.Digest) (version, th
 		return
 	}
 
-	var msigAddrsPath = pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+	var msigAddrsPath = filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletMsigAddrsFile)
 	var pksCandidate []ed25519.PublicKey
 	var versionCandidate, thresholdCandidate int
 	var pksBlob []byte
@@ -1369,7 +1374,7 @@ func (pqw *ParquetWallet) DeleteMultisigAddr(addr types.Digest, pw []byte) (err 
 		return
 	}
 
-	msigAddrsPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+	msigAddrsPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletMsigAddrsFile)
 
 	// Check if keys file exists
 	_, err = os.Stat(msigAddrsPath)
@@ -1423,7 +1428,7 @@ func (pqw *ParquetWallet) ListMultisigAddrs() (addrs []types.Digest, err error) 
 		return addrs, fmt.Errorf("wallet not initialized")
 	}
 
-	msigAddrsPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletMsigAddrsFile
+	msigAddrsPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletMsigAddrsFile)
 
 	// Check if multisig addresses file exists
 	_, err = os.Stat(msigAddrsPath)
@@ -1851,7 +1856,7 @@ func init() {
 // returns a Metadata struct with information about it
 func parquetWalletMetadataFromPath(walletPath string) (metadata ParquetWalletMetadata, err error) {
 	// Read wallet's metadata.json
-	metadataFileContents, err := os.ReadFile(walletPath + "/" + ParquetWalletMetadataFile)
+	metadataFileContents, err := os.ReadFile(filepath.Join(walletPath, ParquetWalletMetadataFile))
 	if err != nil {
 		return
 	}
@@ -1915,7 +1920,7 @@ func (parqwd *ParquetWalletDriver) potentialWalletPaths() (paths []string, err e
 		}
 
 		// Skip directories that don't have a metadata.json file
-		_, err := os.Stat(wDir + "/" + f.Name() + "/" + ParquetWalletMetadataFile)
+		_, err := os.Stat(filepath.Join(wDir, f.Name(), ParquetWalletMetadataFile))
 		if err != nil {
 			continue
 		}
@@ -1940,10 +1945,25 @@ func (parqwd *ParquetWalletDriver) maybeMakeWalletsDir() error {
 // walletsDir returns the wallet directory specified in the config, if there
 // is one, otherwise it returns a subdirectory of the global kmd data dir
 func (parqwd *ParquetWalletDriver) walletsDir() string {
+	var walletDir string
+
+	// Use the default if no wallet directory has been specified in the Parquet
+	// wallet configuration
 	if parqwd.parquetCfg.WalletsDir != "" {
-		return parqwd.parquetCfg.WalletsDir
+		walletDir = filepath.FromSlash(parqwd.parquetCfg.WalletsDir)
+	} else {
+		walletDir = filepath.Join(filepath.FromSlash(parqwd.globalCfg.DataDir), parquetWalletsDirName)
 	}
-	return filepath.Join(parqwd.globalCfg.DataDir, parquetWalletsDirName)
+
+	// The each part of the directory path must be escaped to prevent the
+	// directory name from being used for SQL injection
+	dataDirParts := strings.Split(filepath.FromSlash(walletDir), string(filepath.Separator))
+	var escapedDataDirParts []string
+	for _, part := range dataDirParts {
+		escapedDataDirParts = append(escapedDataDirParts, url.PathEscape(part))
+	}
+
+	return filepath.Join(escapedDataDirParts...)
 }
 
 // idToPath turns a wallet id into a path to the corresponding wallet directory
@@ -1986,7 +2006,7 @@ func (parqwd *ParquetWalletDriver) addParquetWalletMetadata(metadata *ParquetWal
 		return err
 	}
 
-	metadatasPath := parqwd.walletsDir() + "/" + ParquetMetadatasFile
+	metadatasPath := filepath.Join(parqwd.walletsDir(), ParquetMetadatasFile)
 
 	// Activate mutex lock to handle a race over the metadatas file
 	parqwd.metadatasMutex.Lock()
@@ -2057,7 +2077,7 @@ func (pqw *ParquetWallet) DecryptAndGetMasterKey(pw []byte) ([]byte, error) {
 	var encryptedMEPBlob []byte
 	row := db.QueryRow(
 		fmt.Sprintf("SELECT mep_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
-			pqw.walletsPath+"/"+ParquetMetadatasFile),
+			filepath.Join(pqw.walletsPath, ParquetMetadatasFile)),
 		pqw.id,
 	)
 	err = row.Scan(&encryptedMEPBlob)
@@ -2090,7 +2110,7 @@ func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, e
 	var encryptedMDKBlob []byte
 	row := db.QueryRow(
 		fmt.Sprintf("SELECT mdk_encrypted FROM read_parquet('%s') WHERE wallet_id = ? LIMIT 1",
-			pqw.walletsPath+"/"+ParquetMetadatasFile),
+			filepath.Join(pqw.walletsPath, ParquetMetadatasFile)),
 		pqw.id,
 	)
 	err = row.Scan(&encryptedMDKBlob)
@@ -2108,7 +2128,7 @@ func (pqw *ParquetWallet) decryptAndGetMasterDerivationKey(pw []byte) ([]byte, e
 
 // fetchSecretKey retrieves the private key for a given public key
 func (pqw *ParquetWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateKey, err error) {
-	keysPath := pqw.walletsPath + "/" + pqw.id + "/" + ParquetWalletKeysFile
+	keysPath := filepath.Join(pqw.walletsPath, pqw.id, ParquetWalletKeysFile)
 
 	// Check if keys file exists
 	_, err = os.Stat(keysPath)
