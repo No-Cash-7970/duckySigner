@@ -12,12 +12,13 @@ import (
 )
 
 type (
-	// SessionInitPostReq
+	// SessionInitPostReq is the request data for `POST /session/init`
 	SessionInitPostReq struct {
 		DappId string `json:"dapp_id" validate:"required,base64"`
 	}
 
-	// SessionInitPostResp
+	// SessionInitPostResp is the response data to a `POST /session/init`
+	// request
 	SessionInitPostResp struct {
 		// Confirmation ID
 		Id string `json:"id"`
