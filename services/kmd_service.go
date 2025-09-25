@@ -1,6 +1,7 @@
 package services
 
 import (
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -48,6 +49,14 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 		return
 	}
 
+	var walletDir string
+	// Calculate the path of the wallet directory
+	if service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir != "" {
+		walletDir = filepath.Join(service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir, walletID)
+	} else {
+		walletDir = filepath.Join(service.Config.DataDir, "parquet_wallets", walletID)
+	}
+
 	// Initialize wallet in order to securely load master derivation key (MDK)
 	// and master encryption key (MEK) into memory
 	err = fetchedWallet.Init([]byte(password))
@@ -56,7 +65,7 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 	service.session = &ws.WalletSession{
 		Wallet:   &fetchedWallet,
 		Password: memguard.NewEnclave([]byte(password)),
-		FilePath: service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir + "/" + walletID,
+		FilePath: walletDir,
 	}
 	service.session.SetExpiration(
 		time.Now().Add(time.Duration(service.Config.SessionLifetimeSecs) * time.Second),
