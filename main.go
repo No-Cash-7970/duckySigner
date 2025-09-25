@@ -3,11 +3,11 @@ package main
 import (
 	"embed"
 	"encoding/base64"
-	"log"
 	"os"
 	"time"
 
 	"github.com/awnumar/memguard"
+	"github.com/labstack/gommon/log"
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"duckysigner/internal/kmd/config"
