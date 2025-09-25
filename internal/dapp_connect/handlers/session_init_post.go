@@ -40,8 +40,9 @@ const (
 func SessionInitPost(
 	echoInstance *echo.Echo,
 	walletSession *wallet_session.WalletSession,
+	sessionManager *session.Manager,
 	ecdhCurve dc.ECDHCurve,
-) func(echo.Context) error {
+) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if walletSession == nil {
 			return c.JSON(http.StatusInternalServerError, dc.ApiError{
@@ -75,10 +76,6 @@ func SessionInitPost(
 			echoInstance.Logger.Error(err)
 			return c.JSON(http.StatusBadRequest, dappIdApiErr)
 		}
-
-		sessionManager := session.NewManager(ecdhCurve, &session.SessionConfig{
-			DataDir: walletSession.FilePath,
-		})
 
 		// Create confirmation
 		confirm, err := sessionManager.GenerateConfirmation(dappId)

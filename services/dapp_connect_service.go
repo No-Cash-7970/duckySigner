@@ -16,6 +16,7 @@ import (
 
 	dc "duckysigner/internal/dapp_connect"
 	"duckysigner/internal/dapp_connect/handlers"
+	"duckysigner/internal/dapp_connect/session"
 )
 
 // DappConnectService is a Wails binding allows for a Wails frontend to interact
@@ -165,11 +166,14 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	// Set up CORS
 	e.Use(middleware.CORS())
 
-	e.GET("/", handlers.RootGet(dcs.WailsApp))
+	sessionManager := session.NewManager(dcs.ECDHCurve, &session.SessionConfig{
+		DataDir: walletSession.FilePath,
+	})
 
 	e.POST("/session/init", handlers.SessionInitPost(
 		dcs.echo,
 		dcs.KMDService.Session(),
+		sessionManager,
 		dcs.ECDHCurve,
 	))
 }
