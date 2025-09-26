@@ -1,6 +1,7 @@
 package handlers_test
 
 import (
+	"crypto/ecdh"
 	"io"
 	"log/slog"
 	"net/http"
@@ -31,6 +32,7 @@ func getResponseBody(resp *http.Response) ([]byte, error) {
 
 var dcService DappConnectService
 var kmdService *KMDService
+var curve = ecdh.X25519()
 
 const defaultUserRespTimeout = 2 * time.Second
 const rootGetPort = "1384"

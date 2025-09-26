@@ -28,7 +28,6 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		sessionKeyB64 = "OA7vIBYGze5Vapw/qO3iPr+F9nRnaxsWSVnViTEZ1Ag="
 		// dcKeyB64      = "I2y18jGyyNf4KTRrDtWyt09Qw2gppt5KHMJqm+gb9jY="
 	)
-	var curve = ecdh.X25519()
 	var dappPk *ecdh.PublicKey
 	var sessionManager *session.Manager
 	const uri = "http://localhost:" + sessionConfirmPostPort + "/session/confirm"
