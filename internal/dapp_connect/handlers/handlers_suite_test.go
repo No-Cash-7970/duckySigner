@@ -30,14 +30,16 @@ func getResponseBody(resp *http.Response) ([]byte, error) {
 }
 
 var dcService DappConnectService
+var kmdService *KMDService
 
 const defaultUserRespTimeout = 2 * time.Second
 const rootGetPort = "1384"
 const sessionInitPostPort = "1385"
+const sessionConfirmPostPort = "1386"
 
 func setUpDcService(port string, mockSessionKey string) {
 	walletDirName := ".test_dc_handlers_" + port
-	kmdService := createKmdService(walletDirName)
+	kmdService = createKmdService(walletDirName)
 	dcService = DappConnectService{
 		// Make sure to use a port that is not used in another test so the
 		// tests can be run in parallel

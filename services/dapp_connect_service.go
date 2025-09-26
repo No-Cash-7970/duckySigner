@@ -202,6 +202,9 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	e.POST("/session/init", handlers.SessionInitPost(
 		dcs.echo, dcs.KMDService.Session(), sessionManager, dcs.ECDHCurve,
 	))
+	e.POST("/session/confirm", handlers.SessionConfirmPost(
+		dcs.echo, dcs.WailsApp, dcs.KMDService.Session(), sessionManager, dcs.ECDHCurve,
+	))
 }
 
 // HawkMiddlewareOptions is the set of options for the Hawk middleware
