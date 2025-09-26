@@ -53,6 +53,8 @@ type DappConnectService struct {
 	ECDHCurve dc.ECDHCurve
 	// Instance of the KMD service that is being used to access the wallets
 	KMDService *KMDService
+	// Amount of time (in seconds) to wait for user approval of a session
+	ApprovalTimeout uint64
 
 	// Current Echo instance used to control the server
 	echo *echo.Echo
@@ -178,7 +180,8 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	}
 
 	sessionManager := session.NewManager(dcs.ECDHCurve, &session.SessionConfig{
-		DataDir: walletSession.FilePath,
+		DataDir:             walletSession.FilePath,
+		ApprovalTimeoutSecs: dcs.ApprovalTimeout,
 	})
 
 	sessionCredStore := SessionCredentialStore{

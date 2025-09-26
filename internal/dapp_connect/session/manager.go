@@ -159,6 +159,8 @@ type Manager struct {
 	confirmCodeCharset string
 	// The length of a confirmation code
 	confirmCodeLen uint
+	// Amount of time to wait for user approval of a session
+	approvalTimeout time.Duration
 }
 
 // NewManager creates a new session manager using the given configuration for
@@ -174,6 +176,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		confirmsFile       string
 		confirmCodeCharset string
 		confirmCodeLen     uint
+		approvalTimeout    time.Duration
 	)
 
 	// Use default config if no config was given
@@ -185,6 +188,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		confirmsFile = DefaultConfirmsFile
 		confirmCodeCharset = DefaultConfirmCodeCharset
 		confirmCodeLen = DefaultConfirmCodeLen
+		approvalTimeout = DefaultApprovalTimeout
 	} else {
 		sessionLife = time.Duration(sessionConfig.SessionLifetimeSecs) * time.Second
 		confirmLife = time.Duration(sessionConfig.ConfirmLifetimeSecs) * time.Second
@@ -193,6 +197,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		confirmsFile = sessionConfig.ConfirmsFile
 		confirmCodeCharset = sessionConfig.ConfirmCodeCharset
 		confirmCodeLen = sessionConfig.ConfirmCodeLen
+		approvalTimeout = time.Duration(sessionConfig.ApprovalTimeoutSecs) * time.Second
 
 		// If no data directory is given, interpret it as wanting the directory
 		// to be the current directory
@@ -227,6 +232,11 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		if confirmCodeLen == 0 {
 			confirmCodeLen = DefaultConfirmCodeLen
 		}
+
+		// If no approval timeout was given
+		if approvalTimeout == time.Duration(0) {
+			approvalTimeout = DefaultApprovalTimeout
+		}
 	}
 
 	// The each part of the directory path must be escaped to prevent the
@@ -246,6 +256,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		confirmsFile:       url.PathEscape(confirmsFile),
 		confirmCodeCharset: confirmCodeCharset,
 		confirmCodeLen:     confirmCodeLen,
+		approvalTimeout:    approvalTimeout,
 	}
 }
 
@@ -285,6 +296,12 @@ func (sm *Manager) ConfirmCodeCharset() string {
 // ConfirmCodeLen returns the charset used to generate a confirmation code
 func (sm *Manager) ConfirmCodeLen() uint {
 	return sm.confirmCodeLen
+}
+
+// ApprovalTimeout returns the length of time to wait for the approval of a
+// session
+func (sm *Manager) ApprovalTimeout() time.Duration {
+	return sm.approvalTimeout
 }
 
 /*******************************************************************************

@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -26,9 +27,9 @@ var _ = Describe("DApp Connect Session Manager", func() {
 		It("creates a new session manager with given configuration", func() {
 			sessionManager := session.NewManager(
 				curve,
-				&session.SessionConfig{"", "", "somewhere/dc", 42, 8, "0123456789ABCDEF", 6},
+				&session.SessionConfig{"", "", "somewhere/dc", 42, 8, "0123456789ABCDEF", 6, 2},
 			)
-			Expect(sessionManager.DataDir()).To(Equal("somewhere/dc"), "Has correct data directory")
+			Expect(sessionManager.DataDir()).To(Equal(filepath.FromSlash("somewhere/dc")), "Has correct data directory")
 			Expect(sessionManager.SessionLifetime()).To(Equal(42*time.Second),
 				"Has correct session lifetime")
 			Expect(sessionManager.ConfirmLifetime()).To(Equal(8*time.Second),
@@ -37,11 +38,14 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Has correct confirmation code character set")
 			Expect(sessionManager.ConfirmCodeLen()).To(Equal(uint(6)),
 				"Has correct confirmation code length")
+			Expect(sessionManager.ApprovalTimeout()).To(Equal(2*time.Second),
+				"Has correct confirmation code length")
 		})
 
 		It("creates a new session manager with default configuration when no configuration is given", func() {
 			sessionManager := session.NewManager(curve, nil)
-			Expect(sessionManager.DataDir()).To(Equal(session.DefaultDataDir), "Has correct data directory")
+			Expect(sessionManager.DataDir()).To(Equal(filepath.Clean(session.DefaultDataDir)),
+				"Has correct data directory")
 			Expect(sessionManager.SessionLifetime()).To(Equal(session.DefaultSessionLifetime),
 				"Has correct session lifetime")
 			Expect(sessionManager.ConfirmLifetime()).To(Equal(session.DefaultConfirmLifetime),

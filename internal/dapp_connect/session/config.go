@@ -30,8 +30,12 @@ const (
 	// DefaultConfirmCodeCharset is a the set of characters used for generating
 	// a confirmation code
 	DefaultConfirmCodeCharset = "0123456789"
-	// DefaultConfirmCodeLen is the length of a confirmation code
+	// DefaultConfirmCodeLen is the default length of a confirmation code
 	DefaultConfirmCodeLen = 5
+	// DefaultApprovalTimeout is the default length of time to wait for a user
+	// to approve a dApp connect session. This must be less than the default
+	// confirmation lifetime.
+	DefaultApprovalTimeout = 5 * time.Minute
 )
 
 // SessionConfig is used to configure the session manager when creating a new
@@ -53,6 +57,9 @@ type SessionConfig struct {
 	ConfirmCodeCharset string `json:"confirm_code_charset,omitempty"`
 	// The length of a confirmation code
 	ConfirmCodeLen uint `json:"confirm_code_len,omitempty"`
+	// The length of time to wait for a user to approve a dApp connect session.
+	// This must be less than the confirmation lifetime.
+	ApprovalTimeoutSecs uint64 `json:"approval_timeout_secs,omitempty"`
 }
 
 // ToFile creates the session configuration file by encapsulating the session

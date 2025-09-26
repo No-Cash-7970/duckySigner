@@ -51,6 +51,7 @@ func setUpDcService(port string, mockSessionKey string) {
 		UserResponseTimeout: defaultUserRespTimeout,
 		ECDHCurve:           &mocks.EcdhCurveMock{GeneratedPrivateKey: mockSessionKey},
 		KMDService:          kmdService,
+		ApprovalTimeout:     1,
 	}
 	By("Starting dApp connect server")
 	dcService.Start()
