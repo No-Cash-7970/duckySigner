@@ -235,6 +235,17 @@ paths:
                       used after this date-time.
                     type: integer
                     format: int64
+                  addrs:
+                    description: >-
+                      The list account addresses the dApp is allowed to use for
+                      signing
+                    type: array
+                    items:
+                      description: >-
+                        Address of an account that can be used for signing
+                      type: string
+                      minLength: 58
+                      maxLength: 58
         400:
           $ref: '#/components/responses/BadRequest'
         401:
