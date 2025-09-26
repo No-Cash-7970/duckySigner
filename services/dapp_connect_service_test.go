@@ -154,7 +154,11 @@ func createKmdServiceForDCS(walletDirName string) *KMDService {
 						ScryptP: 1,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{UnsafeScrypt: true, Disable: true},
+				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
+					UnsafeScrypt: true,
+					Disable:      true,
+					WalletsDir:   walletDirName,
+				},
 				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
