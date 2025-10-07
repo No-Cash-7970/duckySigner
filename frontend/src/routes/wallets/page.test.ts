@@ -50,6 +50,13 @@ vi.mock('$app/stores', () => ({
   page: writable({url: {searchParams: { get: () => '123' }}})
 }))
 
+const startServerFnMock = vi.fn();
+const stopServerFnMock = vi.fn();
+vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({
+  Start: () => startServerFnMock(),
+  Stop: () => stopServerFnMock(),
+}));
+
 vi.mock('@wailsio/runtime', () => ({}));
 
 describe('Wallet Information Page', () => {
@@ -143,6 +150,69 @@ describe('Wallet Information Page', () => {
     await userEvent.click(screen.getByText('Submit'));
 
     expect((await screen.findAllByText('abandon')).length).toBe(25);
+  });
+
+  it('turns on the server when page is first loaded', async () => {
+    startServerFnMock.mockClear();
+    startServerFnMock.mockResolvedValue(true);
+		render(WalletInfoPage);
+
+    expect(await screen.findByText(/Turn off dApp/)).toBeInTheDocument();
+    expect(startServerFnMock).toHaveBeenCalledOnce();
+  });
+
+  it('turns off the server when "turn server off" button is clicked', async () => {
+    startServerFnMock.mockClear();
+    startServerFnMock.mockResolvedValue(true);
+		render(WalletInfoPage);
+
+    stopServerFnMock.mockClear();
+    stopServerFnMock.mockResolvedValue(false);
+    await userEvent.click(await screen.findByText(/Turn off dApp/));
+
+    expect(await screen.findByText(/Turn on dApp/)).toBeInTheDocument();
+    expect(screen.queryByText(/Turn off dApp/)).not.toBeInTheDocument();
+    expect(stopServerFnMock).toHaveBeenCalledOnce();
+  });
+
+  it('turns the server on when "turn server on" button is clicked', async () => {
+    startServerFnMock.mockClear();
+    startServerFnMock.mockResolvedValue(false);
+		render(WalletInfoPage);
+
+    startServerFnMock.mockResolvedValue(true);
+    await userEvent.click(await screen.findByText(/Turn on dApp/));
+
+    expect(await screen.findByText(/Turn off dApp/)).toBeInTheDocument();
+    expect(screen.queryByText(/Turn on dApp/)).not.toBeInTheDocument();
+    expect(startServerFnMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('still shows "turn server on" button after it was clicked if server failed to turn on',
+  async () => {
+    startServerFnMock.mockClear();
+    startServerFnMock.mockResolvedValue(false);
+		render(WalletInfoPage);
+
+    await userEvent.click(await screen.findByText(/Turn on dApp/));
+
+    expect(await screen.findByText(/Turn on dApp/)).toBeInTheDocument();
+    expect(screen.queryByText(/Turn off dApp/)).not.toBeInTheDocument();
+    expect(startServerFnMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('still shows "turn server off" button after it was clicked if server failed to turn off',
+  async () => {
+    startServerFnMock.mockResolvedValue(true);
+		render(WalletInfoPage);
+
+    stopServerFnMock.mockClear();
+    stopServerFnMock.mockResolvedValue(true);
+    await userEvent.click(await screen.findByText(/Turn off dApp/));
+
+    expect(await screen.findByText(/Turn off dApp/)).toBeInTheDocument();
+    expect(screen.queryByText(/Turn on dApp/)).not.toBeInTheDocument();
+    expect(stopServerFnMock).toHaveBeenCalledOnce();
   });
 
 });

@@ -1,14 +1,13 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import type { Metadata } from '$lib/wails-bindings/duckysigner/internal/kmd/wallet';
-  import { KMDService } from '$lib/wails-bindings/duckysigner/services';
+  import { DappConnectService, KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
   import { onMount } from 'svelte';
 
   let walletId = '';
   let walletInfo: Metadata;
   let passwordWrong = false;
-  let passwordCorrect = false;
   let unlockWalletDialogOpen = false;
   let renameWalletDialogOpen = false;
   let passwordForMnemonicDialogOpen = false;
@@ -19,6 +18,7 @@
   let accounts: string[] = [];
   let mnemonicParts: string[] = [];
   let sessionStarted = false;
+  let dappConnectOn = false;
 
   onMount(async () => {
     walletId = $page.url.searchParams.get('id') ?? '';
@@ -49,12 +49,10 @@
       await KMDService.StartSession(walletId, formData.get('walletPassword')?.toString() ?? '');
       sessionStarted = true;
       accounts = await KMDService.SessionListAccounts();
-      passwordCorrect = true;
       passwordWrong = false;
       unlockWalletDialogOpen = false;
     } catch (error) {
       passwordWrong = true;
-      passwordCorrect = false;
       sessionStarted = false;
     }
   }
@@ -123,7 +121,7 @@
     // No errors, so show mnemonic
     passwordWrong = false;
     passwordForMnemonicDialogOpen = false;
-    mnemonicParts = (await KMDService.SessionExportWallet(walletPassword)).split(' ');
+    mnemonicParts = mnemonic.split(' ');
     mnemonicDialogOpen = true;
   }
 
@@ -140,13 +138,28 @@
       importFail = true;
     }
   }
+
+  async function startServer() {
+    dappConnectOn = await DappConnectService.Start()
+  }
+
+  async function stopServer() {
+    dappConnectOn = await DappConnectService.Stop();
+  }
 </script>
 
-<a href="/" class="btn">Back</a>
+<a href="/" class="btn" on:click={stopServer}>Back</a>
 
 {#if walletInfo}
   <h1 class="text-center text-4xl mb-8">{atob(walletInfo.Name)}</h1>
-  <div>
+
+  {#if dappConnectOn}
+    <button class="btn btn-block" on:click={stopServer}>⏹️ Turn off dApp connect server</button>
+  {:else}
+    <button class="btn btn-block" on:click={startServer}>▶️ Turn on dApp connect server</button>
+  {/if}
+
+  <div class="mt-8">
     <button class="btn" on:click={() => passwordForMnemonicDialogOpen = true}>
       See mnemonic
     </button>
@@ -160,6 +173,7 @@
       Import account
     </button>
   </div>
+
   {#if accounts.length > 0}
     <ul class="menu menu-lg bg-base-200">
       {#each accounts as address}
