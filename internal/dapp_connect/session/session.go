@@ -21,6 +21,9 @@ type Session struct {
 	exp time.Time
 	// The date-time the session was established, if it has been established
 	establishedAt time.Time
+	// List of addresses the dApp is allowed to connect to. If empty or nil, the
+	// dApp is allowed to connect to all addresses in the wallet.
+	addrs []string
 }
 
 // New creates a new Session using the given session data
@@ -30,6 +33,7 @@ func New(
 	exp time.Time,
 	establishedAt time.Time,
 	dappData *dc.DappData,
+	addrs []string,
 ) Session {
 	return Session{
 		key:           key,
@@ -37,6 +41,7 @@ func New(
 		exp:           exp,
 		establishedAt: establishedAt,
 		dappData:      dappData,
+		addrs:         addrs,
 	}
 }
 
@@ -55,8 +60,8 @@ func (session *Session) DappId() *ecdh.PublicKey {
 	return session.dappId
 }
 
-// Expiration returns the date-time when the session expires. Returns a
-// 0 date-time value if the expiration was not set.
+// Expiration returns the date-time when the session expires. Returns a 0
+// date-time value if the expiration was not set.
 func (session *Session) Expiration() time.Time {
 	return session.exp
 }
@@ -74,6 +79,11 @@ func (session *Session) EstablishedAt() time.Time {
 // DappData returns the data of the dApp the session is for
 func (session *Session) DappData() *dc.DappData {
 	return session.dappData
+}
+
+// Addresses returns the list of addresses the dApp is allowed to connected to
+func (session *Session) Addresses() []string {
+	return session.addrs
 }
 
 // SharedKey returns the session shared secret key that is derived from session

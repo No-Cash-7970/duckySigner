@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/marcboeker/go-duckdb/v2"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -74,7 +75,9 @@ var _ = Describe("DApp Connect Session Manager", func() {
 
 			By("Generating a session")
 			sessionManager := session.NewManager(mockCurve, nil)
-			newSession, err := sessionManager.GenerateSession(dappId, &dc.DappData{})
+			newSession, err := sessionManager.GenerateSession(dappId, &dc.DappData{}, []string{
+				"RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A",
+			})
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking the newly created session")
@@ -149,6 +152,8 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Retrieved session has correct dApp description")
 			Expect(retrievedSessionDappData.Icon).To(Equal(testDappData.Icon),
 				"Retrieved session has correct dApp icon")
+			Expect(retrievedSession.Addresses()).To(HaveLen(1),
+				"Retrieved session has correct number of addresses in address list")
 		})
 
 		It("returns nil when attempting to get a session that does not exist", func() {
@@ -237,7 +242,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			}
 
 			By("Creating a session")
-			testSession := session.New(sessionKey, dappId, exp, est, &testDappData)
+			testSession := session.New(sessionKey, dappId, exp, est, &testDappData, nil)
 
 			By("Attempting to store session")
 			// Generate file encryption key
@@ -262,6 +267,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappURL    string
 				storedDappDesc   string
 				storedDappIcon   []byte
+				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
 				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
@@ -272,6 +278,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				&storedExp, &storedEst,
 				&storedDappId,
 				&storedDappName, &storedDappURL, &storedDappDesc, &storedDappIcon,
+				&storedAddrs,
 			)
 
 			Expect(storedSessionId).To(Equal(b64encoder.EncodeToString(sessionId.Bytes())),
@@ -292,6 +299,8 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp description")
 			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
+			Expect(storedAddrs.Get()).To(HaveLen(0),
+				"Stored session has correct number of addresses")
 		})
 
 		It("can add session to a database file that already exists", func() {
@@ -312,7 +321,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				URL:         "https://example.com",
 				Description: "This is a test.",
 				Icon:        "",
-			})
+			}, nil)
 
 			By("Storing the first session")
 			// Generate file encryption key
@@ -338,7 +347,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				Description: "This is another test.",
 				Icon:        "",
 			}
-			testSession2 := session.New(sessionKey2, dappId2, exp2, est2, &testDappData)
+			testSession2 := session.New(sessionKey2, dappId2, exp2, est2, &testDappData, nil)
 
 			By("Attempting to store the second session")
 			err = sessionManager.StoreSession(&testSession2, fileEncryptKey[:])
@@ -359,6 +368,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappURL    string
 				storedDappDesc   string
 				storedDappIcon   []byte
+				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(
 				fmt.Sprintf(
@@ -372,6 +382,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				&storedExp, &storedEst,
 				&storedDappId,
 				&storedDappName, &storedDappURL, &storedDappDesc, &storedDappIcon,
+				&storedAddrs,
 			)
 
 			Expect(storedSessionId).To(Equal(b64encoder.EncodeToString(sessionId2.Bytes())),
@@ -392,6 +403,8 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp description")
 			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
+			Expect(storedAddrs.Get()).To(HaveLen(0),
+				"Stored session has correct number of addresses")
 		})
 
 		It("stores an expired session", func() {
@@ -414,7 +427,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				Description: "This is a test.",
 				Icon:        "",
 			}
-			testSession := session.New(sessionKey, dappId, exp, est, &testDappData)
+			testSession := session.New(sessionKey, dappId, exp, est, &testDappData, nil)
 
 			By("Attempting to store session")
 			// Generate file encryption key
@@ -439,6 +452,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappURL    string
 				storedDappDesc   string
 				storedDappIcon   []byte
+				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
 				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
@@ -449,6 +463,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				&storedExp, &storedEst,
 				&storedDappId,
 				&storedDappName, &storedDappURL, &storedDappDesc, &storedDappIcon,
+				&storedAddrs,
 			)
 
 			Expect(storedSessionId).To(Equal(b64encoder.EncodeToString(sessionId.Bytes())),
@@ -469,6 +484,8 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp description")
 			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
+			Expect(storedAddrs.Get()).To(HaveLen(0),
+				"Stored session has correct number of addresses")
 		})
 
 		It("fails when no session is given", func() {
@@ -501,7 +518,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				URL:         "https://example.com",
 				Description: "This is a test.",
 				Icon:        "",
-			})
+			}, nil)
 
 			By("Attempting to store session with no session key")
 			// Generate file encryption key
@@ -530,7 +547,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				URL:         "https://example.com",
 				Description: "This is a test.",
 				Icon:        "",
-			})
+			}, nil)
 
 			By("Storing the session")
 			// Generate file encryption key
@@ -560,7 +577,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				URL:         "https://example.com",
 				Description: "This is a test.",
 				Icon:        "",
-			})
+			}, nil)
 
 			By("Attempting to store session with no dApp ID")
 			// Generate file encryption key
@@ -729,6 +746,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 					Description: "This is the first test.",
 					Icon:        "",
 				},
+				nil,
 			)
 			sessionManager.StoreSession(&testSession, fileEncryptKey[:])
 			By("Creating session #2 (valid session)")
@@ -773,7 +791,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 		})
 	})
 
-	Describe("Manager.ConfirmSession()", func() {
+	Describe("Manager.EstablishSession()", func() {
 		It("returns an established session if confirmation is valid", func() {
 			By("Generating a dApp key pair (dApp ID & key)")
 			dappKey, err := curve.GenerateKey(rand.Reader)
@@ -797,7 +815,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				Icon:        "",
 			}
 			newSession, err := sessionManager.EstablishSession(
-				token, confirm.Code(), confirm.Key(), &testDappData,
+				token, confirm.Code(), confirm.Key(), &testDappData, nil,
 			)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -837,7 +855,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 
 			By("Attempting to confirm session without a token")
 			_, err = sessionManager.EstablishSession(
-				"", confirm.Code(), confirm.Key(), &dc.DappData{},
+				"", confirm.Code(), confirm.Key(), &dc.DappData{}, nil,
 			)
 			Expect(err).To(MatchError(session.NoConfirmTokenGivenErrMsg))
 		})
@@ -858,7 +876,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Attempting to confirm session using token using incorrect confirmation code")
-			_, err = sessionManager.EstablishSession(token, "XXXXX", confirm.Key(), &dc.DappData{})
+			_, err = sessionManager.EstablishSession(token, "XXXXX", confirm.Key(), &dc.DappData{}, nil)
 			Expect(err).To(MatchError(session.WrongConfirmCodeErrMsg))
 		})
 
@@ -885,7 +903,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				Icon:        "",
 			}
 			_, err = sessionManager.EstablishSession(
-				token, confirm.Code(), dappKey, &testDappData,
+				token, confirm.Code(), dappKey, &testDappData, nil,
 			)
 			Expect(err).To(HaveOccurred())
 		})
@@ -1229,6 +1247,7 @@ func generateAndStoreSession(
 		time.Now().Add(5*time.Minute),
 		time.Now(),
 		dappData,
+		[]string{"RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"},
 	)
 	sessionManager.StoreSession(&testSession, fileEncryptKey)
 

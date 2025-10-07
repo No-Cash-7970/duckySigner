@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/marcboeker/go-duckdb/v2"
+	"github.com/marcboeker/go-duckdb/v2"
 
 	dc "duckysigner/internal/dapp_connect"
 )
@@ -101,7 +101,8 @@ CREATE TABLE sessions (
     dapp_name VARCHAR,
     dapp_url VARCHAR,
     dapp_desc VARCHAR,
-    dapp_icon BLOB
+    dapp_icon BLOB,
+    addrs VARCHAR[],
 );
 `
 
@@ -116,7 +117,7 @@ CREATE TABLE confirms (
 
 // sessionSimpleInsertSQL is the SQL statement for inserting a session into a
 // in-memory table.
-const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
 // confirmSimpleInsertSQL is the SQL statement for inserting a confirmation key
 // pair into a in-memory table.
@@ -311,7 +312,7 @@ func (sm *Manager) ApprovalTimeout() time.Duration {
 // GenerateSession creates a new unestablished session (with no established-at
 // date-time) by generating a new session key pair for the dApp with the given
 // ID with the given dApp data
-func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData) (session *Session, err error) {
+func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData, addrs []string) (session *Session, err error) {
 	// Generate session key pair
 	sessionKey, err := sm.curve.GenerateKey(rand.Reader)
 	if err != nil {
@@ -324,6 +325,7 @@ func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData
 		exp:      exp,
 		dappId:   dappId,
 		dappData: dappData,
+		addrs:    addrs,
 	}
 
 	return
@@ -358,6 +360,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappURL         string
 		retrievedDappDesc        string
 		retrievedDappIcon        []byte
+		retrievedAddrs           duckdb.Composite[[]string]
 	)
 	sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, sessionsFilePath), sessionId)
 	err = sessionRow.Scan(
@@ -370,6 +373,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		&retrievedDappURL,
 		&retrievedDappDesc,
 		&retrievedDappIcon,
+		&retrievedAddrs,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -388,6 +392,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappURL,
 		retrievedDappDesc,
 		retrievedDappIcon,
+		retrievedAddrs.Get(),
 	)
 }
 
@@ -427,6 +432,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			retrievedDappURL         string
 			retrievedDappDesc        string
 			retrievedDappIcon        []byte
+			retrievedAddrs           duckdb.Composite[[]string]
 		)
 
 		err := sessionsRows.Scan(
@@ -439,6 +445,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			&retrievedDappURL,
 			&retrievedDappDesc,
 			&retrievedDappIcon,
+			&retrievedAddrs,
 		)
 		if err != nil {
 			// An unexpected error occurred
@@ -455,6 +462,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			retrievedDappURL,
 			retrievedDappDesc,
 			retrievedDappIcon,
+			retrievedAddrs.Get(),
 		)
 		if err != nil {
 			// Return the incomplete set along with the error
@@ -524,6 +532,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		dappData.URL,
 		dappData.Description,
 		dappIconB64,
+		session.addrs,
 	)
 	if err != nil {
 		return
@@ -673,6 +682,7 @@ func (sm *Manager) EstablishSession(
 	code string,
 	key *ecdh.PrivateKey,
 	dappData *dc.DappData,
+	addrs []string,
 ) (*Session, error) {
 	// Check token
 	if token == "" {
@@ -698,6 +708,7 @@ func (sm *Manager) EstablishSession(
 		dappData:      dappData,
 		establishedAt: now,
 		exp:           now.Add(sm.sessionLifetime),
+		addrs:         addrs,
 	}
 
 	return &session, nil
@@ -1036,6 +1047,7 @@ func (sm *Manager) rowToSession(
 	dappURL string,
 	dappDesc string,
 	dappIcon []byte,
+	addrs []string,
 ) (*Session, error) {
 	// Convert session key bytes to an ECDH private key
 	retrievedSessionKey, err := sm.curve.NewPrivateKey(sessionKeyBytes)
@@ -1064,6 +1076,7 @@ func (sm *Manager) rowToSession(
 			Description: dappDesc,
 			Icon:        base64.StdEncoding.EncodeToString(dappIcon),
 		},
+		addrs: addrs,
 	}, nil
 }
 

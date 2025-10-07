@@ -42,7 +42,7 @@ var _ = Describe("GET /", Ordered, func() {
 		sessionManager := session.NewManager(curve, &session.SessionConfig{
 			DataDir: kmdService.Session().FilePath,
 		})
-		session, err := sessionManager.GenerateSession(dappPk, &dapp_connect.DappData{Name: "Foobar"})
+		session, err := sessionManager.GenerateSession(dappPk, &dapp_connect.DappData{Name: "Foobar"}, nil)
 		Expect(err).NotTo(HaveOccurred())
 		mek, err := kmdService.Session().GetMasterKey()
 		Expect(err).NotTo(HaveOccurred())

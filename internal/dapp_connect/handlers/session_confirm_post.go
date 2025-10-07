@@ -215,7 +215,7 @@ func SessionConfirmPost(
 			}
 
 			// Generate session
-			session, err := sessionManager.GenerateSession(dappId, &reqData.DappData)
+			session, err := sessionManager.GenerateSession(dappId, &reqData.DappData, nil)
 			if err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, dc.ApiError{
