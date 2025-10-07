@@ -90,7 +90,7 @@
         onload: () => resolve(reader.result as string),
         onerror: () => reject(reader.error),
       });
-      reader.readAsDataURL(new File([bytes], '', { type }));
+      reader.readAsDataURL(new File([bytes as BlobPart], '', { type }));
     });
   };
 
