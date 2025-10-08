@@ -16,6 +16,9 @@ const (
 	// RemoveSessionNotExistErrMsg is the error message text for when there is
 	// an attempt to remove a session that is not stored
 	RemoveSessionNotStoredErrMsg = "cannot remove session that is not stored"
+	// NoConfirmGivenErrMsg is the error message text for when no confirmation
+	// is provided
+	NoConfirmGivenErrMsg = "no confirmation was given"
 	// WrongConfirmCodeErrMsg is the error message text for when the given
 	// confirmation code does not match the code that is with in the given
 	// confirmation token

@@ -676,13 +676,14 @@ func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
 }
 
 // EstablishSession creates a new established session using the given dApp data
-// after checking the given confirmation token, code and key
+// and connect addresses after checking the given confirmation token, code and
+// key
 func (sm *Manager) EstablishSession(
 	token string,
 	code string,
 	key *ecdh.PrivateKey,
 	dappData *dc.DappData,
-	addrs []string,
+	connectAddrs []string,
 ) (*Session, error) {
 	// Check token
 	if token == "" {
@@ -708,7 +709,40 @@ func (sm *Manager) EstablishSession(
 		dappData:      dappData,
 		establishedAt: now,
 		exp:           now.Add(sm.sessionLifetime),
-		addrs:         addrs,
+		addrs:         connectAddrs,
+	}
+
+	return &session, nil
+}
+
+// EstablishSessionWithConfirm creates a new established session using the given
+// dApp data and connect addresses after checking the given confirmation code
+// (given by the user) using the data within the given confirmation
+func (sm *Manager) EstablishSessionWithConfirm(
+	confirm *Confirmation,
+	codeFromUser string,
+	dappData *dc.DappData,
+	connectAddrs []string,
+) (*Session, error) {
+	// Check confirmation
+	if confirm == nil {
+		return nil, errors.New(NoConfirmGivenErrMsg)
+	}
+
+	// Check code
+	if codeFromUser != confirm.code {
+		return nil, errors.New(WrongConfirmCodeErrMsg)
+	}
+
+	// Create the new established session
+	now := time.Now()
+	session := Session{
+		key:           confirm.sessionKey,
+		dappId:        confirm.dappId,
+		dappData:      dappData,
+		establishedAt: now,
+		exp:           now.Add(sm.sessionLifetime),
+		addrs:         connectAddrs,
 	}
 
 	return &session, nil

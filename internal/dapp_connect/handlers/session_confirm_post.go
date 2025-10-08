@@ -148,8 +148,6 @@ func SessionConfirmPost(
 			})
 		}
 
-		dappId := credStoreConfig.ExtractedConfirm.DappId()
-
 		// Prompt user to approve dApp connect session
 		promptDataJSON, err := json.Marshal(UserPromptData{DappData: reqData.DappData})
 		if err != nil {
@@ -195,8 +193,10 @@ func SessionConfirmPost(
 				})
 			}
 
+			userRespCode := userRespData[0].Code
+
 			// If no confirmation code is given, that means the user rejected
-			if userRespData[0].Code == "" {
+			if userRespCode == "" {
 				return c.JSON(
 					http.StatusForbidden,
 					dc.ApiError{Name: "session_rejected", Message: "Session was rejected"},
@@ -204,7 +204,7 @@ func SessionConfirmPost(
 			}
 
 			// Check if the code is correct
-			if userRespData[0].Code != credStoreConfig.ExtractedConfirm.Code() {
+			if userRespCode != credStoreConfig.ExtractedConfirm.Code() {
 				return c.JSON(
 					http.StatusForbidden,
 					dc.ApiError{
@@ -214,8 +214,13 @@ func SessionConfirmPost(
 				)
 			}
 
-			// Generate session
-			session, err := sessionManager.GenerateSession(dappId, &reqData.DappData, nil)
+			// Establish session
+			session, err := sessionManager.EstablishSessionWithConfirm(
+				credStoreConfig.ExtractedConfirm,
+				userRespCode,
+				&reqData.DappData,
+				userRespData[0].Addresses,
+			)
 			if err != nil {
 				echoInstance.Logger.Error(err)
 				return c.JSON(http.StatusInternalServerError, dc.ApiError{
@@ -223,6 +228,9 @@ func SessionConfirmPost(
 					Message: "Failed to create dApp connect session",
 				})
 			}
+
+			sessionShared, _ := session.SharedKey()
+			fmt.Println("Session shared key:", base64.StdEncoding.EncodeToString(sessionShared))
 
 			// Get encryption key needed to modify the session database
 			mek, err := walletSession.GetMasterKey()
