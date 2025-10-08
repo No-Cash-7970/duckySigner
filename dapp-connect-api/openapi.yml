@@ -174,7 +174,7 @@ paths:
               required:
                 - dapp
               properties:
-                confirm_token:
+                token:
                   description: >-
                     The confirmation token given by the server after completing
                     session initialization
