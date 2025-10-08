@@ -30,6 +30,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 	)
 	var dappPk *ecdh.PublicKey
 	var sessionManager *session.Manager
+	var testConfirm *session.Confirmation
 	const uri = "http://localhost:" + sessionConfirmPostPort + "/session/confirm"
 
 	BeforeAll(func() {
@@ -47,12 +48,13 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 
 	It("confirms session and responds with session data", func() {
 		By("Creating and storing a session confirmation")
-		confirm, err := sessionManager.GenerateConfirmation(dappPk)
+		var err error
+		testConfirm, err = sessionManager.GenerateConfirmation(dappPk)
 		Expect(err).NotTo(HaveOccurred())
 		mek, err := kmdService.Session().GetMasterKey()
 		Expect(err).NotTo(HaveOccurred())
-		sessionManager.StoreConfirmKey(confirm.Key(), mek)
-		token, err := confirm.GenerateTokenString()
+		sessionManager.StoreConfirmKey(testConfirm.Key(), mek)
+		token, err := testConfirm.GenerateTokenString()
 		Expect(err).NotTo(HaveOccurred())
 
 		var reqBody = `{"token":"` + token + `","dapp":{"name":"foo"}}`
@@ -61,13 +63,13 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		go func() {
 			defer GinkgoRecover()
 			By("Creating Hawk request header")
-			confirmSharedKey, err := confirm.SharedKey()
+			confirmSharedKey, err := testConfirm.SharedKey()
 			Expect(err).NotTo(HaveOccurred())
 			nonce, err := hawk.Nonce(4) // Generate nonce that is 4 bytes long
 			Expect(err).NotTo(HaveOccurred())
 			hawkClient := hawk.NewClient(
 				&hawk.Credential{
-					ID:  base64.StdEncoding.EncodeToString(confirm.ID().Bytes()),
+					ID:  base64.StdEncoding.EncodeToString(testConfirm.ID().Bytes()),
 					Key: base64.StdEncoding.EncodeToString(confirmSharedKey),
 					Alg: hawk.SHA256,
 				},
@@ -106,7 +108,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
 				"session_confirm_response",
-				`{"code":"`+confirm.Code()+`","addrs":["account 1","account 2"]}`,
+				`{"code":"`+testConfirm.Code()+`","addrs":["account 1","account 2"]}`,
 			)
 		})
 		DeferCleanup(func() {
@@ -122,6 +124,80 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		Expect(respData.Id).To(HaveLen(44), "Session ID is within response")
 		Expect(respData.Expiration).To(BeNumerically(">", time.Now().Unix()),
 			"Expiry is within response")
+	})
+
+	It("fails when attempting to confirm a session again", func() {
+		// NOTE: Because this `Describe` container is "Ordered", a particular
+		// session is assumed to have been established
+
+		token, err := testConfirm.GenerateTokenString()
+		Expect(err).NotTo(HaveOccurred())
+
+		var reqBody = `{"token":"` + token + `","dapp":{"name":"foo"}}`
+		// Signal for when the request has yielded a response
+		var respSignal = make(chan []byte)
+		go func() {
+			defer GinkgoRecover()
+			By("Creating Hawk request header")
+			confirmSharedKey, err := testConfirm.SharedKey()
+			Expect(err).NotTo(HaveOccurred())
+			nonce, err := hawk.Nonce(4) // Generate nonce that is 4 bytes long
+			Expect(err).NotTo(HaveOccurred())
+			hawkClient := hawk.NewClient(
+				&hawk.Credential{
+					ID:  base64.StdEncoding.EncodeToString(testConfirm.ID().Bytes()),
+					Key: base64.StdEncoding.EncodeToString(confirmSharedKey),
+					Alg: hawk.SHA256,
+				},
+				&hawk.Option{
+					TimeStamp:   time.Now().Unix(),
+					Payload:     reqBody,
+					ContentType: "application/json",
+					Nonce:       nonce,
+				},
+			)
+			Expect(err).NotTo(HaveOccurred())
+			hawkHeader, err := hawkClient.Header("POST", uri)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Making an authenticated request to server with valid dApp data")
+			req, err := http.NewRequest("POST", uri, bytes.NewReader([]byte(reqBody)))
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", hawkHeader)
+			resp, err := (&http.Client{Timeout: 1 * time.Minute}).Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Processing response from server")
+			body, err := getResponseBody(resp)
+			Expect(err).NotTo(HaveOccurred())
+			// Signal that request has completed
+			respSignal <- body
+			close(respSignal)
+		}()
+
+		// Mock UI/user response to prompt event emitted from server
+		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
+			defer GinkgoRecover()
+			By("UI: Prompting user to approve session connection")
+			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			By("Wallet user: Approving session connection")
+			dcService.WailsApp.Event.Emit(
+				"session_confirm_response",
+				`{"code":"`+testConfirm.Code()+`","addrs":["account 1","account 2"]}`,
+			)
+		})
+		DeferCleanup(func() {
+			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
+		})
+
+		// Wait for request to complete before trying to parse & check the response
+		respBody := <-respSignal
+
+		By("Checking if server responds with error")
+		var respData dc.ApiError
+		json.Unmarshal(respBody, &respData)
+		Expect(respData.Name).To(Equal("session_create_fail"))
 	})
 
 	It("fails when no confirmation token is given", func() {
