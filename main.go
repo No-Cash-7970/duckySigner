@@ -122,6 +122,23 @@ func main() {
 		os.WriteFile(fileLoc, dataBytes, 0666)
 	})
 
+	app.Event.On("session_confirm_prompt", func(e *application.CustomEvent) {
+		app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title: "Ducky Connect",
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+			// BackgroundColour: application.NewRGB(27, 38, 54),
+			URL:    "/dapp-connect",
+			Width:  512,
+			Height: 700,
+		})
+		// Send event to load contents in window
+		app.Event.Emit("session_confirm_prompt_load", e.Data)
+	})
+
 	// Run the application. This blocks until the application has been exited.
 	// If an error occurred while running the application, log it and exit.
 	if err := app.Run(); err != nil {
