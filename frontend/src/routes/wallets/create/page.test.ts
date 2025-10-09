@@ -15,6 +15,7 @@ vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
 
 vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));
 
+vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('@wailsio/runtime', () => ({}));
 
 import CreateWalletPage from './+page.svelte';

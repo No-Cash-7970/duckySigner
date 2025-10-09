@@ -2,19 +2,18 @@ import {render, screen} from '@testing-library/svelte';
 import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('$lib/wails-bindings/duckysigner/services/kmdservice', () => ({
-  ImportWallet: async () => ({
+  ImportWalletMnemonic: async () => ({
     ID: "NzMxN2MxNmE0MGRjMmMzZjY0MzBkMzYzZDY5NDE3MzY=",
     Name: "dGVzdA==",
-    DriverName: "sqlite",
+    DriverName: "parquet",
     DriverVersion: 1,
     SupportsMnemonicUX: false,
     SupportsMasterKey: true,
-    SupportedTransactions:["pay","keyreg"]
+    SupportedTransactions:["pay","keyreg"],
   })
 }));
 
-vi.mock('$lib/wails-bindings/duckysigner/services/dappconnectservice', () => ({}));
-
+vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('@wailsio/runtime', () => ({}));
 
 import ImportWalletPage from './+page.svelte';
@@ -44,7 +43,7 @@ describe('Import Wallet Page', () => {
 
   it('has "import wallet" button', () => {
 		render(ImportWalletPage);
-    expect(screen.getByRole('button')).toHaveTextContent('Import wallet')
+    expect(screen.getByRole('button')).toHaveTextContent('Import wallet');
 	});
 
 });
