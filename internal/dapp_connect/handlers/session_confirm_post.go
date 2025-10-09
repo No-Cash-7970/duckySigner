@@ -182,6 +182,8 @@ func SessionConfirmPost(
 				dc.ApiError{Name: "confirm_timeout", Message: "User did not respond"},
 			)
 		case dataJSON := <-userResp: // Got user's response
+			echoInstance.Logger.Debug("Received dApp connect user response:", dataJSON)
+
 			var userRespData []UserRespData
 
 			err := json.Unmarshal([]byte(dataJSON), &userRespData)
@@ -214,6 +216,10 @@ func SessionConfirmPost(
 				)
 			}
 
+			echoInstance.Logger.Debug(
+				"DApp connection has been confirmed. Establishing session...",
+			)
+
 			// Establish session
 			session, err := sessionManager.EstablishSessionWithConfirm(
 				credStoreConfig.ExtractedConfirm,
@@ -230,7 +236,7 @@ func SessionConfirmPost(
 			}
 
 			sessionShared, _ := session.SharedKey()
-			fmt.Println("Session shared key:", base64.StdEncoding.EncodeToString(sessionShared))
+			echoInstance.Logger.Debug("Session shared key:", base64.StdEncoding.EncodeToString(sessionShared))
 
 			// Get encryption key needed to modify the session database
 			mek, err := walletSession.GetMasterKey()

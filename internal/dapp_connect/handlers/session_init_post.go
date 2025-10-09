@@ -110,6 +110,9 @@ func SessionInitPost(
 			})
 		}
 
+		confirmShared, _ := confirm.SharedKey()
+		echoInstance.Logger.Debug("Confirmation shared key:", base64.StdEncoding.EncodeToString(confirmShared))
+
 		// Create and respond with session confirmation data
 		return c.JSON(http.StatusOK, SessionInitPostResp{
 			Id:         base64.StdEncoding.EncodeToString(confirm.ID().Bytes()),
