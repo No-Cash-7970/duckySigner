@@ -226,7 +226,7 @@ func HawkMiddleware(echoInstance *echo.Echo, opt *HawkMiddlewareOptions) echo.Mi
 				echoInstance.Logger.Debug(
 					"No Authorization header. Skipping Hawk authentication because it is not required.",
 				)
-				next(c)
+				next(c) // Continue to do other request stuff
 				return nil
 			}
 
@@ -246,9 +246,6 @@ func HawkMiddleware(echoInstance *echo.Echo, opt *HawkMiddlewareOptions) echo.Mi
 				})
 			}
 
-			// Continue to do other request stuff
-			next(c)
-
 			echoInstance.Logger.Debug("Creating Hawk response header")
 
 			// Add Hawk response header after the request is finished
@@ -260,6 +257,8 @@ func HawkMiddleware(echoInstance *echo.Echo, opt *HawkMiddlewareOptions) echo.Mi
 				})
 			}
 			c.Response().Header().Set("Server-Authorization", hawkRespHeader)
+
+			next(c) // Continue to do other request stuff
 
 			return nil
 		}
