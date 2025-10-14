@@ -266,6 +266,13 @@ func (lw *LedgerWallet) Metadata() (wallet.Metadata, error) {
 	}, nil
 }
 
+// CheckAddrInWallet checks if the account with the given address is stored in
+// the wallet
+func (lw *LedgerWallet) CheckAddrInWallet(addr string) (bool, error) {
+	// TODO
+	return false, errNotSupported
+}
+
 // ListKeys implements the Wallet interface.
 func (lw *LedgerWallet) ListKeys() ([]types.Digest, error) {
 	lw.mu.Lock()

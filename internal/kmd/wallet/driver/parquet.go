@@ -652,6 +652,31 @@ func (pqw *ParquetWallet) CheckPassword(pw []byte) error {
 	return err
 }
 
+// CheckAddrInWallet checks if the account with the given address is stored in
+// the wallet
+func (pqw *ParquetWallet) CheckAddrInWallet(addr string) (bool, error) {
+	if !pqw.initialized {
+		return false, fmt.Errorf("wallet not initialized")
+	}
+
+	decodedAddr, err := types.DecodeAddress(addr)
+	if err != nil {
+		return false, err
+	}
+
+	// Attempt to fetch key
+	_, err = pqw.fetchSecretKey(types.Digest(decodedAddr))
+	if err == errKeyNotFound {
+		return false, nil
+	}
+	if err != nil {
+		// Some unexpected error occurred
+		return false, err
+	}
+
+	return true, nil
+}
+
 // ListKeys lists all the addresses in the wallet
 func (pqw *ParquetWallet) ListKeys() (addrs []types.Digest, err error) {
 	if !pqw.initialized {

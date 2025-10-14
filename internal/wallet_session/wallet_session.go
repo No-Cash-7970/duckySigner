@@ -68,6 +68,14 @@ func (session *WalletSession) ExportWallet(password string) (string, error) {
 	return mnemonic.FromMasterDerivationKey(mdk)
 }
 
+func (session *WalletSession) CheckAddrInWallet(addr string) (bool, error) {
+	if err := session.Check(); err != nil {
+		return false, err
+	}
+
+	return (*session.Wallet).CheckAddrInWallet(addr)
+}
+
 // ListAccounts lists the addresses of all accounts within the session wallet
 func (session *WalletSession) ListAccounts() (acctAddrs []string, err error) {
 	if err = session.Check(); err != nil {

@@ -40,6 +40,7 @@ type Wallet interface {
 
 	Metadata() (Metadata, error)
 
+	CheckAddrInWallet(addr string) (bool, error)
 	ListKeys() ([]types.Digest, error)
 
 	ImportKey(sk ed25519.PrivateKey) (types.Digest, error)

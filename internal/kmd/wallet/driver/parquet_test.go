@@ -12,6 +12,7 @@ import (
 	logging "github.com/sirupsen/logrus"
 
 	"duckysigner/internal/kmd/config"
+	"duckysigner/internal/kmd/wallet"
 	"duckysigner/internal/kmd/wallet/driver"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -653,6 +654,65 @@ var _ = Describe("Parquet Wallet Driver", func() {
 				By("Attempting to export MDK with an incorrect password")
 				_, err = wallet.ExportMasterDerivationKey([]byte("wrong password"))
 				Expect(err).To(HaveOccurred(), "Exporting MDK failed because password is incorrect")
+			})
+		})
+
+		Describe("CheckAddrInWallet()", Ordered, func() {
+			const walletDirName = ".test_pq_wallet_check_addr"
+			var parquetDriver driver.ParquetWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
+
+			var wallet wallet.Wallet
+
+			BeforeAll(func() {
+				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := parquetDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				wallet, err = parquetDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = wallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Generating a key")
+				_, err = wallet.GenerateKey(false)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns false if address is NOT in wallet", func() {
+				By("Checking if a certain address is stored in wallet")
+				check, err := wallet.CheckAddrInWallet(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(check).To(BeFalse())
+			})
+
+			It("returns true if address is in wallet", func() {
+				By("Importing a key")
+				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
+				Expect(err).ToNot(HaveOccurred())
+				_, err = wallet.ImportKey(sk)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking if a certain address is stored in wallet")
+				check, err := wallet.CheckAddrInWallet(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(check).To(BeTrue())
 			})
 		})
 
