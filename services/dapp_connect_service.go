@@ -3,14 +3,12 @@ package services
 import (
 	"context"
 	"crypto/ecdh"
-	"encoding/base64"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
 	"github.com/awnumar/memguard"
-	"github.com/hiyosi/hawk"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -19,7 +17,6 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 	"duckysigner/internal/dapp_connect/handlers"
 	"duckysigner/internal/dapp_connect/session"
-	"duckysigner/internal/wallet_session"
 )
 
 // DappConnectService is a Wails binding allows for a Wails frontend to interact
@@ -174,7 +171,7 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	walletSession := dcs.KMDService.Session()
 
 	if walletSession == nil {
-		e.GET("/", handlers.RootGet(dcs.WailsApp))
+		e.GET("/", handlers.RootGet(dcs.echo, nil, nil))
 		// Don't bother setting up other routes
 		return
 	}
@@ -184,118 +181,13 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 		ApprovalTimeoutSecs: dcs.ApprovalTimeout,
 	})
 
-	sessionCredStore := SessionCredentialStore{
-		WalletSession:  walletSession,
-		SessionManager: sessionManager,
-	}
-
-	e.GET("/", handlers.RootGet(dcs.WailsApp),
-		HawkMiddleware(
-			dcs.echo,
-			&HawkMiddlewareOptions{
-				Required:        false,
-				CredentialStore: sessionCredStore,
-			},
-		),
-	)
-
+	e.GET("/", handlers.RootGet(
+		dcs.echo, walletSession, sessionManager,
+	))
 	e.POST("/session/init", handlers.SessionInitPost(
-		dcs.echo, dcs.KMDService.Session(), sessionManager, dcs.ECDHCurve,
+		dcs.echo, walletSession, sessionManager, dcs.ECDHCurve,
 	))
 	e.POST("/session/confirm", handlers.SessionConfirmPost(
-		dcs.echo, dcs.WailsApp, dcs.KMDService.Session(), sessionManager, dcs.ECDHCurve,
+		dcs.echo, dcs.WailsApp, walletSession, sessionManager, dcs.ECDHCurve,
 	))
-}
-
-// HawkMiddlewareOptions is the set of options for the Hawk middleware
-type HawkMiddlewareOptions struct {
-	// If authentication is required
-	Required bool
-	// The store that contains a function for retrieving credentials.
-	CredentialStore hawk.CredentialStore
-}
-
-// HawkMiddleware is a middleware function that enables Hawk authentication on a
-// route
-func HawkMiddleware(echoInstance *echo.Echo, opt *HawkMiddlewareOptions) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			var req = c.Request()
-
-			if req.Header.Get("Authorization") == "" && !opt.Required {
-				echoInstance.Logger.Debug(
-					"No Authorization header. Skipping Hawk authentication because it is not required.",
-				)
-				next(c) // Continue to do other request stuff
-				return nil
-			}
-
-			echoInstance.Logger.Debug("Authenticating Hawk request header")
-
-			hawkServer := hawk.NewServer(opt.CredentialStore)
-
-			// Authenticate the Hawk request header
-			cred, err := hawkServer.Authenticate(req)
-			if err != nil {
-				// Set WWW-Authenticate header
-				c.Response().Header().Set("WWW-Authenticate", "Hawk")
-				// Respond with 401 Unauthorized
-				return c.JSON(http.StatusUnauthorized, dc.ApiError{
-					Name:    "auth_request_failed",
-					Message: err.Error(),
-				})
-			}
-
-			echoInstance.Logger.Debug("Creating Hawk response header")
-
-			// Add Hawk response header after the request is finished
-			hawkRespHeader, err := hawkServer.Header(req, cred, &hawk.Option{})
-			if err != nil {
-				return c.JSON(http.StatusInternalServerError, dc.ApiError{
-					Name:    "auth_response_failed",
-					Message: err.Error(),
-				})
-			}
-			c.Response().Header().Set("Server-Authorization", hawkRespHeader)
-
-			next(c) // Continue to do other request stuff
-
-			return nil
-		}
-	}
-}
-
-// SessionCredentialStore is a Hawk CredentialStore use for retrieving dApp
-// connect session credentials
-type SessionCredentialStore struct {
-	WalletSession  *wallet_session.WalletSession
-	SessionManager *session.Manager
-}
-
-// GetCredential returns the a set of Hawk credentials by retrieving stored
-// session data
-func (store SessionCredentialStore) GetCredential(id string) (*hawk.Credential, error) {
-	// The wallet session's master key is needed to read the dApp connect
-	// session database file
-	mek, err := store.WalletSession.GetMasterKey()
-	if err != nil {
-		return nil, err
-	}
-
-	session, err := store.SessionManager.GetSession(id, mek)
-	if err != nil {
-		return nil, err
-	}
-
-	// Derive shared key
-	sharedKey, err := session.SharedKey()
-	if err != nil {
-		return nil, err
-	}
-
-	return &hawk.Credential{
-		ID:  id,
-		Key: base64.StdEncoding.EncodeToString(sharedKey),
-		Alg: hawk.SHA256,
-	}, nil
 }

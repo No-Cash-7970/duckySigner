@@ -12,14 +12,17 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+const RootGetUri = "http://localhost:" + rootGetPort + "/" // The trailing slash is needed
+
 var _ = Describe("GET /", Ordered, func() {
+
 	BeforeAll(func() {
 		setUpDcService(rootGetPort, "")
 	})
 
 	It("works", func() {
 		By("Making request to server")
-		resp, err := http.Get("http://localhost:" + rootGetPort)
+		resp, err := http.Get(RootGetUri)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("Processing response from server")
@@ -31,8 +34,6 @@ var _ = Describe("GET /", Ordered, func() {
 	})
 
 	It("works with an authenticated request", func() {
-		const uri = "http://localhost:" + rootGetPort + "/" // The trailing slash is needed
-
 		By("By creating a session")
 		const dappIdB64 = "c+2pz3JaUkIEMnbi1vuv7RWdGpfyiv6O3xaYbYbieAg="
 		dappIdBytes, err := base64.StdEncoding.DecodeString(dappIdB64)
@@ -63,12 +64,11 @@ var _ = Describe("GET /", Ordered, func() {
 			&hawk.Option{TimeStamp: time.Now().Unix(), Nonce: nonce},
 		)
 		Expect(err).NotTo(HaveOccurred())
-		hawkHeader, err := hawkClient.Header("GET", uri)
+		hawkHeader, err := hawkClient.Header("GET", RootGetUri)
 		Expect(err).NotTo(HaveOccurred())
-		GinkgoWriter.Println(hawkHeader)
 
 		By("Making an authenticated request")
-		req, err := http.NewRequest("GET", uri, nil)
+		req, err := http.NewRequest("GET", RootGetUri, nil)
 		Expect(err).NotTo(HaveOccurred())
 		req.Header.Set("Authorization", hawkHeader)
 		resp, err := (&http.Client{Timeout: 1 * time.Minute}).Do(req)
