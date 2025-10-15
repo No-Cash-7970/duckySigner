@@ -38,6 +38,7 @@ const defaultUserRespTimeout = 2 * time.Second
 const rootGetPort = "1384"
 const sessionInitPostPort = "1385"
 const sessionConfirmPostPort = "1386"
+const transactionSignPostPort = "1387"
 
 func setUpDcService(port string, mockSessionKey string) {
 	walletDirName := ".test_dc_handlers_" + port
@@ -46,7 +47,7 @@ func setUpDcService(port string, mockSessionKey string) {
 		// Make sure to use a port that is not used in another test so the
 		// tests can be run in parallel
 		ServerAddr:       ":" + port,
-		LogLevel:         log.ERROR,
+		LogLevel:         log.DEBUG,
 		HideServerBanner: true,
 		HideServerPort:   true,
 		WailsApp: application.New(application.Options{

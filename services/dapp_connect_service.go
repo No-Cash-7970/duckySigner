@@ -190,4 +190,7 @@ func (dcs *DappConnectService) setupServerRoutes(e *echo.Echo) {
 	e.POST("/session/confirm", handlers.SessionConfirmPost(
 		dcs.echo, dcs.WailsApp, walletSession, sessionManager, dcs.ECDHCurve,
 	))
+	e.POST("/transaction/sign", handlers.TransactionSignPost(
+		dcs.echo, dcs.WailsApp, walletSession, sessionManager, dcs.ECDHCurve,
+	))
 }

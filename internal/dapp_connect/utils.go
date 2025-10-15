@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -138,4 +140,9 @@ func PromptUIOnce(
 	wailsApp.Event.Emit(promptEvent, promptData)
 
 	return
+}
+
+func GetRawRequestBody(req *http.Request) ([]byte, error) {
+	defer req.Body.Close()
+	return io.ReadAll(req.Body)
 }
