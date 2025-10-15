@@ -35,15 +35,15 @@ type (
 		Addresses []string `json:"addrs"`
 	}
 
-	// UserPromptData is the data passed to the UI when prompting the user to
-	// approve the session
-	UserPromptData struct {
+	// ApproveSessionPromptData is the data passed to the UI when prompting the
+	// user to approve the session
+	ApproveSessionPromptData struct {
 		DappData dc.DappData `json:"dapp"`
 	}
 
-	// UserRespData is the data the UI sends when the user responds to the
-	// prompt
-	UserRespData struct {
+	// ApproveSessionRespData is the data the UI sends when the user responds to
+	// the prompt to approve the session
+	ApproveSessionRespData struct {
 		Code      string   `json:"code"`
 		Addresses []string `json:"addrs"`
 	}
@@ -73,12 +73,12 @@ type (
 	}
 )
 
-// UIPromptEventName is the name for the event for triggering the
+// SessionConfirmPromptEventName is the name for the event for triggering the
 // UI to prompt the user to approve the dApp connect session confirmation
 // request
 const SessionConfirmPromptEventName string = "session_confirm_prompt"
 
-// UIRespEventName is the name for the event that the UI uses to
+// SessionConfirmRespEventName is the name for the event that the UI uses to
 // forward the user's response to the dApp connect session confirmation request
 const SessionConfirmRespEventName string = "session_confirm_response"
 
@@ -149,7 +149,7 @@ func SessionConfirmPost(
 		}
 
 		// Prompt user to approve dApp connect session
-		promptDataJSON, err := json.Marshal(UserPromptData{DappData: reqData.DappData})
+		promptDataJSON, err := json.Marshal(ApproveSessionPromptData{DappData: reqData.DappData})
 		if err != nil {
 			echoInstance.Logger.Error(err)
 			return c.JSON(http.StatusInternalServerError, dc.ApiError{
@@ -170,7 +170,10 @@ func SessionConfirmPost(
 		defer wailsApp.Event.Off(SessionConfirmRespEventName)
 		if err != nil {
 			echoInstance.Logger.Error(err)
-			return c.JSON(http.StatusBadRequest, err)
+			return c.JSON(http.StatusInternalServerError, dc.ApiError{
+				Name:    "unexpected_fail",
+				Message: err.Error(),
+			})
 		}
 
 		// Wait for user response...
@@ -184,7 +187,7 @@ func SessionConfirmPost(
 		case dataJSON := <-userResp: // Got user's response
 			echoInstance.Logger.Debug("Received dApp connect user response:", dataJSON)
 
-			var userRespData []UserRespData
+			var userRespData []ApproveSessionRespData
 
 			err := json.Unmarshal([]byte(dataJSON), &userRespData)
 			if err != nil {

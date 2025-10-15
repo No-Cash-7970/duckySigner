@@ -112,10 +112,13 @@ func PromptUIOnce(
 	// Contains the UI's response to prompt
 	uiRespCh = make(chan string)
 
+	logger.Debug("Removing any existing event listeners for: ", respEvent)
+	wailsApp.Event.Off(respEvent)
+
 	// Set up listener for event that will contain UI's response
-	logger.Debug("Listening for", respEvent, "event from UI")
+	logger.Debug("Listening for ", respEvent, " event from UI")
 	wailsApp.Event.On(respEvent, func(e *application.CustomEvent) {
-		logger.Debug("Event from UI:", respEvent, "\nEvent data:", e.Data)
+		logger.Debug("Event from UI: ", respEvent, "\nEvent data:", e.Data)
 		// NOTE: For some reason, the actual event data is always within an array
 		uiRespCh <- fmt.Sprint(e.Data)
 		// Only need to know about the first instance of this response, so
@@ -131,7 +134,7 @@ func PromptUIOnce(
 	// the server has the chance to set up the listener to receive the UI's
 	// response. The server misses the UI's only response, which can be a
 	// problem when unit testing.
-	logger.Debug("Emitted", promptEvent, "event to UI")
+	logger.Debug("Emitted ", promptEvent, " event to UI")
 	wailsApp.Event.Emit(promptEvent, promptData)
 
 	return

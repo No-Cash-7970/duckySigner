@@ -32,6 +32,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 	var sessionManager *session.Manager
 	var testConfirm *session.Confirmation
 	const uri = "http://localhost:" + sessionConfirmPostPort + "/session/confirm"
+	var confirmToken string
 
 	BeforeAll(func() {
 		dappIdBytes, err := base64.StdEncoding.DecodeString(dappIdB64)
@@ -44,20 +45,23 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		sessionManager = session.NewManager(curve, &session.SessionConfig{
 			DataDir: kmdService.Session().FilePath,
 		})
-	})
 
-	It("confirms session and responds with session data", func() {
 		By("Creating and storing a session confirmation")
-		var err error
 		testConfirm, err = sessionManager.GenerateConfirmation(dappPk)
 		Expect(err).NotTo(HaveOccurred())
 		mek, err := kmdService.Session().GetMasterKey()
 		Expect(err).NotTo(HaveOccurred())
 		sessionManager.StoreConfirmKey(testConfirm.Key(), mek)
-		token, err := testConfirm.GenerateTokenString()
+		confirmToken, err = testConfirm.GenerateTokenString()
 		Expect(err).NotTo(HaveOccurred())
+	})
 
-		var reqBody = `{"token":"` + token + `","dapp":{"name":"foo"}}`
+	AfterEach(func() {
+		dcService.WailsApp.Event.Reset()
+	})
+
+	It("confirms session and responds with session data", func() {
+		var reqBody = `{"token":"` + confirmToken + `","dapp":{"name":"foo"}}`
 		// Signal for when the request has yielded a response
 		var respSignal = make(chan []byte)
 		go func() {
@@ -107,12 +111,9 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
-				"session_confirm_response",
+				handlers.SessionConfirmRespEventName,
 				`{"code":"`+testConfirm.Code()+`","addrs":["account 1","account 2"]}`,
 			)
-		})
-		DeferCleanup(func() {
-			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
 		})
 
 		// Wait for request to complete before trying to parse & check the response
@@ -183,12 +184,9 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
-				"session_confirm_response",
+				handlers.SessionConfirmRespEventName,
 				`{"code":"`+testConfirm.Code()+`","addrs":["account 1","account 2"]}`,
 			)
-		})
-		DeferCleanup(func() {
-			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
 		})
 
 		// Wait for request to complete before trying to parse & check the response
@@ -253,7 +251,6 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 
 		// Wait for request to complete before trying to parse & check the response
 		respBody := <-respSignal
-
 		By("Checking if server responds with validation error data")
 		var respData dc.ApiError
 		json.Unmarshal(respBody, &respData)
@@ -512,9 +509,6 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
 			By("Wallet user: Not responding...")
 		})
-		DeferCleanup(func() {
-			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
-		})
 
 		// Wait for request to complete before trying to parse & check the response
 		respBody := <-respSignal
@@ -584,10 +578,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			By("UI: Prompting user to approve session connection")
 			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
 			By("Wallet user: Approving session connection")
-			dcService.WailsApp.Event.Emit("session_confirm_response", `{"code":"","addrs":[]}`)
-		})
-		DeferCleanup(func() {
-			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
+			dcService.WailsApp.Event.Emit(handlers.SessionConfirmRespEventName, `{"code":"","addrs":[]}`)
 		})
 
 		// Wait for request to complete before trying to parse & check the response
@@ -659,12 +650,9 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
-				"session_confirm_response",
+				handlers.SessionConfirmRespEventName,
 				`{"code":"0000","addrs":["account 1","account 2"]}`,
 			)
-		})
-		DeferCleanup(func() {
-			dcService.WailsApp.Event.Off(handlers.SessionConfirmPromptEventName)
 		})
 
 		// Wait for request to complete before trying to parse & check the response
@@ -676,3 +664,25 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		Expect(respData.Name).To(Equal("wrong_confirm_code"))
 	})
 })
+
+// CreateSessionConfirmPostReqHawkHeader creates a new Hawk authentication
+// header for a `/transaction/sign` request
+func CreateSessionConfirmPostReqHawkHeader(sess *session.Session) (hawkHeader string) {
+	By("Creating Hawk request header")
+	sessionSharedKey, err := sess.SharedKey()
+	Expect(err).NotTo(HaveOccurred())
+	nonce, err := hawk.Nonce(4) // Generate nonce that is 4 bytes long
+	Expect(err).NotTo(HaveOccurred())
+	hawkClient := hawk.NewClient(
+		&hawk.Credential{
+			ID:  base64.StdEncoding.EncodeToString(sess.ID().Bytes()),
+			Key: base64.StdEncoding.EncodeToString(sessionSharedKey),
+			Alg: hawk.SHA256,
+		},
+		&hawk.Option{TimeStamp: time.Now().Unix(), Nonce: nonce},
+	)
+	Expect(err).NotTo(HaveOccurred())
+	hawkHeader, err = hawkClient.Header("POST", txnSignPostUri)
+	Expect(err).NotTo(HaveOccurred())
+	return
+}
