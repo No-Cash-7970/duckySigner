@@ -388,12 +388,14 @@ components:
           format: base64
           description: >-
             Msgpack encoding of a single algod `Transaction` object
-        public_key:
-          $ref: '#/components/schemas/Curve25519PublicKey'
+        signer:
           description: >-
-            Overrides the default account used to sign the transaction. The
-            default account used to sign the transaction is the authorized
-            account of the sender of the transaction.
+            Address of the account to use to sign the transaction. Overrides
+            the default. The default account used to sign the transaction is the
+            authorized account of the sender of the transaction.
+          type: string
+          minLength: 58
+          maxLength: 58
     MultisigSignRequest:
       description: Data needed to sign a single multisignature transaction
       required:
