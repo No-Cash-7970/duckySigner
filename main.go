@@ -49,7 +49,11 @@ func main() {
 	}
 	// Clean up KMD when application terminates and we're returning from this
 	// main function
-	defer kmdService.CleanUp()
+	defer func() {
+		if err := kmdService.CleanUp(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// Create dApp connect service
 	dcService := &services.DappConnectService{
@@ -59,7 +63,11 @@ func main() {
 	}
 	// Clean up dApp connect service when application terminates and we're
 	// returning from this main function
-	defer dcService.CleanUp()
+	defer func() {
+		if err := dcService.CleanUp(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.

@@ -153,14 +153,16 @@ func (dcs *DappConnectService) IsOn() bool {
 	return dcs.serverRunning
 }
 
-// CleanUp end memory enclave sessions and release resources used by this dApp
-// connection service
-//
+// CleanUp performs various operations to clean up and release resources used by
+// the dApp connection service.
 // FOR THE BACKEND ONLY
-func (dcs *DappConnectService) CleanUp() {
-	// Purge the MemGuard session
-	defer memguard.Purge()
+func (dcs *DappConnectService) CleanUp() error {
+	/* Purge the MemGuard session */
+	memguard.Purge()
+
 	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
+
+	return nil
 }
 
 // setupServerRoutes declares the server routes

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/awnumar/memguard"
 	logging "github.com/sirupsen/logrus"
 
+	"duckysigner/internal/dapp_connect/session"
 	"duckysigner/internal/kmd/config"
 	"duckysigner/internal/kmd/wallet"
 	"duckysigner/internal/kmd/wallet/driver"
@@ -270,14 +272,47 @@ func (service *KMDService) CheckWalletPassword(walletID, password string) error 
 // 	return nil
 // }
 
-// CleanUp end memory enclave sessions and release resources used by this KMD
-// service
-//
+// CleanUp performs various operations to clean up and release resources used by
+// the KMD service.
 // FOR THE BACKEND ONLY
-func (service *KMDService) CleanUp() {
-	// Purge the MemGuard session
-	defer memguard.Purge()
+func (service *KMDService) CleanUp() error {
+	/* Purge the MemGuard session */
+	memguard.Purge()
+
+	/* Remove dApp connect session confirmation files in all wallets */
+	walletMetas, err := service.ListWallets()
+	if err != nil {
+		return err
+	}
+	// Remove dApp connect session confirmation file in each wallet (if it
+	// exists)
+	for _, wm := range walletMetas {
+		var confirmsPath string
+		// Calculate the path of the wallet directory
+		if service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir != "" {
+			confirmsPath = filepath.Join(
+				service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir,
+				string(wm.ID),
+				session.DefaultConfirmsFile,
+			)
+		} else {
+			confirmsPath = filepath.Join(
+				service.Config.DataDir,
+				"parquet_wallets",
+				string(wm.ID),
+				session.DefaultConfirmsFile,
+			)
+		}
+		// Delete dApp connect session confirmation file
+		err := os.Remove(confirmsPath)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+
 	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
+
+	return nil
 }
 
 // init initializes KMD configuration and drivers for use if it has not been
