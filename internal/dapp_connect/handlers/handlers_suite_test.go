@@ -47,7 +47,7 @@ func setUpDcService(port string, mockSessionKey string) {
 		// Make sure to use a port that is not used in another test so the
 		// tests can be run in parallel
 		ServerAddr:       ":" + port,
-		LogLevel:         log.DEBUG,
+		LogLevel:         log.ERROR,
 		HideServerBanner: true,
 		HideServerPort:   true,
 		WailsApp: application.New(application.Options{
