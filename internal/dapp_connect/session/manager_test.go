@@ -266,7 +266,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappName   string
 				storedDappURL    string
 				storedDappDesc   string
-				storedDappIcon   []byte
+				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
@@ -297,7 +297,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp URL")
 			Expect(storedDappDesc).To(Equal(testDappData.Description),
 				"Stored session has correct dApp description")
-			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
+			Expect(storedDappIcon).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
 			Expect(storedAddrs.Get()).To(HaveLen(0),
 				"Stored session has correct number of addresses")
@@ -367,7 +367,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappName   string
 				storedDappURL    string
 				storedDappDesc   string
-				storedDappIcon   []byte
+				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(
@@ -401,7 +401,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp URL")
 			Expect(storedDappDesc).To(Equal(testDappData.Description),
 				"Stored session has correct dApp description")
-			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
+			Expect(storedDappIcon).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
 			Expect(storedAddrs.Get()).To(HaveLen(0),
 				"Stored session has correct number of addresses")
@@ -451,7 +451,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappName   string
 				storedDappURL    string
 				storedDappDesc   string
-				storedDappIcon   []byte
+				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
 			storedSessionRow := db.QueryRow(fmt.Sprintf(
@@ -482,7 +482,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct dApp URL")
 			Expect(storedDappDesc).To(Equal(testDappData.Description),
 				"Stored session has correct dApp description")
-			Expect(b64encoder.EncodeToString(storedDappIcon)).To(Equal(testDappData.Icon),
+			Expect(storedDappIcon).To(Equal(testDappData.Icon),
 				"Stored session has correct dApp icon")
 			Expect(storedAddrs.Get()).To(HaveLen(0),
 				"Stored session has correct number of addresses")

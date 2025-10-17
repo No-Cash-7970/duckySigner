@@ -101,7 +101,7 @@ CREATE TABLE sessions (
     dapp_name VARCHAR,
     dapp_url VARCHAR,
     dapp_desc VARCHAR,
-    dapp_icon BLOB,
+    dapp_icon VARCHAR,
     addrs VARCHAR[],
 );
 `
@@ -359,7 +359,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappName        string
 		retrievedDappURL         string
 		retrievedDappDesc        string
-		retrievedDappIcon        []byte
+		retrievedDappIcon        string
 		retrievedAddrs           duckdb.Composite[[]string]
 	)
 	sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, sessionsFilePath), sessionId)
@@ -431,7 +431,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			retrievedDappName        string
 			retrievedDappURL         string
 			retrievedDappDesc        string
-			retrievedDappIcon        []byte
+			retrievedDappIcon        string
 			retrievedAddrs           duckdb.Composite[[]string]
 		)
 
@@ -507,11 +507,6 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	} else {
 		dappData = session.dappData
 	}
-	// The dApp icon needs to be stored as bytes, so decode the base64
-	dappIconB64, decodeErr := b64Encoder.DecodeString(dappData.Icon)
-	if decodeErr != nil {
-		return decodeErr
-	}
 
 	// Create temporary table in memory
 	_, err = db.Exec(sessionsCreateTblSQL)
@@ -531,7 +526,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		dappData.Name,
 		dappData.URL,
 		dappData.Description,
-		dappIconB64,
+		dappData.Icon,
 		session.addrs,
 	)
 	if err != nil {
@@ -1080,7 +1075,7 @@ func (sm *Manager) rowToSession(
 	dappName string,
 	dappURL string,
 	dappDesc string,
-	dappIcon []byte,
+	dappIcon string,
 	addrs []string,
 ) (*Session, error) {
 	// Convert session key bytes to an ECDH private key
@@ -1108,7 +1103,7 @@ func (sm *Manager) rowToSession(
 			Name:        dappName,
 			URL:         dappURL,
 			Description: dappDesc,
-			Icon:        base64.StdEncoding.EncodeToString(dappIcon),
+			Icon:        dappIcon,
 		},
 		addrs: addrs,
 	}, nil

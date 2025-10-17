@@ -29,8 +29,8 @@ type DappData struct {
 	URL string `json:"url,omitempty" validate:"omitempty,uri"`
 	// Description of the app
 	Description string `json:"desc,omitempty"`
-	// Icon for the app connecting to wallet as a Base64 encoded JPEG, PNG or
-	// SVG data URI
+	// Icon for the app connecting to wallet as a data URI for an image (JPEG,
+	// PNG or SVG)
 	Icon string `json:"icon,omitempty"`
 }
 
