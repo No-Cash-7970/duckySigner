@@ -139,6 +139,23 @@ func main() {
 		app.Event.Emit("session_confirm_prompt_load", e.Data)
 	})
 
+	app.Event.On("txn_sign_prompt", func(e *application.CustomEvent) {
+		app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title: "Sign Transaction",
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+			// BackgroundColour: application.NewRGB(27, 38, 54),
+			URL:    "/txn-sign-approval",
+			Width:  512,
+			Height: 700,
+		})
+		// Send event to load contents in window
+		app.Event.Emit("txn_sign_prompt_load", e.Data)
+	})
+
 	// Run the application. This blocks until the application has been exited.
 	// If an error occurred while running the application, log it and exit.
 	if err := app.Run(); err != nil {
