@@ -127,7 +127,7 @@
   }
 
   function saveTxnFile() {
-    Events.Emit({ name: 'saveFile', data: signedTxnB64 })
+    Events.Emit('saveFile', signedTxnB64)
     resetThings();
   }
 </script>
