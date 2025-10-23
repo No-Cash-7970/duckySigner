@@ -1,0 +1,23 @@
+{
+  "name": "dapp-connect-client-js",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "packageManager": "yarn@4.10.3",
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.15",
+    "@txnlab/use-wallet": "^4.3.1",
+    "algosdk": "^3.5.2",
+    "tailwindcss": "^4.1.15",
+    "typescript": "~5.9.3",
+    "vite": "npm:rolldown-vite@7.1.14"
+  },
+  "resolutions": {
+    "vite": "npm:rolldown-vite@7.1.14"
+  }
+}
