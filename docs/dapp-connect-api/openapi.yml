@@ -265,6 +265,37 @@ paths:
           $ref: '#/components/responses/RequestTimeout'
         default:
           $ref: '#/components/responses/UnexpectedError'
+  /session/end:
+    get:
+      operationId: sessionEnd
+      summary: End an established session
+      description: >-
+        Terminate the established session that is used to make this
+        authenticated request. After the session is terminated, the session
+        authentication credentials will be invalid.
+      tags:
+        - Session
+        - Authentication Required
+        - All
+      responses:
+        200:
+          description: The session has been terminated
+          content:
+            application/json:
+              example: >+
+                OK
+          headers:
+            Server-Authorization:
+              $ref: '#/components/headers/HawkServerAuth'
+        401:
+          $ref: '#/components/responses/Unauthorized'
+          description: >-
+            The authentication for the request is invalid. This could be because
+            the authentication header is invalid (e.g. improper formatting,
+            invalid MAC) or the session used for authentication is invalid (e.g.
+            session expired).
+        default:
+          $ref: '#/components/responses/UnexpectedError'
   /transaction/sign:
     post:
       operationId: txnSign
