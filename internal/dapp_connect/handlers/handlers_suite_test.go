@@ -39,6 +39,7 @@ const rootGetPort = "1384"
 const sessionInitPostPort = "1385"
 const sessionConfirmPostPort = "1386"
 const transactionSignPostPort = "1387"
+const sessionEndGetPort = "1388"
 
 func setUpDcService(port string, mockSessionKey string) {
 	walletDirName := ".test_dc_handlers_" + port
