@@ -14,7 +14,7 @@ import (
 )
 
 // The trailing slash is needed
-const SessionEndGetUri = "http://localhost:" + sessionEndGetPort + "/"
+const SessionEndGetUri = "http://localhost:" + sessionEndGetPort + "/session/end"
 
 var _ = Describe("GET /session/end", Ordered, func() {
 	// Pre-generated keys for dApp connect session
@@ -27,7 +27,6 @@ var _ = Describe("GET /session/end", Ordered, func() {
 	)
 	var sessionManager *session.Manager
 	var testSession *session.Session
-	var hawkHeader string
 
 	BeforeAll(func() {
 		By("Setting up dApp connect server")
@@ -88,7 +87,26 @@ var _ = Describe("GET /session/end", Ordered, func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("responds with success with ending session that does not exist", func() {
+	It("fails if session used to authenticate does not exist", func() {
+		// NOTE: The test session should have been deleted in the last test
+
+		By("Creating Hawk request header")
+		sessionSharedKey, err := testSession.SharedKey()
+		Expect(err).NotTo(HaveOccurred())
+		nonce, err := hawk.Nonce(4) // Generate nonce that is 4 bytes long
+		Expect(err).NotTo(HaveOccurred())
+		hawkClient := hawk.NewClient(
+			&hawk.Credential{
+				ID:  base64.StdEncoding.EncodeToString(testSession.ID().Bytes()),
+				Key: base64.StdEncoding.EncodeToString(sessionSharedKey),
+				Alg: hawk.SHA256,
+			},
+			&hawk.Option{TimeStamp: time.Now().Unix(), Nonce: nonce},
+		)
+		Expect(err).NotTo(HaveOccurred())
+		hawkHeader, err := hawkClient.Header("GET", SessionEndGetUri)
+		Expect(err).NotTo(HaveOccurred())
+
 		By("Making an authenticated request")
 		req, err := http.NewRequest("GET", SessionEndGetUri, nil)
 		Expect(err).NotTo(HaveOccurred())
@@ -96,10 +114,8 @@ var _ = Describe("GET /session/end", Ordered, func() {
 		resp, err := (&http.Client{Timeout: 1 * time.Minute}).Do(req)
 		Expect(err).NotTo(HaveOccurred())
 
-		By("Processing and checking response from server")
-		body, err := getResponseBody(resp)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(string(body)).To(Equal(`"OK"` + "\n"))
+		By("Checking response status code")
+		Expect(resp.StatusCode).To(Equal(401))
 	})
 
 	It("fails if request is not authenticated", func() {

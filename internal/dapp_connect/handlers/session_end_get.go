@@ -26,7 +26,7 @@ func SessionEndGet(
 				SessionManager: sessionManager,
 			},
 		}
-		// Hawk authentication (optional)
+		// Hawk authentication
 		hawkServer, cred, apiErr := mw.HawkAuth(nil, &hawkOpt)
 		if apiErr != nil {
 			// Set WWW-Authenticate header

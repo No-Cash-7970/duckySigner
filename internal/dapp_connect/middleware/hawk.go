@@ -3,6 +3,7 @@ package middleware
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -140,6 +141,9 @@ func (store SessionCredentialStore) GetCredential(id string) (*hawk.Credential, 
 	session, err := store.SessionManager.GetSession(id, mek)
 	if err != nil {
 		return nil, err
+	}
+	if session == nil {
+		return nil, errors.New("session does not exist")
 	}
 
 	// Derive shared key
