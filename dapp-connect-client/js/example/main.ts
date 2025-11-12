@@ -1,7 +1,7 @@
 import './style.css'
 import typescriptLogo from './typescript.svg'
 import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import { setupCounter } from '../example/counter.ts'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div class="max-w-7xl p-8 text-center self-center">
