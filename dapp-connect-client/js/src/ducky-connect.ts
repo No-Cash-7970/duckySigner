@@ -54,7 +54,14 @@ interface SessionConfirmationInfo {
 }
 
 /** Information regarding a session that is to be stored into local storage */
-export interface StoredSessionInfo extends SessionInfo {
+export interface StoredSessionInfo {
+  /** Base64-encoded Elliptic-curve Diffie-Hellman (ECDH) public key that is to be used to identify
+   * the dApp to the DApp. It is referred to as the "dApp ID" in some other documentation. More than
+   * one session may use the same connect ID/key.
+   */
+  connectId: string
+  /** Information about the session */
+  session: SessionInfo
   /** Information about the dapp this session is for */
   dapp: DappInfo
   /** The connect server URL. If not set, the default (localhost:1323) is used. */
@@ -65,7 +72,7 @@ export interface ConnectOptions {
   /** Information about the dApp connecting to the wallet */
   dapp: DappInfo
   /** The base URL to the wallet's connect server */
-  serverBaseURL?: string
+  serverURL?: string
   /** Function for displaying the confirmation code */
   confirmCodeDisplayFn?: (code: string) => void
 }
@@ -77,7 +84,7 @@ export class DuckyConnect {
   #confirmCodeDisplayFn: (code: string) => void
 
   constructor(options: ConnectOptions) {
-    this.#baseURL = options.serverBaseURL ?? DEFAULT_SERVER_BASE_URL
+    this.#baseURL = options.serverURL ?? DEFAULT_SERVER_BASE_URL
     this.#dappInfo = options.dapp
     this.#confirmCodeDisplayFn = options.confirmCodeDisplayFn ?? ((code: string) => alert(`Confirmation code: ${code}`))
   }
@@ -113,10 +120,9 @@ export class DuckyConnect {
     return {id: '', exp: new Date, addrs: []}
   }
 
-  /** Retrieve session data from local storage */
-  retrieveSessionData(): StoredSessionInfo|null {
+  retrieveSession(): StoredSessionInfo|null {
     // TODO
-    return {id: '', exp: new Date, addrs: [], dapp: {name: ''}}
+    return {connectId: '', session: {id: '', exp: new Date, addrs: []}, dapp: {name: ''}}
   }
 
   /** End the current established session by contacting the server, if possible */
@@ -124,8 +130,7 @@ export class DuckyConnect {
     // TODO
   }
 
-  /** Securely store the given session data into local storage */
-  #storeSession(sessionData: SessionInfo) {
+  #storeSession(sessionInfo: SessionInfo) {
     // TODO
   }
 

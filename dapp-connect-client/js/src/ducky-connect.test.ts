@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { DuckyConnect, DEFAULT_SERVER_BASE_URL } from './ducky-connect'
+import { DuckyConnect, DEFAULT_SERVER_BASE_URL, type StoredSessionInfo } from './ducky-connect'
 import algosdk from 'algosdk'
 
 const fetchSpy = vi.spyOn(globalThis, 'fetch')
@@ -46,7 +46,7 @@ describe('Ducky Connect class', () => {
       expect(session.id).toBe('XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=')
       expect(Math.floor(session.exp.getTime() / 1000)).toBe(1760591204)
       expect(session.addrs).toBe(['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'])
-      expect(dc.retrieveSessionData()).not.toBeNull()
+      expect(dc.retrieveSession()).not.toBeNull()
     })
 
     it.skip('throws error when session initialization fails', async () => {
@@ -107,28 +107,31 @@ describe('Ducky Connect class', () => {
     })
   })
 
-  describe('retrieveSessionData()', () => {
-    it.skip('returns stored session data, if it exists', () => {
-      const sessionDataToBeStored = {
-        id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
-        exp: 1760591204,
-        addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
+  describe('retrieveSession()', () => {
+    it.skip('returns stored session information, if it exists', () => {
+      const sessionInfoToBeStored: StoredSessionInfo = {
+        connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
+        session: {
+          id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
+          exp: new Date(1760591204 * 1000),
+          addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
+        },
         dapp: { name: 'Test DApp' },
       }
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const dc = new DuckyConnect({dapp: {name: ''}})
-      const storedSession = dc.retrieveSessionData()
-      expect(storedSession?.id).toBe(sessionDataToBeStored.id)
-      expect(Math.floor((storedSession?.exp.getTime() ?? 0) / 1000)).toBe(sessionDataToBeStored.exp)
-      expect(storedSession?.addrs).toBe(sessionDataToBeStored.addrs)
-      expect(storedSession?.dapp.name).toBe(sessionDataToBeStored.dapp.name)
+      const storedSession = dc.retrieveSession()
+      expect(storedSession?.session.id).toBe(sessionInfoToBeStored.session.id)
+      expect(storedSession?.session.exp).toBe(sessionInfoToBeStored.session.exp)
+      expect(storedSession?.session.addrs).toBe(sessionInfoToBeStored.session.addrs)
+      expect(storedSession?.dapp.name).toBe(sessionInfoToBeStored.dapp.name)
     })
 
-    it.skip('returns null if there is no stored session data', () => {
+    it.skip('returns null if there is no stored session information', () => {
       const dc = new DuckyConnect({dapp: {name: ''}})
-      expect(dc.retrieveSessionData()).toBeNull()
+      expect(dc.retrieveSession()).toBeNull()
     })
   })
 
@@ -142,14 +145,14 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const dc = new DuckyConnect({dapp: { name: 'Test DApp'}})
       await dc.endSession()
-      expect(dc.retrieveSessionData()).toBeNull()
+      expect(dc.retrieveSession()).toBeNull()
     })
 
-    it.skip('still removes stored session after contacting server fails', async () => {
+    it.skip('still removes stored session information after contacting server fails', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${DEFAULT_SERVER_BASE_URL}/session/end`) {
@@ -158,11 +161,11 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const dc = new DuckyConnect({dapp: { name: 'Test DApp'}})
       await dc.endSession()
-      expect(dc.retrieveSessionData()).toBeNull()
+      expect(dc.retrieveSession()).toBeNull()
     })
   })
 
@@ -181,7 +184,7 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
@@ -217,7 +220,7 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
@@ -256,7 +259,7 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      // TODO: Set stored session data in local storage
+      // TODO: Set stored session info in local storage
 
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
