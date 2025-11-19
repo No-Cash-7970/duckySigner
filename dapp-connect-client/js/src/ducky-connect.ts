@@ -139,6 +139,33 @@ export class DuckyConnect {
     // TODO
   }
 
+  /** Store (and maybe generate) connect key
+   *
+   * Securely store the given Base64-encoded Elliptic-curve Diffie-Hellman (ECDH) secret key
+   * ("connect key") that is to be used to identify the dApp to the DApp Connect server. A connect
+   * key is required to create and use a session. The connect key may be referred to as the "dApp
+   * key" in other documentation.
+   *
+   * @param key Base64-encoded ECDH secret key for the dApp to store. If no key is given, one is
+   *            generated
+   */
+  #storeConnectKey(key: string = '') {
+    // TODO
+  }
+
+  /** Get the connect key from secure storage
+   * @return Base64-encoded connect key
+   */
+  #retrieveConnectKey(): string {
+    // TODO
+    return ''
+  }
+
+  /** Remove the connect key from secure storage */
+  #removeConnectKey() {
+    // TODO
+  }
+
   /** Sign the given transaction */
   async signTransaction(txn: algosdk.Transaction, signerAddr?: string) {
     // TODO
