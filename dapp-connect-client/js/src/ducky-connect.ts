@@ -68,6 +68,7 @@ export interface StoredSessionInfo {
   serverURL?: string
 }
 
+/** Options for connecting to DuckySigner */
 export interface ConnectOptions {
   /** Information about the dApp connecting to the wallet */
   dapp: DappInfo
@@ -89,7 +90,10 @@ export class DuckyConnect {
     this.#confirmCodeDisplayFn = options.confirmCodeDisplayFn ?? ((code: string) => alert(`Confirmation code: ${code}`))
   }
 
-  /** Create a new dApp connect session that can then be used for other actions (e.g. signing a transaction) */
+  /** Create a new dApp connect session that can then be used for other actions (e.g. signing a
+   * transaction)
+   * @return The data for the newly established session
+   */
   async establishSession() {
     let confirmData = await this.#initializeSession()
     let sessionData = await this.#confirmSession(confirmData)
@@ -97,7 +101,9 @@ export class DuckyConnect {
     return sessionData
   }
 
-  /** Create and initialize a new session with the dApp connect server */
+  /** Create and initialize a new session with the dApp connect server
+   * @return Information needed to confirm the newly initialized session
+   */
   async #initializeSession(): Promise<SessionConfirmationInfo> {
     // TODO: Generate dApp ID and key & store key
 
@@ -108,7 +114,12 @@ export class DuckyConnect {
     return {id: '', code: '', token: '', exp: new Date}
   }
 
-  /** Confirm an initialized session to complete the establishment of the session with the dApp connect server */
+  /** Confirm an initialized session to complete the establishment of the session with the dApp
+   * connect server
+   * @param sessionConfirm Confirmation information about the initialized session. Should be what is
+   *                       returned by the `#initializeSession()` method
+   * @return Information about the newly confirmed (established) session
+   */
   async #confirmSession(sessionConfirm: SessionConfirmationInfo): Promise<SessionInfo> {
     // TODO: Make request to server
       // On error: Log error and return
@@ -120,16 +131,23 @@ export class DuckyConnect {
     return {id: '', exp: new Date, addrs: []}
   }
 
+  /** Retrieve session data from local storage
+   * @return Information about the current established session being used
+   */
   retrieveSession(): StoredSessionInfo|null {
     // TODO
     return {connectId: '', session: {id: '', exp: new Date, addrs: []}, dapp: {name: ''}}
   }
 
-  /** End the current established session by contacting the server, if possible */
+  /** End the current established session by contacting the server, if possible. */
   async endSession() {
-    // TODO
+    // TODO: Remove stored session
+    // TODO: Remove dApp key?
   }
 
+  /** Store the given session information into local storage
+   * @param Session information to store
+   */
   #storeSession(sessionInfo: SessionInfo) {
     // TODO
   }
