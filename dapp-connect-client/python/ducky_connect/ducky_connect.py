@@ -79,10 +79,16 @@ class __SessionConfirmationInfo:
     exp: datetime.datetime
 
 @dataclass
-class StoredSessionInfo(SessionInfo):
+class StoredSessionInfo:
     """Information regarding a session that is to be stored into a file.
 
-    Properties (in addition to `SessionInfo` properties):
+    Properties:
+        connect_id -- Base64-encoded Elliptic-curve Diffie-Hellman (ECDH) public key \
+                      that is to be used to identify the dApp to the DApp Connect \
+                      Server. It is referred to as the "dApp ID" in some other \
+                      documentation. More than one session may use the same connect \
+                      ID/key.
+        session -- Information about the session
         dapp -- Information about the dapp this session is for
         server_url -- Connect server URL. If not set, the default (localhost:1323) is \
                       used. (default: {DEFAULT_SERVER_BASE_URL})
@@ -90,6 +96,8 @@ class StoredSessionInfo(SessionInfo):
                      established session
     """
 
+    connect_id: str
+    session: SessionInfo
     dapp: DappInfo
     server_url = DEFAULT_SERVER_BASE_URL
     file_path = DEFAULT_SESSION_FILE_PATH
@@ -136,7 +144,7 @@ class DuckyConnect:
         transaction)
 
         Returns:
-            Information about the newly established session
+            Information about the newly confirmed (established) session
         """
         pass
 
@@ -158,10 +166,10 @@ class DuckyConnect:
         Arguments:
             session_confirm -- Confirmation information about the initialized session. \
                                Should be what is returned by the \
-                               `_initialize_session()` method.
+                               `__initialize_session()` method.
 
         Returns:
-            Information about the established session.
+            Information about the current established session being used.
         """
         pass
 
@@ -196,12 +204,13 @@ class DuckyConnect:
         """Remove the stored session information."""
         pass
 
-    def __store_dapp_key(key: str = '') -> None:
-        """Store (and maybe generate) dApp secret key.
+    def __store_connect_key(key: str = '') -> None:
+        """Store (and maybe generate) connect key.
 
         Securely store the given Base64-encoded Elliptic-curve Diffie-Hellman (ECDH)
-        secret key that is to be used to identify the dApp to the DApp Connect server.
-        The DApp secret key is required to create and use a session.
+        secret key ("connect key") that is to be used to identify the dApp to the DApp
+        Connect server. A connect key is required to create and use a session. The
+        connect key may be referred to as the "dApp key" in other documentation.
 
         Keyword Arguments:
             key -- Base64-encoded ECDH secret key for the dApp to store. If no key is \
@@ -209,16 +218,16 @@ class DuckyConnect:
         """
         pass
 
-    def __retrieve_dapp_key() -> str:
-        """Get the dApp secret key from secure storage.
+    def __retrieve_connect_key() -> str:
+        """Get the connect key from secure storage.
 
         Returns:
-            Base64-encoded dApp secret key
+            Base64-encoded connect key
         """
         pass
 
-    def __remove_dapp_key() -> None:
-        """Remove the dApp secret key from secure storage."""
+    def __remove_connect_key() -> None:
+        """Remove the connect key from secure storage."""
         pass
 
     def sign_transaction(txn: transaction.Transaction, signer_addr: str = ''):
