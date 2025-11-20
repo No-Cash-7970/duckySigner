@@ -6,6 +6,8 @@ export const DEFAULT_SERVER_BASE_URL = 'http://localhost:1323'
 export const SESSION_INIT_ENDPOINT = '/session/init'
 /** The endpoint path for confirming an initialized session */
 export const SESSION_CONFIRM_ENDPOINT = '/session/confirm'
+/** The endpoint path for ending a session */
+export const SESSION_END_ENDPOINT = '/session/end'
 /** The endpoint path for signing a transaction */
 export const SIGN_TXN_ENDPOINT = '/transaction/sign'
 
