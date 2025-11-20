@@ -4,9 +4,9 @@ A collection of utilities and classes for connecting to DApp Connect server for
 DuckySigner wallet.
 """
 
-import datetime
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from algosdk import transaction
 
@@ -44,9 +44,9 @@ class DappInfo:
     """
 
     name: str
-    url = ''
-    desc = ''
-    icon = ''
+    url: str = ''
+    desc: str = ''
+    icon: str = ''
 
 @dataclass
 class SessionInfo:
@@ -61,7 +61,7 @@ class SessionInfo:
     """
 
     id: str
-    exp: datetime.datetime
+    exp: datetime
     addrs: tuple[str]
 
 @dataclass
@@ -82,7 +82,7 @@ class __SessionConfirmationInfo:
     id: str
     code: str
     token: str
-    exp: datetime.datetime
+    exp: datetime
 
 @dataclass
 class StoredSessionInfo:
@@ -105,8 +105,8 @@ class StoredSessionInfo:
     connect_id: str
     session: SessionInfo
     dapp: DappInfo
-    server_url = DEFAULT_SERVER_BASE_URL
-    file_path = DEFAULT_SESSION_FILE_PATH
+    server_url: str = DEFAULT_SERVER_BASE_URL
+    file_path: str = DEFAULT_SESSION_FILE_PATH
 
 @dataclass
 class ConnectOptions:
@@ -122,9 +122,9 @@ class ConnectOptions:
     """
 
     dapp: DappInfo
-    server_url = DEFAULT_SERVER_BASE_URL
-    session_file_path = DEFAULT_SESSION_FILE_PATH
-    confirm_code_display_fn: Callable[[str], None]
+    server_url: str = DEFAULT_SERVER_BASE_URL
+    session_file_path: str = DEFAULT_SESSION_FILE_PATH
+    confirm_code_display_fn: Callable[[str], None] = lambda code: print(code)
 
 class DuckyConnect:
     """Class for connecting to and interacting with a DApp Connect server."""
@@ -179,7 +179,7 @@ class DuckyConnect:
         """
         pass
 
-    def retrieve_session() -> StoredSessionInfo:
+    def retrieve_session() -> StoredSessionInfo | None:
         """Retrieve session data from local storage.
 
         Returns:
@@ -236,7 +236,10 @@ class DuckyConnect:
         """Remove the connect key from secure storage."""
         pass
 
-    def sign_transaction(txn: transaction.Transaction, signer_addr: str = ''):
+    def sign_transaction(
+        txn: transaction.Transaction,
+        signer_addr: str = '',
+    ) -> transaction.SignedTransaction:
         """Sign the given transaction.
 
         Arguments:
