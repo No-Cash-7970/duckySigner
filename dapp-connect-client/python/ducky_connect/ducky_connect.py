@@ -10,17 +10,23 @@ from dataclasses import dataclass
 
 from algosdk import transaction
 
-# The default base URL to the wallet connect server
 DEFAULT_SERVER_BASE_URL = 'http://localhost:1323'
-# The default file path to the where information of an established session is stored
-DEFAULT_SESSION_FILE_PATH = './.dc_session_info'
+"""The default base URL to the wallet connect server"""
 
-# The endpoint path for initializing a session
+DEFAULT_SESSION_FILE_PATH = './.dc_session_info'
+"""The default file path to the where information of an established session is stored"""
+
 SESSION_INIT_ENDPOINT = '/session/init'
-# The endpoint path for confirming an initialized session
+"""The endpoint path for initializing a session"""
+
 SESSION_CONFIRM_ENDPOINT = '/session/confirm'
-# The endpoint path for signing a transaction
+"""The endpoint path for confirming an initialized session"""
+
+SESSION_END_ENDPOINT = '/session/end'
+"""The endpoint path for ending a session"""
+
 SIGN_TXN_ENDPOINT = '/transaction/sign'
+"""The endpoint path for signing a transaction"""
 
 @dataclass
 class DappInfo:
