@@ -7,7 +7,7 @@
   Events.On('txn_sign_prompt_load', async (e) => {
     // Extract and parse transaction data
     const parsedEvtData: {data: {transaction: string, signer: string}} = JSON.parse(`${e.data}`)
-    const txnByteData = await base64ToBytes(parsedEvtData.data.transaction);
+    const txnByteData = algosdk.base64ToBytes(parsedEvtData.data.transaction);
     txn = algosdk.decodeUnsignedTransaction(txnByteData)
   })
 
@@ -15,11 +15,6 @@
     Events.Emit('txn_sign_response', JSON.stringify([{approved}]))
     Window.Close()
   }
-
-  async function base64ToBytes (base64: string) {
-    const res = await fetch(`data:application/octet-stream;base64,${base64}`);
-    return new Uint8Array(await res.arrayBuffer());
-  };
 </script>
 
 <div class="h-full">

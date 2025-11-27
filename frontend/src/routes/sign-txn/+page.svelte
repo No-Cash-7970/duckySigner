@@ -72,40 +72,9 @@
     txnData = algosdk.encodeJSON(txn, { space: 2 });
   };
 
-  /** Converts bytes as a Uint8Array buffer to data URL.
-   *
-   * Adapted from:
-   * https://developer.mozilla.org/en-US/docs/Glossary/Base64#converting_arbitrary_binary_data
-   *
-   * @param bytes The bytes to convert to a data URL
-   * @param type The MIME type of the data
-   * @returns The bytes in the form of a data URL
-   */
-  export const bytesToDataUrl = async (
-    bytes: Uint8Array,
-    type = 'application/octet-stream'
-  ): Promise<string> => {
-    return await new Promise((resolve, reject) => {
-      const reader = Object.assign(new FileReader(), {
-        onload: () => resolve(reader.result as string),
-        onerror: () => reject(reader.error),
-      });
-      reader.readAsDataURL(new File([bytes as BlobPart], '', { type }));
-    });
-  };
-
-  /** Converts bytes as a Uint8Array buffer to a Base64-encoded string
-   * @param bytes The bytes to convert to a Base64-encoded string
-   * @returns The bytes in the form of a Base64-encoded string
-   */
-  export const bytesToBase64 = async (bytes: Uint8Array) => {
-    const dataUrl = await bytesToDataUrl(bytes);
-    return dataUrl.slice(dataUrl.indexOf(',') + 1);
-  };
-
   async function signTxn() {
     try {
-      const unsignedTxnB64 = await bytesToBase64(txn.toByte());
+      const unsignedTxnB64 = algosdk.bytesToBase64(txn.toByte());
       signedTxnB64 = await KMDService.SessionSignTransaction(unsignedTxnB64, acctAddr);
       // Reset wallet password dialog
       passwordWrong = false;
