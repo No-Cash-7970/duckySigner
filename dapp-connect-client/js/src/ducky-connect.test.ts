@@ -1,18 +1,23 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest'
+import 'fake-indexeddb/auto'
 import * as dc from './ducky-connect'
 import algosdk from 'algosdk'
+import { clear as idbClear, get as idbGet, set as idbSet } from 'idb-keyval'
+import hawk from 'hawk'
 
 const fetchSpy = vi.spyOn(globalThis, 'fetch')
+const hawkClientAuthSpy = vi.spyOn(hawk.client, 'authenticate')
 
 describe('Ducky Connect class', () => {
 
   afterEach(() => {
     fetchSpy.mockReset()
-    // TODO: Clear local storage
+    hawkClientAuthSpy.mockReset()
+    idbClear()
   })
 
   describe('establishSession()', () => {
-    it.skip('creates a new session and returns the session data', async () => {
+    it('creates a new session and returns the session data', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_INIT_ENDPOINT}`) {
@@ -28,29 +33,40 @@ describe('Ducky Connect class', () => {
         }
 
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_CONFIRM_ENDPOINT}`) {
+          hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
           return new Response(
             JSON.stringify({
               id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
               exp: 1760591204,
               addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            {
+              headers: new Headers({
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              })
+            }
           )
         }
 
         return new Response
       })
 
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const confirmCodeDisplayFn = vi.fn()
+      const duckconn = await (new dc.DuckyConnect({
+        dapp: { name: 'Test DApp'},
+        confirmCodeDisplayFn
+      })).init()
       const session = await duckconn.establishSession()
 
+      expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
       expect(session.id).toBe('XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=')
       expect(Math.floor(session.exp.getTime() / 1000)).toBe(1760591204)
-      expect(session.addrs).toBe(['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'])
+      expect(session.addrs).toStrictEqual(['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'])
       expect(duckconn.retrieveSession()).not.toBeNull()
     })
 
-    it.skip('throws error when session initialization fails', async () => {
+    it('throws error when session initialization fails', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_INIT_ENDPOINT}`) {
@@ -74,12 +90,17 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const confirmCodeDisplayFn = vi.fn()
+      const duckconn = await (new dc.DuckyConnect({
+        dapp: { name: 'Test DApp'},
+        confirmCodeDisplayFn
+      })).init()
 
       await expect(() => duckconn.establishSession()).rejects.toThrowError()
+      expect(confirmCodeDisplayFn).not.toBeCalled()
     })
 
-    it.skip('throws error when session confirmation fails', async () => {
+    it('throws error when session confirmation fails', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_INIT_ENDPOINT}`) {
@@ -104,14 +125,19 @@ describe('Ducky Connect class', () => {
         return new Response
       })
 
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const confirmCodeDisplayFn = vi.fn()
+      const duckconn = await (new dc.DuckyConnect({
+        dapp: { name: 'Test DApp'},
+        confirmCodeDisplayFn
+      })).init()
 
       await expect(() => duckconn.establishSession()).rejects.toThrowError()
+      expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
     })
   })
 
   describe('retrieveSession()', () => {
-    it.skip('returns stored session information, if it exists', () => {
+    it.skip('returns stored session information, if it exists', async () => {
       const sessionInfoToBeStored: dc.StoredSessionInfo = {
         connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
         session: {
@@ -124,7 +150,7 @@ describe('Ducky Connect class', () => {
 
       // TODO: Set stored session info in local storage
 
-      const duckconn = new dc.DuckyConnect({dapp: {name: ''}})
+      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
       const storedSession = duckconn.retrieveSession()
 
       expect(storedSession?.connectId).toBe(sessionInfoToBeStored.connectId)
@@ -134,13 +160,21 @@ describe('Ducky Connect class', () => {
       expect(storedSession?.dapp.name).toBe(sessionInfoToBeStored.dapp.name)
     })
 
-    it.skip('returns null if there is no stored session information', () => {
-      const duckconn = new dc.DuckyConnect({dapp: {name: ''}})
+    it.skip('returns null if there is no stored session information', async () => {
+      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
       expect(duckconn.retrieveSession()).toBeNull()
     })
   })
 
   describe('endSession()', () => {
+    beforeAll(async () => {
+      // Create and store a connect ("dapp") key pair
+      idbSet(
+        dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+    })
+
     it.skip('removes stored session after successfully contacting server', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
@@ -152,7 +186,7 @@ describe('Ducky Connect class', () => {
 
       // TODO: Remove stored session info from local storage
 
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
 
       expect(duckconn.retrieveSession()).toBeNull()
@@ -169,7 +203,7 @@ describe('Ducky Connect class', () => {
 
       // TODO: Remove stored session info from local storage
 
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
 
       expect(duckconn.retrieveSession()).toBeNull()
@@ -177,6 +211,14 @@ describe('Ducky Connect class', () => {
   })
 
   describe('signTransaction()', () => {
+    beforeAll(async () => {
+      // Create and store a connect ("dapp") key pair
+      idbSet(
+        dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+    })
+
     it.skip('signs transaction WITHOUT signer address given', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
@@ -206,7 +248,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       const signedTxn = await duckconn.signTransaction(testTxn)
 
       // Check if the correct transaction was signed
@@ -244,7 +286,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       const signedTxn = await duckconn.signTransaction(
         testTxn,
         'VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA'
@@ -283,7 +325,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
       await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
@@ -315,7 +357,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = new dc.DuckyConnect({dapp: { name: 'Test DApp'}})
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
       await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })

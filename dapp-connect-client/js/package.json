@@ -6,13 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "packageManager": "yarn@4.10.3",
   "dependencies": {
     "@tailwindcss/vite": "^4.1.15",
     "@txnlab/use-wallet": "^4.3.1",
     "algosdk": "^3.5.2",
+    "hawk": "^9.0.2",
+    "idb-keyval": "^6.2.2",
     "tailwindcss": "^4.1.15",
     "typescript": "~5.9.3",
     "vite": "npm:rolldown-vite@7.1.14"
@@ -24,7 +29,9 @@
     "@eslint/css": "^0.13.0",
     "@eslint/js": "^9.38.0",
     "@eslint/json": "^0.13.2",
+    "@types/hawk": "^9",
     "eslint": "^9.38.0",
+    "fake-indexeddb": "^6.2.5",
     "globals": "^16.4.0",
     "jiti": "^2.6.1",
     "typescript-eslint": "^8.46.2",

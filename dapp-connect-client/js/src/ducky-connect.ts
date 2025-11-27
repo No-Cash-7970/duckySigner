@@ -1,4 +1,6 @@
 import algosdk from 'algosdk'
+import { del as idbDel, get as idbGet, set as idbSet } from 'idb-keyval'
+import hawk from 'hawk';
 
 /** The default base URL to the wallet connect server */
 export const DEFAULT_SERVER_BASE_URL = 'http://localhost:1323'
@@ -10,6 +12,15 @@ export const SESSION_CONFIRM_ENDPOINT = '/session/confirm'
 export const SESSION_END_ENDPOINT = '/session/end'
 /** The endpoint path for signing a transaction */
 export const SIGN_TXN_ENDPOINT = '/transaction/sign'
+/** The default name in storage for the connect ID/key pair */
+export const DEFAULT_CONNECT_KEY_PAIR_NAME = 'dcDappKeyPair'
+
+/** Error message for when running certain DuckyConnect method before initializing the DuckyConnect
+ * instance
+ */
+const NOT_INIT_ERR_MSG = 'This DuckyConnect instance has not been initialized. Run `init()` first.'
+/** Algorithm used for cryptographic key pairs */
+export const KEY_ALGORITHM = 'X25519'
 
 /** Information about the dApp trying to connect to the wallet. It should be the app using this
  * library.
@@ -59,7 +70,7 @@ interface SessionConfirmationInfo {
 export interface StoredSessionInfo {
   /** Base64-encoded Elliptic-curve Diffie-Hellman (ECDH) public key that is to be used to identify
    * the dApp to the DApp. It is referred to as the "dApp ID" in some other documentation. More than
-   * one session may use the same connect ID/key.
+   * one session may use the same connect ID-key pair.
    */
   connectId: string
   /** Information about the session */
@@ -76,20 +87,57 @@ export interface ConnectOptions {
   dapp: DappInfo
   /** The base URL to the wallet's connect server */
   serverURL?: string
-  /** Function for displaying the confirmation code */
+  /** Function for displaying the confirmation code. If this function throws an error, the request
+   * to confirm the session will not be sent to the connect server.
+   */
   confirmCodeDisplayFn?: (code: string) => void
+  /** Name that is used to refer to the connect key pair (connect ID & connect key) in storage. It
+   * is the non-cryptographic "key" used in the storage key-value pair (the value being the
+   * cryptographic connect key pair).
+   */
+  connectKeyPairName?: string
 }
 
 /** Class for connecting to and interacting with a DuckySigner DApp Connect server */
 export class DuckyConnect {
+  #initialized: boolean = false
+  #connectId: string = ''
+  #connectKeyPair: CryptoKeyPair|undefined
+
   #baseURL: string
   #dappInfo: DappInfo
   #confirmCodeDisplayFn: (code: string) => void
+  #connectKeyPairName: string
 
   constructor(options: ConnectOptions) {
     this.#baseURL = options.serverURL ?? DEFAULT_SERVER_BASE_URL
     this.#dappInfo = options.dapp
-    this.#confirmCodeDisplayFn = options.confirmCodeDisplayFn ?? ((code: string) => alert(`Confirmation code: ${code}`))
+    this.#confirmCodeDisplayFn = options.confirmCodeDisplayFn
+      ?? ((code: string) => alert(`Confirmation code: ${code}`))
+    this.#connectKeyPairName = options.connectKeyPairName ?? DEFAULT_CONNECT_KEY_PAIR_NAME
+  }
+
+  /** Initialize by doing various actions, like retrieving data from storage. Some methods require
+   * this initialization.
+   * @return Instance of this class
+   */
+  async init() {
+    /*
+     * This method is used to get around the fact that running asynchronous methods are not well
+     * suited being in the constructor.
+     */
+
+    // Set the connect key pair to whatever is in storage, or generate a key pair if there is no
+    // pair in storage
+    if (!(this.#connectKeyPair = await this.#retrieveConnectKeyPair())) {
+      this.#connectKeyPair = await this.#newConnectKeyPair()
+    }
+
+    // Set connect ID
+    this.#connectId = await keyToBase64(this.#connectKeyPair.publicKey)
+
+    this.#initialized = true
+    return this
   }
 
   /** Create a new dApp connect session that can then be used for other actions (e.g. signing a
@@ -107,13 +155,31 @@ export class DuckyConnect {
    * @return Information needed to confirm the newly initialized session
    */
   async #initializeSession(): Promise<SessionConfirmationInfo> {
-    // TODO: Generate dApp ID and key & store key
+    if (!this.#initialized) {
+      throw new Error(NOT_INIT_ERR_MSG)
+    }
 
-    // TODO: Make request to server
-      // On error: Log error and return
+    // Make request to server
+    const response = await fetch(`${this.#baseURL}${SESSION_INIT_ENDPOINT}`, {
+      method: 'POST',
+      body: JSON.stringify({'dapp_id': this.#connectId}),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const respJSON = await response.json()
 
-    // TODO: Return session confirmation data
-    return {id: '', code: '', token: '', exp: new Date}
+    if (!response.ok) {
+      // NOTE: An error from the server will have a 'name' and a 'message'
+      console.error('Error from server:', `${respJSON.message} (${respJSON.name})`)
+      throw Error('Session initialization failed')
+    }
+
+    // Return session confirmation data
+    return {
+      id: respJSON.id,
+      code: respJSON.code,
+      token: respJSON.token,
+      exp: new Date(respJSON.exp * 1000)
+    }
   }
 
   /** Confirm an initialized session to complete the establishment of the session with the dApp
@@ -123,21 +189,72 @@ export class DuckyConnect {
    * @return Information about the newly confirmed (established) session
    */
   async #confirmSession(sessionConfirm: SessionConfirmationInfo): Promise<SessionInfo> {
-    // TODO: Make request to server
-      // On error: Log error and return
+    if (!this.#initialized) {
+      throw new Error(NOT_INIT_ERR_MSG)
+    }
 
-    // TODO: Get confirmation code and display code (default with an alert box)
-      // On error: Log error and return
+    const url = `${this.#baseURL}${SESSION_CONFIRM_ENDPOINT}`
+    const reqMethod = 'POST'
+    const reqBody = JSON.stringify({ token: sessionConfirm.token, dapp: this.#dappInfo })
 
-    // TODO: Return new established session data
-    return {id: '', exp: new Date, addrs: []}
+    // Create Hawk header
+    const credentials: hawk.client.Credentials = {
+      id: sessionConfirm.id,
+      key: await deriveSharedKeyB64(
+        this.#connectKeyPair!.privateKey,
+        await base64ToKey(sessionConfirm.id, true), // Convert confirmation ID to public key
+      ),
+      algorithm: 'sha256'
+    }
+    const hawkHeader = hawk.client.header(url, reqMethod, { credentials, payload: reqBody })
+
+    // Show confirmation code
+    this.#confirmCodeDisplayFn(sessionConfirm.code)
+
+    // Make request to server
+    const response = await fetch(url, {
+      method: reqMethod,
+      body: reqBody,
+      headers: {
+        'Content-Type': 'application/json',
+        'Server-Authorization': hawkHeader.header,
+      },
+    })
+    const respText = await response.text()
+    const respJSON = JSON.parse(respText)
+
+    // Verify server response
+    const authResult = hawk.client.authenticate(
+      response as any,
+      credentials,
+      hawkHeader.artifacts,
+      { payload: respText }
+    )
+    // If the response is valid the authentication header is returned, otherwise no headers are
+    // returned or an error is thrown
+    if (Object.keys(authResult.headers).length === 0) {
+      throw new Error('Server response failed verification')
+    }
+
+    if (!response.ok) {
+      // NOTE: An error from the server will have a 'name' and a 'message'
+      console.error('Error from server:', `${respJSON.message} (${respJSON.name})`)
+      throw Error('Session confirmation failed')
+    }
+
+    // Return new established session data
+    return {
+      id: respJSON.id,
+      exp: new Date(respJSON.exp * 1000),
+      addrs: respJSON.addrs
+    }
   }
 
   /** Retrieve session data from local storage
    * @return Information about the current established session being used
    */
   retrieveSession(): StoredSessionInfo|null {
-    // TODO
+    // TODO: Get session data
     return {connectId: '', session: {id: '', exp: new Date, addrs: []}, dapp: {name: ''}}
   }
 
@@ -159,31 +276,72 @@ export class DuckyConnect {
     // TODO
   }
 
-  /** Store (and maybe generate) connect key
+  /** Generate and store connect key pair
    *
-   * Securely store the given Base64-encoded Elliptic-curve Diffie-Hellman (ECDH) secret key
-   * ("connect key") that is to be used to identify the dApp to the DApp Connect server. A connect
-   * key is required to create and use a session. The connect key may be referred to as the "dApp
-   * key" in other documentation.
+   * Securely generate and store an X25519 Elliptic-curve Diffie-Hellman (ECDH) secret key
+   * ("connect key") and its public key ("connect ID"). A connect key (or "dApp key" in other
+   * documentation) is required to create and use a session. If a connect key is already stored,
+   * an error is thrown.
    *
-   * @param key Base64-encoded ECDH secret key for the dApp to store. If no key is given, one is
-   *            generated
+   * Using the key storage method outlined here:
+   * <https://www.w3.org/TR/webcrypto/#concepts-key-storage>
+   *
+   * A [CryptoKey](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey) object is used to
+   * generate and contain the key with the `extractable` option set to `false`. The object is then
+   * stored into IndexedDB, where it can be retrieved later.
+   *
+   * Resources about the IndexedDB key storage method:
+   *
+   * - [Are there any security concerns with storing private keys in browser's javascript?](https://security.stackexchange.com/a/219677)
+   * - [Web Crypto API - Is a non-exactrable CryptoKey in IndexedDB safe enough...?](https://stackoverflow.com/questions/52276862/)
+   * - [SubtleCrypto: generateKey() method](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey)
+   * - [Example of saving a CryptoKey into IndexedDB](https://gist.github.com/saulshanabrook/b74984677bccd08b028b30d9968623f5)
+   *
+   * @return Connect ID and connect key as a key pair
    */
-  #storeConnectKey(key: string = '') {
-    // TODO
+  async #newConnectKeyPair(): Promise<CryptoKeyPair> {
+    // Throw error if connect key pair is already stored
+    if (await this.#retrieveConnectKeyPair() !== undefined) {
+      throw new KeyPairExistsError(
+        `A connect key pair already exists under the name '${this.#connectKeyPairName}'`
+      )
+    }
+
+    // Generate key pair
+    // Some code taken from <https://asecuritysite.com/webcrypto/crypt_x25519_enc>
+    const keyPair = await crypto.subtle.generateKey(
+      KEY_ALGORITHM,
+      false, // non-extractable (very important!)
+      ['deriveBits']
+    ) as CryptoKeyPair
+
+    // Store key pair into IndexedDB
+    await idbSet(this.#connectKeyPairName, keyPair)
+
+    // Set connect ID
+    this.#connectId = await keyToBase64(keyPair.publicKey)
+
+    return keyPair
   }
 
-  /** Get the connect key from secure storage
-   * @return Base64-encoded connect key
+  /** Get the connect key-ID pair from storage
+   * @return Stored connect ID and connect key as a key pair, `undefined` if there is no key pair
+   *         stored under the given `storeName`
    */
-  #retrieveConnectKey(): string {
-    // TODO
-    return ''
+  async #retrieveConnectKeyPair(): Promise<CryptoKeyPair|undefined> {
+    const keyPair = await idbGet<CryptoKeyPair>(this.#connectKeyPairName)
+
+    // Set connect ID if key pair was successfully retrieved
+    if (keyPair) {
+      this.#connectId = await keyToBase64(keyPair.publicKey)
+    }
+
+    return keyPair
   }
 
-  /** Remove the connect key from secure storage */
-  #removeConnectKey() {
-    // TODO
+  /** Remove the connect key-ID pair from storage */
+  #removeConnectKeyPair() {
+    idbDel(this.#connectKeyPairName)
   }
 
   /** Sign the given transaction */
@@ -192,4 +350,47 @@ export class DuckyConnect {
     return algosdk.decodeSignedTransaction(new Uint8Array)
   }
 
+}
+
+class KeyPairExistsError extends Error {}
+
+/** Converts the given public key (or private key, if allowed) to a Base64-encoded string of bytes
+ * @param key Cryptographic key to convert to a Base64-encoded string
+ * @return Key as an Base64-encoded string
+ */
+async function keyToBase64(key: CryptoKey): Promise<string> {
+  if (!key.extractable) {
+    throw new Error('Converting key to Base64 is not allowed')
+  }
+
+  const keyBytes = await crypto.subtle.exportKey('raw', key)
+
+  return algosdk.bytesToBase64(new Uint8Array(keyBytes))
+}
+
+/** Derive the shared key using the given X25519 private and public keys
+ * @param privateKey Secret key
+ * @param publicKey Public key
+ * @returns Shared key as a Base64-encoded string
+ */
+async function deriveSharedKeyB64(privateKey: CryptoKey, publicKey: CryptoKey): Promise<string> {
+  const sharedKey = await crypto.subtle.deriveBits(
+    { name: KEY_ALGORITHM, public: publicKey },
+    privateKey,
+    32,
+  )
+  return algosdk.bytesToBase64(new Uint8Array(sharedKey))
+}
+
+/** Convert a Base64-encoded key into a `CryptoKey` object
+ * @param b64 Base64-encoded string to convert
+ * @param extractable If the key is allowed to be extracted. Should be `true` if the key is a public
+ *                    key and `false` if the key is a private key. Refer to [documentation about
+ *                    `CryptoKey.extractable`](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/extractable)
+ *                    for more information.
+ * @return Key as a `CryptoKey`
+ */
+async function base64ToKey(b64: string, extractable = false): Promise<CryptoKey> {
+  const keyBytes: ArrayBuffer = new Uint8Array(algosdk.base64ToBytes(b64)).buffer
+  return await crypto.subtle.importKey('raw', keyBytes, KEY_ALGORITHM, extractable, [])
 }
