@@ -200,6 +200,7 @@ describe('Ducky Connect class', () => {
       await duckconn.endSession()
 
       expect(await duckconn.retrieveSession()).toBeNull()
+      expect(fetchSpy).toHaveBeenCalledOnce()
     })
 
     it('still removes stored session information after contacting server fails', async () => {
@@ -232,6 +233,87 @@ describe('Ducky Connect class', () => {
       await duckconn.endSession()
 
       expect(await duckconn.retrieveSession()).toBeNull()
+    })
+
+    it('does not attempt to contact the server if specified not to do so', async () => {
+      // Mock the responses to connect server requests
+      fetchSpy.mockImplementation(async url => {
+        if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
+          return new Response('OK', { headers: new Headers({'Content-Type': 'application/json'}) })
+        }
+        return new Response
+      })
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
+
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      await duckconn.endSession(false) // Specify not to contact the server
+
+      expect(await duckconn.retrieveSession()).toBeNull()
+      expect(fetchSpy).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('refreshConnectKeyPair()', () => {
+    const sessionInfoToBeStored: dc.StoredSessionInfo = {
+      connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
+      session: {
+        id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
+        exp: new Date(1760591204 * 1000),
+        addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
+      },
+      dapp: { name: 'Test DApp' },
+      serverURL: dc.DEFAULT_SERVER_BASE_URL,
+    }
+
+    beforeEach(() => {
+      // Mock the responses to connect server requests
+      fetchSpy.mockImplementation(async url => {
+        if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
+          return new Response('OK', { headers: new Headers({'Content-Type': 'application/json'}) })
+        }
+        return new Response
+      })
+    })
+
+    it('replaces the key pair in storage with a newly generated pair', async () => {
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const oldKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
+      await duckconn.refreshConnectKeyPair()
+      const newKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
+
+      expect(oldKeyPair?.publicKey).not.toBe(newKeyPair?.publicKey)
+      expect(await duckconn.retrieveSession()).toBeNull()
+      expect(fetchSpy).toHaveBeenCalledOnce()
+    })
+
+    it('does not attempt to contact the server if specified not to do so', async () => {
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const oldKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
+      await duckconn.refreshConnectKeyPair(false)
+      const newKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
+
+      expect(oldKeyPair?.publicKey).not.toBe(newKeyPair?.publicKey)
+      expect(await duckconn.retrieveSession()).toBeNull()
+      expect(fetchSpy).not.toHaveBeenCalled()
     })
   })
 

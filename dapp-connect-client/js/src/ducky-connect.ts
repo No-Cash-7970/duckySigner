@@ -272,15 +272,19 @@ export class DuckyConnect {
     return sessionData ?? null
   }
 
-  /** End the current established session by contacting the server, if possible. */
-  async endSession() {
+  /** End the current established session by contacting the server, if possible.
+   * @param contactServer If there should be an attempt to contact the connect server so the wallet
+   *                      knows to remove the session data it has stored on its end. It is best
+   *                      practice to contact the server.
+   */
+  async endSession(contactServer=true) {
     if (!this.#initialized) {
       throw new Error(NOT_INIT_ERR_MSG)
     }
 
     const sessionId = (await this.retrieveSession())?.session.id
 
-    if (sessionId) {
+    if (contactServer && sessionId) {
       const url = `${this.#baseURL}${SESSION_END_ENDPOINT}`
       const reqMethod = 'GET'
 
@@ -303,7 +307,8 @@ export class DuckyConnect {
       }
     }
 
-    this.#removeStoredSession()
+    // Remove session from storage
+    idbDel(this.#sessionDataKeyName)
   }
 
   /** Store the given session information into local storage
@@ -339,11 +344,13 @@ export class DuckyConnect {
    * - [SubtleCrypto: generateKey() method](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey)
    * - [Example of saving a CryptoKey into IndexedDB](https://gist.github.com/saulshanabrook/b74984677bccd08b028b30d9968623f5)
    *
+   * @param ignoreExists Ignore if a key pair exists? If true, the existing key pair will be
+   *                     overwritten with a new pair
    * @return Connect ID and connect key as a key pair
    */
-  async #newConnectKeyPair(): Promise<CryptoKeyPair> {
+  async #newConnectKeyPair(ignoreExists=false): Promise<CryptoKeyPair> {
     // Throw error if connect key pair is already stored
-    if (await this.#retrieveConnectKeyPair() !== undefined) {
+    if (!ignoreExists && await this.#retrieveConnectKeyPair() !== undefined) {
       throw new KeyPairExistsError(
         `A connect key pair already exists under the name '${this.#connectKeyPairName}'`
       )
@@ -381,9 +388,18 @@ export class DuckyConnect {
     return keyPair
   }
 
-  /** Remove the connect key-ID pair from storage */
-  #removeConnectKeyPair() {
-    idbDel(this.#connectKeyPairName)
+  /** Generate a new connect key pair and replace the stored key pair with this new one.
+   *
+   * WARNING: This immediately ends the current connect session.
+   *
+   * @param contactServer If there should be an attempt to contact the connect server so the wallet
+   *                      knows to remove the session data it has stored on its end. It is best
+   *                      practice to contact the server.
+   */
+  async refreshConnectKeyPair(contactServer=true) {
+    this.#connectKeyPair = await this.#newConnectKeyPair(true) // Generate new key pair & replace
+    this.#connectId = await keyToBase64(this.#connectKeyPair.publicKey)
+    await this.endSession(contactServer)
   }
 
   /** Sign the given transaction */
