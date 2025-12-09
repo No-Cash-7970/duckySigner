@@ -148,6 +148,7 @@ describe('Ducky Connect class', () => {
           addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
         },
         dapp: { name: 'Test DApp' },
+        serverURL: dc.DEFAULT_SERVER_BASE_URL,
       }
       // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
@@ -177,6 +178,7 @@ describe('Ducky Connect class', () => {
         addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
       },
       dapp: { name: 'Test DApp' },
+      serverURL: dc.DEFAULT_SERVER_BASE_URL,
     }
 
     it('removes stored session after successfully contacting server', async () => {

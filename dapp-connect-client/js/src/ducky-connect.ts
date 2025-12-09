@@ -82,7 +82,7 @@ export interface StoredSessionInfo {
   /** Information about the dapp this session is for */
   dapp: DappInfo
   /** The connect server URL. If not set, the default (localhost:1323) is used. */
-  serverURL?: string
+  serverURL: string
 }
 
 /** Options for connecting to DuckySigner */
@@ -310,12 +310,12 @@ export class DuckyConnect {
    * @param Session information to store
    */
   #storeSession(sessionInfo: SessionInfo) {
-    idbSet(this.#sessionDataKeyName, sessionInfo)
-  }
-
-  /** Remove all session data from local storage */
-  #removeStoredSession() {
-    idbDel(this.#sessionDataKeyName)
+    idbSet(this.#sessionDataKeyName, {
+      connectId: this.#connectId,
+      session: sessionInfo,
+      dapp: this.#dappInfo,
+      serverURL: this.#baseURL,
+    } as StoredSessionInfo)
   }
 
   /** Generate and store connect key pair
