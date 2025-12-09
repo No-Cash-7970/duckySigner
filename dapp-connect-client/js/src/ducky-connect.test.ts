@@ -1,19 +1,21 @@
-import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
 import * as dc from './ducky-connect'
 import algosdk from 'algosdk'
 import { clear as idbClear, get as idbGet, set as idbSet } from 'idb-keyval'
 import hawk from 'hawk'
 
+const consoleWarnSpy = vi.spyOn(globalThis.console, 'warn')
 const fetchSpy = vi.spyOn(globalThis, 'fetch')
 const hawkClientAuthSpy = vi.spyOn(hawk.client, 'authenticate')
 
 describe('Ducky Connect class', () => {
 
-  afterEach(() => {
+  beforeEach(async () => {
+    consoleWarnSpy.mockReset()
     fetchSpy.mockReset()
     hawkClientAuthSpy.mockReset()
-    idbClear()
+    await idbClear()
   })
 
   describe('establishSession()', () => {
@@ -147,8 +149,7 @@ describe('Ducky Connect class', () => {
         },
         dapp: { name: 'Test DApp' },
       }
-
-      // Set stored session info in local storage
+      // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
       const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
@@ -168,15 +169,17 @@ describe('Ducky Connect class', () => {
   })
 
   describe('endSession()', () => {
-    beforeAll(async () => {
-      // Create and store a connect ("dapp") key pair
-      idbSet(
-        dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
-        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
-      )
-    })
+    const sessionInfoToBeStored: dc.StoredSessionInfo = {
+      connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
+      session: {
+        id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
+        exp: new Date(1760591204 * 1000),
+        addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
+      },
+      dapp: { name: 'Test DApp' },
+    }
 
-    it.skip('removes stored session after successfully contacting server', async () => {
+    it('removes stored session after successfully contacting server', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
@@ -184,8 +187,12 @@ describe('Ducky Connect class', () => {
         }
         return new Response
       })
-
-      // TODO: Remove stored session info from local storage
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
@@ -193,7 +200,10 @@ describe('Ducky Connect class', () => {
       expect(await duckconn.retrieveSession()).toBeNull()
     })
 
-    it.skip('still removes stored session information after contacting server fails', async () => {
+    it('still removes stored session information after contacting server fails', async () => {
+      // Silence the console warning output that will appear when running the test
+      consoleWarnSpy.mockImplementation(() => {})
+
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
@@ -201,9 +211,21 @@ describe('Ducky Connect class', () => {
         }
         return new Response
       })
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+        await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
+      )
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
-      // TODO: Remove stored session info from local storage
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      await duckconn.endSession()
 
+      expect(await duckconn.retrieveSession()).toBeNull()
+      expect(consoleWarnSpy).toHaveBeenCalledOnce()
+    })
+
+    it('does not fail if there is no session', async () => {
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
 

@@ -126,14 +126,17 @@ export class DuckyConnect {
     this.#sessionDataKeyName = options.sessionDataKeyName ?? DEFAULT_SESSION_DATA_NAME
   }
 
-  /** Initialize by doing various actions, like retrieving data from storage. Some methods require
-   * this initialization.
+  /** Initialize by doing various actions, like retrieving data from storage.
+   *
+   * NOTE: Any method that accesses the connect key pair require this initialization.
+   *
    * @return Instance of this class
    */
   async init() {
     /*
      * This method is used to get around the fact that running asynchronous methods are not well
-     * suited being in the constructor.
+     * suited being in the constructor. Asynchronous methods are needed for getting and generating a
+     * connect key pair.
      */
 
     // Set the connect key pair to whatever is in storage, or generate a key pair if there is no
@@ -271,8 +274,36 @@ export class DuckyConnect {
 
   /** End the current established session by contacting the server, if possible. */
   async endSession() {
-    // TODO: Remove stored session
-    // TODO: Remove dApp key?
+    if (!this.#initialized) {
+      throw new Error(NOT_INIT_ERR_MSG)
+    }
+
+    const sessionId = (await this.retrieveSession())?.session.id
+
+    if (sessionId) {
+      const url = `${this.#baseURL}${SESSION_END_ENDPOINT}`
+      const reqMethod = 'GET'
+
+      // Create Hawk header
+      const credentials: hawk.client.Credentials = {
+        id: sessionId,
+        key: await deriveSharedKeyB64(
+          this.#connectKeyPair!.privateKey,
+          await base64ToKey(sessionId, true), // Convert session ID to public key
+        ),
+        algorithm: 'sha256'
+      }
+      const hawkHeader = hawk.client.header(url, reqMethod, { credentials })
+
+      try {
+        // Make request to server. No need to know what the server's response is this time.
+        await fetch(url, {method: reqMethod, headers: {'Server-Authorization': hawkHeader.header}})
+      } catch (e: any) {
+        console.warn(e)
+      }
+    }
+
+    this.#removeStoredSession()
   }
 
   /** Store the given session information into local storage
@@ -284,7 +315,7 @@ export class DuckyConnect {
 
   /** Remove all session data from local storage */
   #removeStoredSession() {
-    // TODO
+    idbDel(this.#sessionDataKeyName)
   }
 
   /** Generate and store connect key pair
