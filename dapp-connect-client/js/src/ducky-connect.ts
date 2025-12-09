@@ -169,8 +169,9 @@ export class DuckyConnect {
 
     if (!response.ok) {
       // NOTE: An error from the server will have a 'name' and a 'message'
-      console.error('Error from server:', `${respJSON.message} (${respJSON.name})`)
-      throw Error('Session initialization failed')
+      throw Error(
+        `Session initialization failed. Error from server: ${respJSON.message} (${respJSON.name})`
+      )
     }
 
     // Return session confirmation data
@@ -238,8 +239,9 @@ export class DuckyConnect {
 
     if (!response.ok) {
       // NOTE: An error from the server will have a 'name' and a 'message'
-      console.error('Error from server:', `${respJSON.message} (${respJSON.name})`)
-      throw Error('Session confirmation failed')
+      throw Error(
+        `Session confirmation failed. Error from server: ${respJSON.message} (${respJSON.name})`
+      )
     }
 
     // Return new established session data

@@ -96,7 +96,7 @@ describe('Ducky Connect class', () => {
         confirmCodeDisplayFn
       })).init()
 
-      await expect(() => duckconn.establishSession()).rejects.toThrowError()
+      await expect(duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).not.toBeCalled()
     })
 
@@ -131,7 +131,7 @@ describe('Ducky Connect class', () => {
         confirmCodeDisplayFn
       })).init()
 
-      await expect(() => duckconn.establishSession()).rejects.toThrowError()
+      await expect(duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
     })
   })
@@ -327,7 +327,7 @@ describe('Ducky Connect class', () => {
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
-      await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
+      await expect(duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
 
     it.skip('throws error if no session has been established', async () => {
@@ -359,7 +359,7 @@ describe('Ducky Connect class', () => {
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
-      await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
+      await expect(duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
   })
 })
