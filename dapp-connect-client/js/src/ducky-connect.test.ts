@@ -63,7 +63,7 @@ describe('Ducky Connect class', () => {
       expect(session.id).toBe('XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=')
       expect(Math.floor(session.exp.getTime() / 1000)).toBe(1760591204)
       expect(session.addrs).toStrictEqual(['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'])
-      expect(duckconn.retrieveSession()).not.toBeNull()
+      expect(await duckconn.retrieveSession()).not.toBeNull()
     })
 
     it('throws error when session initialization fails', async () => {
@@ -96,7 +96,7 @@ describe('Ducky Connect class', () => {
         confirmCodeDisplayFn
       })).init()
 
-      await expect(duckconn.establishSession()).rejects.toThrowError()
+      await expect(() => duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).not.toBeCalled()
     })
 
@@ -131,13 +131,13 @@ describe('Ducky Connect class', () => {
         confirmCodeDisplayFn
       })).init()
 
-      await expect(duckconn.establishSession()).rejects.toThrowError()
+      await expect(() => duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
     })
   })
 
   describe('retrieveSession()', () => {
-    it.skip('returns stored session information, if it exists', async () => {
+    it('returns stored session information, if it exists', async () => {
       const sessionInfoToBeStored: dc.StoredSessionInfo = {
         connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
         session: {
@@ -148,21 +148,22 @@ describe('Ducky Connect class', () => {
         dapp: { name: 'Test DApp' },
       }
 
-      // TODO: Set stored session info in local storage
+      // Set stored session info in local storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
       const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
-      const storedSession = duckconn.retrieveSession()
+      const storedSession = await duckconn.retrieveSession()
 
       expect(storedSession?.connectId).toBe(sessionInfoToBeStored.connectId)
       expect(storedSession?.session.id).toBe(sessionInfoToBeStored.session.id)
-      expect(storedSession?.session.exp).toBe(sessionInfoToBeStored.session.exp)
-      expect(storedSession?.session.addrs).toBe(sessionInfoToBeStored.session.addrs)
+      expect(storedSession?.session.exp).toStrictEqual(sessionInfoToBeStored.session.exp)
+      expect(storedSession?.session.addrs).toStrictEqual(sessionInfoToBeStored.session.addrs)
       expect(storedSession?.dapp.name).toBe(sessionInfoToBeStored.dapp.name)
     })
 
-    it.skip('returns null if there is no stored session information', async () => {
+    it('returns null if there is no stored session information', async () => {
       const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
-      expect(duckconn.retrieveSession()).toBeNull()
+      expect(await duckconn.retrieveSession()).toBeNull()
     })
   })
 
@@ -189,7 +190,7 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
 
-      expect(duckconn.retrieveSession()).toBeNull()
+      expect(await duckconn.retrieveSession()).toBeNull()
     })
 
     it.skip('still removes stored session information after contacting server fails', async () => {
@@ -206,7 +207,7 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       await duckconn.endSession()
 
-      expect(duckconn.retrieveSession()).toBeNull()
+      expect(await duckconn.retrieveSession()).toBeNull()
     })
   })
 
@@ -327,7 +328,7 @@ describe('Ducky Connect class', () => {
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
-      await expect(duckconn.signTransaction(testTxn)).rejects.toThrowError()
+      await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
 
     it.skip('throws error if no session has been established', async () => {
@@ -359,7 +360,7 @@ describe('Ducky Connect class', () => {
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
 
-      await expect(duckconn.signTransaction(testTxn)).rejects.toThrowError()
+      await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
   })
 })

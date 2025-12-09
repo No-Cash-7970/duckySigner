@@ -12,15 +12,19 @@ export const SESSION_CONFIRM_ENDPOINT = '/session/confirm'
 export const SESSION_END_ENDPOINT = '/session/end'
 /** The endpoint path for signing a transaction */
 export const SIGN_TXN_ENDPOINT = '/transaction/sign'
+
 /** The default name in storage for the connect ID/key pair */
 export const DEFAULT_CONNECT_KEY_PAIR_NAME = 'dcDappKeyPair'
+/** The default name in storage for the connect ID/key pair */
+export const DEFAULT_SESSION_DATA_NAME = 'dcSessionData'
+
+/** Algorithm used for cryptographic key pairs */
+export const KEY_ALGORITHM = 'X25519'
 
 /** Error message for when running certain DuckyConnect method before initializing the DuckyConnect
  * instance
  */
 const NOT_INIT_ERR_MSG = 'This DuckyConnect instance has not been initialized. Run `init()` first.'
-/** Algorithm used for cryptographic key pairs */
-export const KEY_ALGORITHM = 'X25519'
 
 /** Information about the dApp trying to connect to the wallet. It should be the app using this
  * library.
@@ -96,6 +100,10 @@ export interface ConnectOptions {
    * cryptographic connect key pair).
    */
   connectKeyPairName?: string
+  /** Name that is used to refer to the connect session data in storage. It is the non-cryptographic
+   * "key" used in the storage key-value pair (the value being the connect session data).
+   */
+  sessionDataKeyName?: string
 }
 
 /** Class for connecting to and interacting with a DuckySigner DApp Connect server */
@@ -103,11 +111,11 @@ export class DuckyConnect {
   #initialized: boolean = false
   #connectId: string = ''
   #connectKeyPair: CryptoKeyPair|undefined
-
   #baseURL: string
   #dappInfo: DappInfo
   #confirmCodeDisplayFn: (code: string) => void
   #connectKeyPairName: string
+  #sessionDataKeyName: string
 
   constructor(options: ConnectOptions) {
     this.#baseURL = options.serverURL ?? DEFAULT_SERVER_BASE_URL
@@ -115,6 +123,7 @@ export class DuckyConnect {
     this.#confirmCodeDisplayFn = options.confirmCodeDisplayFn
       ?? ((code: string) => alert(`Confirmation code: ${code}`))
     this.#connectKeyPairName = options.connectKeyPairName ?? DEFAULT_CONNECT_KEY_PAIR_NAME
+    this.#sessionDataKeyName = options.sessionDataKeyName ?? DEFAULT_SESSION_DATA_NAME
   }
 
   /** Initialize by doing various actions, like retrieving data from storage. Some methods require
@@ -255,9 +264,9 @@ export class DuckyConnect {
   /** Retrieve session data from local storage
    * @return Information about the current established session being used
    */
-  retrieveSession(): StoredSessionInfo|null {
-    // TODO: Get session data
-    return {connectId: '', session: {id: '', exp: new Date, addrs: []}, dapp: {name: ''}}
+  async retrieveSession(): Promise<StoredSessionInfo | null> {
+    const sessionData = await idbGet<StoredSessionInfo>(this.#sessionDataKeyName)
+    return sessionData ?? null
   }
 
   /** End the current established session by contacting the server, if possible. */
@@ -270,7 +279,7 @@ export class DuckyConnect {
    * @param Session information to store
    */
   #storeSession(sessionInfo: SessionInfo) {
-    // TODO
+    idbSet(this.#sessionDataKeyName, sessionInfo)
   }
 
   /** Remove all session data from local storage */
