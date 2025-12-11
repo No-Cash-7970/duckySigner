@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import 'fake-indexeddb/auto'
 import * as dc from './ducky-connect'
 import algosdk from 'algosdk'
@@ -30,7 +30,7 @@ describe('Ducky Connect class', () => {
               token: 'v4.local.kotGdyU87V83S8E2qtvnMchNcTjmq50u2C17-mlBDzvVf_bw3xtW0vQQZ-X8jfkDO326nz7_Z9BinJIQre3rQqrJD2BLSM9mzJxCUnjpZKxcgKvr5Bj4pphCanuonR7gwtb03_jYRcfH8PJaOHsRIz24KuhO7GJ8sJS4k-jVMhvuPquqi0VJDAAy7Cn8OMD871mKn7vfE7zYpjjul1AGXgTvd_SapSbYqd3K4PeP3_Y-9_gagK-eXqvoxZ4pNAfcEb4eGP_beR_QjP0X0a7Eq8dwr-bONpW-VzhN3gcj',
               exp: 1760003247,
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            { headers: { 'Content-Type': 'application/json' } }
           )
         }
 
@@ -43,10 +43,10 @@ describe('Ducky Connect class', () => {
               addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
             }),
             {
-              headers: new Headers({
+              headers: {
                 'Content-Type': 'application/json',
                 'Server-Authorization': 'some_faked_auth_header',
-              })
+              }
             }
           )
         }
@@ -74,7 +74,7 @@ describe('Ducky Connect class', () => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_INIT_ENDPOINT}`) {
           return new Response(
             JSON.stringify({ name: 'oops',  message: 'Something went wrong!' }),
-            { status: 500, headers: new Headers({'Content-Type': 'application/json'}) }
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
           )
         }
 
@@ -85,7 +85,7 @@ describe('Ducky Connect class', () => {
               exp: 1760591204,
               addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            { headers: { 'Content-Type': 'application/json' } }
           )
         }
 
@@ -113,14 +113,14 @@ describe('Ducky Connect class', () => {
               token: 'v4.local.kotGdyU87V83S8E2qtvnMchNcTjmq50u2C17-mlBDzvVf_bw3xtW0vQQZ-X8jfkDO326nz7_Z9BinJIQre3rQqrJD2BLSM9mzJxCUnjpZKxcgKvr5Bj4pphCanuonR7gwtb03_jYRcfH8PJaOHsRIz24KuhO7GJ8sJS4k-jVMhvuPquqi0VJDAAy7Cn8OMD871mKn7vfE7zYpjjul1AGXgTvd_SapSbYqd3K4PeP3_Y-9_gagK-eXqvoxZ4pNAfcEb4eGP_beR_QjP0X0a7Eq8dwr-bONpW-VzhN3gcj',
               exp: 1760003247,
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            { headers: { 'Content-Type': 'application/json' } }
           )
         }
 
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_CONFIRM_ENDPOINT}`) {
           return new Response(
             JSON.stringify({ name: 'oops',  message: 'Something went wrong!' }),
-            { status: 500, headers: new Headers({'Content-Type': 'application/json'}) }
+            { status: 500, headers: { 'Content-Type': 'application/json' } }
           )
         }
 
@@ -185,7 +185,7 @@ describe('Ducky Connect class', () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
-          return new Response('OK', { headers: new Headers({'Content-Type': 'application/json'}) })
+          return new Response('OK', { headers: { 'Content-Type': 'application/json' } })
         }
         return new Response
       })
@@ -239,7 +239,7 @@ describe('Ducky Connect class', () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
-          return new Response('OK', { headers: new Headers({'Content-Type': 'application/json'}) })
+          return new Response('OK', { headers: { 'Content-Type': 'application/json' } })
         }
         return new Response
       })
@@ -274,7 +274,7 @@ describe('Ducky Connect class', () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SESSION_END_ENDPOINT}`) {
-          return new Response('OK', { headers: new Headers({'Content-Type': 'application/json'}) })
+          return new Response('OK', { headers: { 'Content-Type': 'application/json' } })
         }
         return new Response
       })
@@ -318,34 +318,48 @@ describe('Ducky Connect class', () => {
   })
 
   describe('signTransaction()', () => {
-    beforeAll(async () => {
-      // Create and store a connect ("dapp") key pair
-      idbSet(
-        dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
+    beforeEach(async () => {
+      // Put session data into storage
+      idbSet(dc.DEFAULT_SESSION_DATA_NAME, {
+        connectId: '7v/yMHo8iYIvnDvq5ObjgSjTX88/PIdpxkTA+zRM/Xo=',
+        session: {
+          id: 'XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=',
+          exp: new Date(1760591204 * 1000),
+          addrs: ['RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A'],
+        },
+        dapp: { name: 'Test DApp' },
+        serverURL: dc.DEFAULT_SERVER_BASE_URL,
+      })
+      // Put connect ("dapp") key pair into storage
+      idbSet(dc.DEFAULT_CONNECT_KEY_PAIR_NAME,
         await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
       )
     })
 
-    it.skip('signs transaction WITHOUT signer address given', async () => {
+    it('signs transaction WITHOUT signer address given', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
+        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
           return new Response(
             JSON.stringify({
-              signed_transaction: 'gqNzaWfEQMSfjRLM8S/j4At47sdxr8GSV+Yy//7Srs9iJlpReFs719ibxEiU+ZIpE2NJ2kJYpvPswnSx+8eIa0Jm6wJ+ZwijdHhuiaNhbXTOAA9CQKNmZWXNA+iiZnbOA1+J/aNnZW6sdGVzdG5lduckconn12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4DX43lo3JjdsQgVTpfwudWgk+SmzvrmbFS1Xh2IAM+amjAWnhX5FsIJzajc25kxCBVOl/C51aCT5KbO+uZsVLVeHYgAz5qaMBaeFfkWwgnNqR0eXBlo3BheQ==',
+              signed_transaction: 'gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ==',
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              }
+            }
           )
         }
         return new Response
       })
 
-      // TODO: Set stored session info in local storage
-
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
         receiver: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
-        amount: 5_000_000, // 5 Algos
+        amount: 0,
         suggestedParams: {
           fee: 1000, // 0.001 Algos
           firstValid: 6000000,
@@ -356,33 +370,37 @@ describe('Ducky Connect class', () => {
         }
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
-      const signedTxn = await duckconn.signTransaction(testTxn)
+      const signedTxn = await duckconn.signTransaction(testTxn, '', vi.fn())
 
       // Check if the correct transaction was signed
-      expect(signedTxn.txn.sender).toBe(testTxn.sender.toString())
-      expect(signedTxn.txn.payment?.amount).toBe(5_000_000)
+      expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
+      expect(signedTxn.txn.payment?.amount).toBe(0n)
     })
 
-    it.skip('signs transaction WITH signer address given', async () => {
+    it('signs transaction WITH signer address given', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
+        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
           return new Response(
             JSON.stringify({
-              'signed_transaction': 'gqNzaWfEQMSfjRLM8S/j4At47sdxr8GSV+Yy//7Srs9iJlpReFs719ibxEiU+ZIpE2NJ2kJYpvPswnSx+8eIa0Jm6wJ+ZwijdHhuiaNhbXTOAA9CQKNmZWXNA+iiZnbOA1+J/aNnZW6sdGVzdG5lduckconn12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4DX43lo3JjdsQgVTpfwudWgk+SmzvrmbFS1Xh2IAM+amjAWnhX5FsIJzajc25kxCBVOl/C51aCT5KbO+uZsVLVeHYgAz5qaMBaeFfkWwgnNqR0eXBlo3BheQ==',
+              signed_transaction: 'gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ==',
             }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              }
+            }
           )
         }
         return new Response
       })
 
-      // TODO: Set stored session info in local storage
-
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
         receiver: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
-        amount: 5_000_000, // 5 Algos
+        amount: 0,
         suggestedParams: {
           fee: 1000, // 0.001 Algos
           flatFee: true,
@@ -396,28 +414,77 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
       const signedTxn = await duckconn.signTransaction(
         testTxn,
-        'VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA'
+        'VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA',
+        vi.fn(),
       )
 
       // Check if the correct transaction was signed
-      expect(signedTxn.txn.sender).toBe(testTxn.sender.toString())
-      expect(signedTxn.txn.payment?.amount).toBe(5_000_000)
+      expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
+      expect(signedTxn.txn.payment?.amount).toBe(0n)
     })
 
-    it.skip('throws error if transaction signing fails', async () => {
+    it('runs user prompt function when starting to wait for response', async () => {
       // Mock the responses to connect server requests
       fetchSpy.mockImplementation(async url => {
+        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
+        if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
+          return new Response(
+            JSON.stringify({
+              signed_transaction: 'gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ==',
+            }),
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              }
+            }
+          )
+        }
+        return new Response
+      })
+
+      const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
+        receiver: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
+        amount: 0,
+        suggestedParams: {
+          fee: 1000, // 0.001 Algos
+          firstValid: 6000000,
+          lastValid: 6001000,
+          genesisHash: algosdk.base64ToBytes('SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI='),
+          genesisID: 'testnet-v1.0',
+          minFee: 1000,
+        }
+      })
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const promptUserFn = vi.fn()
+      const signedTxn = await duckconn.signTransaction(testTxn, '', promptUserFn)
+
+      // Check if the correct transaction was signed
+      expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
+      expect(signedTxn.txn.payment?.amount).toBe(0n)
+      expect(promptUserFn).toHaveBeenCalledOnce()
+    })
+
+    it('throws error if transaction signing fails', async () => {
+      // Mock the responses to connect server requests
+      fetchSpy.mockImplementation(async url => {
+        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
           return new Response(
             JSON.stringify({ name: 'oops',  message: 'Something went wrong!' }),
-            { status: 500, headers: new Headers({'Content-Type': 'application/json'}) }
+            {
+              status: 500,
+              headers: {
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              }
+            }
           )
         }
 
         return new Response
       })
-
-      // TODO: Set stored session info in local storage
 
       const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
@@ -437,14 +504,20 @@ describe('Ducky Connect class', () => {
       await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
 
-    it.skip('throws error if no session has been established', async () => {
+    it('throws error if no session has been established', async () => {
       // Mock the responses to connect server requests to prevent an error from being thrown from a
       // request failing
       fetchSpy.mockImplementation(async url => {
+        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
         if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
           return new Response(
             JSON.stringify({ signed_transaction: 'some base64 encoded stuff' }),
-            { headers: new Headers({'Content-Type': 'application/json'}) }
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Server-Authorization': 'some_faked_auth_header',
+              }
+            }
           )
         }
 

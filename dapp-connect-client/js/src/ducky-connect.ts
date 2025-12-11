@@ -299,8 +299,8 @@ export class DuckyConnect {
       }
       const hawkHeader = hawk.client.header(url, reqMethod, { credentials })
 
+      // Make request to server. No need to know what the server's response is this time.
       try {
-        // Make request to server. No need to know what the server's response is this time.
         await fetch(url, {method: reqMethod, headers: {'Server-Authorization': hawkHeader.header}})
       } catch (e: any) {
         console.warn(e)
@@ -313,14 +313,17 @@ export class DuckyConnect {
 
   /** Store the given session information into local storage
    * @param Session information to store
+   * @return The stored session information, which includes other session related data
    */
-  #storeSession(sessionInfo: SessionInfo) {
-    idbSet(this.#sessionDataKeyName, {
+  #storeSession(sessionInfo: SessionInfo): StoredSessionInfo {
+    const storedInfo = {
       connectId: this.#connectId,
       session: sessionInfo,
       dapp: this.#dappInfo,
       serverURL: this.#baseURL,
-    } as StoredSessionInfo)
+    }
+    idbSet(this.#sessionDataKeyName, storedInfo)
+    return storedInfo
   }
 
   /** Generate and store connect key pair
@@ -402,15 +405,88 @@ export class DuckyConnect {
     await this.endSession(contactServer)
   }
 
-  /** Sign the given transaction */
-  async signTransaction(txn: algosdk.Transaction, signerAddr?: string) {
-    // TODO
-    return algosdk.decodeSignedTransaction(new Uint8Array)
-  }
+  /** Sign the given transaction
+   * @param txn Transaction to sign
+   * @param signerAddr Address of the account to use to sign the transaction, if not the sender.
+   * @param promptUserFn Function to run when starting to wait for the user to sign the transaction.
+   *                     Should be used to indicate to the user that the transaction is ready for
+   *                     them sign.
+   */
+  async signTransaction(
+    txn: algosdk.Transaction,
+    signerAddr?: string,
+    promptUserFn = () => alert('Please sign the transaction.'),
+  ): Promise<algosdk.SignedTransaction> {
+    if (!this.#initialized) {
+      throw new Error(NOT_INIT_ERR_MSG)
+    }
 
+    const sessionId = (await this.retrieveSession())?.session.id
+
+    if (!sessionId) {
+      throw new NoConnectSessionError(
+        'There is no valid connect session. Establish a connect session and try again.'
+      )
+    }
+
+    // Transform transaction into Base64 encoded bytes
+    const txnToBeSignedB46 = algosdk.bytesToBase64(txn.bytesToSign())
+
+    const url = `${this.#baseURL}${SIGN_TXN_ENDPOINT}`
+    const reqMethod = 'POST'
+    const reqBody = JSON.stringify({ transaction: txnToBeSignedB46, signer: signerAddr || undefined })
+
+    // Create Hawk header
+    const credentials: hawk.client.Credentials = {
+      id: sessionId,
+      key: await deriveSharedKeyB64(
+        this.#connectKeyPair!.privateKey,
+        await base64ToKey(sessionId, true), // Convert confirmation ID to public key
+      ),
+      algorithm: 'sha256'
+    }
+    const hawkHeader = hawk.client.header(url, reqMethod, { credentials, payload: reqBody })
+
+    promptUserFn()
+
+    // Make request to server
+    const response = await fetch(url, {
+      method: reqMethod,
+      body: reqBody,
+      headers: {
+        'Content-Type': 'application/json',
+        'Server-Authorization': hawkHeader.header,
+      },
+    })
+    const respText = await response.text()
+    const respJSON = JSON.parse(respText)
+
+    // Verify server response
+    const authResult = hawk.client.authenticate(
+      response as any,
+      credentials,
+      hawkHeader.artifacts,
+      { payload: respText }
+    )
+    // If the response is valid the authentication header is returned, otherwise no headers are
+    // returned or an error is thrown
+    if (Object.keys(authResult.headers).length === 0) {
+      throw new Error('Server response failed verification')
+    }
+
+    if (!response.ok) {
+      // NOTE: An error from the server will have a 'name' and a 'message'
+      throw Error(
+        `Session confirmation failed. Error from server: ${respJSON.message} (${respJSON.name})`
+      )
+    }
+
+    return algosdk.decodeSignedTransaction(algosdk.base64ToBytes(respJSON['signed_transaction']))
+  }
 }
 
 class KeyPairExistsError extends Error {}
+class NoConnectSessionError extends Error {}
 
 /** Converts the given public key (or private key, if allowed) to a Base64-encoded string of bytes
  * @param key Cryptographic key to convert to a Base64-encoded string
