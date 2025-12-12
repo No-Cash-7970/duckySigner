@@ -21,10 +21,11 @@ export const DEFAULT_SESSION_DATA_NAME = 'dcSessionData'
 /** Algorithm used for cryptographic key pairs */
 export const KEY_ALGORITHM = 'X25519'
 
-/** Error message for when running certain DuckyConnect method before initializing the DuckyConnect
- * instance
+/** Error message for when running certain DuckyConnect method before completely setting up the
+ * DuckyConnect instance
  */
-const NOT_INIT_ERR_MSG = 'This DuckyConnect instance has not been initialized. Run `init()` first.'
+const NOT_INIT_ERR_MSG =
+  'This DuckyConnect instance has not been completely set up. Run `setup()` first.'
 
 /** Information about the dApp trying to connect to the wallet. It should be the app using this
  * library.
@@ -108,7 +109,7 @@ export interface ConnectOptions {
 
 /** Class for connecting to and interacting with a DuckySigner DApp Connect server */
 export class DuckyConnect {
-  #initialized: boolean = false
+  #setupComplete: boolean = false
   #connectId: string = ''
   #connectKeyPair: CryptoKeyPair|undefined
   #baseURL: string
@@ -126,13 +127,13 @@ export class DuckyConnect {
     this.#sessionDataKeyName = options.sessionDataKeyName ?? DEFAULT_SESSION_DATA_NAME
   }
 
-  /** Initialize by doing various actions, like retrieving data from storage.
+  /** Set up this instance by doing various actions, like retrieving data from storage.
    *
    * NOTE: Any method that accesses the connect key pair require this initialization.
    *
-   * @return Instance of this class
+   * @returns Instance of this class
    */
-  async init() {
+  async setup(): Promise<DuckyConnect> {
     /*
      * This method is used to get around the fact that running asynchronous methods are not well
      * suited being in the constructor. Asynchronous methods are needed for getting and generating a
@@ -148,26 +149,25 @@ export class DuckyConnect {
     // Set connect ID
     this.#connectId = await keyToBase64(this.#connectKeyPair.publicKey)
 
-    this.#initialized = true
+    this.#setupComplete = true
     return this
   }
 
   /** Create a new dApp connect session that can then be used for other actions (e.g. signing a
    * transaction)
-   * @return The data for the newly established session
+   * @returns The data for the newly established session
    */
-  async establishSession() {
+  async establishSession(): Promise<StoredSessionInfo> {
     let confirmData = await this.#initializeSession()
     let sessionData = await this.#confirmSession(confirmData)
-    this.#storeSession(sessionData)
-    return sessionData
+    return await this.#storeSession(sessionData)
   }
 
   /** Create and initialize a new session with the dApp connect server
-   * @return Information needed to confirm the newly initialized session
+   * @returns Information needed to confirm the newly initialized session
    */
   async #initializeSession(): Promise<SessionConfirmationInfo> {
-    if (!this.#initialized) {
+    if (!this.#setupComplete) {
       throw new Error(NOT_INIT_ERR_MSG)
     }
 
@@ -199,10 +199,10 @@ export class DuckyConnect {
    * connect server
    * @param sessionConfirm Confirmation information about the initialized session. Should be what is
    *                       returned by the `#initializeSession()` method
-   * @return Information about the newly confirmed (established) session
+   * @returns Information about the newly confirmed (established) session
    */
   async #confirmSession(sessionConfirm: SessionConfirmationInfo): Promise<SessionInfo> {
-    if (!this.#initialized) {
+    if (!this.#setupComplete) {
       throw new Error(NOT_INIT_ERR_MSG)
     }
 
@@ -265,7 +265,7 @@ export class DuckyConnect {
   }
 
   /** Retrieve session data from local storage
-   * @return Information about the current established session being used
+   * @returns Information about the current established session being used
    */
   async retrieveSession(): Promise<StoredSessionInfo | null> {
     const sessionData = await idbGet<StoredSessionInfo>(this.#sessionDataKeyName)
@@ -278,7 +278,7 @@ export class DuckyConnect {
    *                      practice to contact the server.
    */
   async endSession(contactServer=true) {
-    if (!this.#initialized) {
+    if (!this.#setupComplete) {
       throw new Error(NOT_INIT_ERR_MSG)
     }
 
@@ -313,16 +313,16 @@ export class DuckyConnect {
 
   /** Store the given session information into local storage
    * @param Session information to store
-   * @return The stored session information, which includes other session related data
+   * @returns The stored session information, which includes other session related data
    */
-  #storeSession(sessionInfo: SessionInfo): StoredSessionInfo {
+  async #storeSession(sessionInfo: SessionInfo): Promise<StoredSessionInfo> {
     const storedInfo = {
       connectId: this.#connectId,
       session: sessionInfo,
       dapp: this.#dappInfo,
       serverURL: this.#baseURL,
     }
-    idbSet(this.#sessionDataKeyName, storedInfo)
+    await idbSet(this.#sessionDataKeyName, storedInfo)
     return storedInfo
   }
 
@@ -349,7 +349,7 @@ export class DuckyConnect {
    *
    * @param ignoreExists Ignore if a key pair exists? If true, the existing key pair will be
    *                     overwritten with a new pair
-   * @return Connect ID and connect key as a key pair
+   * @returns Connect ID and connect key as a key pair
    */
   async #newConnectKeyPair(ignoreExists=false): Promise<CryptoKeyPair> {
     // Throw error if connect key pair is already stored
@@ -377,7 +377,7 @@ export class DuckyConnect {
   }
 
   /** Get the connect key-ID pair from storage
-   * @return Stored connect ID and connect key as a key pair, `undefined` if there is no key pair
+   * @returns Stored connect ID and connect key as a key pair, `undefined` if there is no key pair
    *         stored under the given `storeName`
    */
   async #retrieveConnectKeyPair(): Promise<CryptoKeyPair|undefined> {
@@ -415,9 +415,9 @@ export class DuckyConnect {
   async signTransaction(
     txn: algosdk.Transaction,
     signerAddr?: string,
-    promptUserFn = () => alert('Please sign the transaction.'),
+    promptUserFn = () => alert('Please sign the transaction.'), // TODO: Move this into configuration
   ): Promise<algosdk.SignedTransaction> {
-    if (!this.#initialized) {
+    if (!this.#setupComplete) {
       throw new Error(NOT_INIT_ERR_MSG)
     }
 
@@ -490,7 +490,7 @@ class NoConnectSessionError extends Error {}
 
 /** Converts the given public key (or private key, if allowed) to a Base64-encoded string of bytes
  * @param key Cryptographic key to convert to a Base64-encoded string
- * @return Key as an Base64-encoded string
+ * @returns Key as an Base64-encoded string
  */
 async function keyToBase64(key: CryptoKey): Promise<string> {
   if (!key.extractable) {
@@ -522,7 +522,7 @@ async function deriveSharedKeyB64(privateKey: CryptoKey, publicKey: CryptoKey): 
  *                    key and `false` if the key is a private key. Refer to [documentation about
  *                    `CryptoKey.extractable`](https://developer.mozilla.org/en-US/docs/Web/API/CryptoKey/extractable)
  *                    for more information.
- * @return Key as a `CryptoKey`
+ * @returns Key as a `CryptoKey`
  */
 async function base64ToKey(b64: string, extractable = false): Promise<CryptoKey> {
   const keyBytes: ArrayBuffer = new Uint8Array(algosdk.base64ToBytes(b64)).buffer

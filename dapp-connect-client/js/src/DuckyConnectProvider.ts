@@ -13,29 +13,64 @@ export default class DuckyConnectProvider implements CustomProvider {
     this.#dc = new DuckyConnect(options)
   }
 
-  // Required: Connect to wallet and return accounts
+  /** Connect to wallet and return accounts
+   * @returns Wallet accounts that are accessible in this connection
+   */
   async connect(): Promise<WalletAccount[]> {
-    // TODO
-    return []
+    await this.#dc.setup()
+    const storedSessionData = await this.#dc.establishSession()
+    return this.#addrsToWalletAccounts(storedSessionData.session.addrs)
   }
 
   // Optional: Clean up when disconnecting
   async disconnect(): Promise<void> {
-    // TODO
+    this.#dc.endSession()
   }
 
-  // Optional: Restore previous session
+  /** Restore previous session
+   * @returns Wallet accounts that are accessible in this connection or `void` if there is no session
+   *         to resume
+   */
   async resumeSession(): Promise<WalletAccount[] | void> {
-    // TODO
+    await this.#dc.setup()
+    const storedSessionData = await this.#dc.retrieveSession()
+
+    if (!storedSessionData) return
+
+    return this.#addrsToWalletAccounts(storedSessionData?.session.addrs)
   }
 
-  // Optional: Sign transactions (implement at least one signing method)
+  /** Sign transactions
+   * @param txnGroup Transactions or transaction groups to be signed in the form of a `Transaction`
+   *                 object or as encoded bytes
+   * @param indexesToSign Indexes of the transaction in `txnGroup` to be signed, if all transaction
+   *                      in `txnGroup` are not to be signed
+   * @returns All the signed transactions, each signed transaction as encoded bytes. If a
+   *          transaction at a particular index was not signed, it will be `null`.
+   */
   async signTransactions(
     txnGroup: algosdk.Transaction[] | Uint8Array[] | (algosdk.Transaction[] | Uint8Array[])[],
     indexesToSign?: number[]
   ): Promise<(Uint8Array | null)[]> {
-    // TODO
-    return []
+    return await Promise.all(
+      txnGroup.map(async (txn, i) => {
+        if (indexesToSign && indexesToSign.indexOf(i) < 0) return null
+
+        if (txn instanceof Array) {
+          throw new Error('Transaction groups are not supported by this wallet.')
+        }
+
+        const stxn = await this.#dc.signTransaction(
+          txn instanceof Uint8Array ? algosdk.decodeUnsignedTransaction(txn) : txn
+        )
+
+        return algosdk.encodeMsgpack(stxn)
+      })
+    )
+  }
+
+  #addrsToWalletAccounts(addrs: string[]): WalletAccount[] {
+    return addrs.map((addr, i) => ({ name: `Ducky Account ${i+1}`, address: addr }))
   }
 
   // // Optional: Sign with ATC-compatible signer
@@ -43,7 +78,7 @@ export default class DuckyConnectProvider implements CustomProvider {
   //   txnGroup: algosdk.Transaction[],
   //   indexesToSign: number[]
   // ): Promise<Uint8Array[]> {
-  //   // TODO
+  //   // Do something here
   //   return []
   // }
 }

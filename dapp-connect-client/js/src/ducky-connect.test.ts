@@ -58,8 +58,8 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({
         dapp: { name: 'Test DApp'},
         confirmCodeDisplayFn
-      })).init()
-      const session = await duckconn.establishSession()
+      })).setup()
+      const session = (await duckconn.establishSession()).session
 
       expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
       expect(session.id).toBe('XN/2YQP/uAdTsa3946CvbicxbwZGFPqAdep7g47UyyQ=')
@@ -96,7 +96,7 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({
         dapp: { name: 'Test DApp'},
         confirmCodeDisplayFn
-      })).init()
+      })).setup()
 
       await expect(() => duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).not.toBeCalled()
@@ -131,7 +131,7 @@ describe('Ducky Connect class', () => {
       const duckconn = await (new dc.DuckyConnect({
         dapp: { name: 'Test DApp'},
         confirmCodeDisplayFn
-      })).init()
+      })).setup()
 
       await expect(() => duckconn.establishSession()).rejects.toThrowError()
       expect(confirmCodeDisplayFn).toHaveBeenCalledOnce()
@@ -153,7 +153,7 @@ describe('Ducky Connect class', () => {
       // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
-      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).setup()
       const storedSession = await duckconn.retrieveSession()
 
       expect(storedSession?.connectId).toBe(sessionInfoToBeStored.connectId)
@@ -164,7 +164,7 @@ describe('Ducky Connect class', () => {
     })
 
     it('returns null if there is no stored session information', async () => {
-      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: {name: ''}})).setup()
       expect(await duckconn.retrieveSession()).toBeNull()
     })
   })
@@ -196,7 +196,7 @@ describe('Ducky Connect class', () => {
       // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       await duckconn.endSession()
 
       expect(await duckconn.retrieveSession()).toBeNull()
@@ -221,7 +221,7 @@ describe('Ducky Connect class', () => {
       // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       await duckconn.endSession()
 
       expect(await duckconn.retrieveSession()).toBeNull()
@@ -229,7 +229,7 @@ describe('Ducky Connect class', () => {
     })
 
     it('does not fail if there is no session', async () => {
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       await duckconn.endSession()
 
       expect(await duckconn.retrieveSession()).toBeNull()
@@ -250,7 +250,7 @@ describe('Ducky Connect class', () => {
       // Put session data into storage
       idbSet(dc.DEFAULT_SESSION_DATA_NAME, sessionInfoToBeStored)
 
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       await duckconn.endSession(false) // Specify not to contact the server
 
       expect(await duckconn.retrieveSession()).toBeNull()
@@ -288,7 +288,7 @@ describe('Ducky Connect class', () => {
         await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
       )
 
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       const oldKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
       await duckconn.refreshConnectKeyPair()
       const newKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
@@ -306,7 +306,7 @@ describe('Ducky Connect class', () => {
         await globalThis.crypto.subtle.generateKey(dc.KEY_ALGORITHM, false, ['deriveBits'])
       )
 
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       const oldKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
       await duckconn.refreshConnectKeyPair(false)
       const newKeyPair = await idbGet<CryptoKeyPair>(dc.DEFAULT_CONNECT_KEY_PAIR_NAME)
@@ -369,7 +369,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       const signedTxn = await duckconn.signTransaction(testTxn, '', vi.fn())
 
       // Check if the correct transaction was signed
@@ -411,7 +411,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       const signedTxn = await duckconn.signTransaction(
         testTxn,
         'VCMJKWOY5P5P7SKMZFFOCEROPJCZOTIJMNIYNUCKH7LRO45JMJP6UYBIJA',
@@ -456,7 +456,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
       const promptUserFn = vi.fn()
       const signedTxn = await duckconn.signTransaction(testTxn, '', promptUserFn)
 
@@ -499,7 +499,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
 
       await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
@@ -537,7 +537,7 @@ describe('Ducky Connect class', () => {
           minFee: 1000,
         }
       })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).init()
+      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
 
       await expect(() => duckconn.signTransaction(testTxn)).rejects.toThrowError()
     })
