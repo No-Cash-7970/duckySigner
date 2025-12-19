@@ -7,12 +7,17 @@ This is a JavaScript/TypeScript library for connecting to Ducky Signer. Includes
 ```js
 import { DuckyConnect } from 'ducky-connect'
 
-// Must set up before doing anything else 
+// Must set up before doing anything else. This also resumes an existing connect session that is
+// stored locally.
 const duckconn = await (new dc.DuckyConnect({ dapp: { name: 'Test DApp'} })).setup()
 
-// Connect to the wallet by establishing a session where the user must approve the connection in
-// Ducky Signer
-const session = (await duckconn.establishSession()).session
+// Check if there is an existing connect session by trying to retrieve the session data. If there is
+// no session, `retrieveSession()` returns `null`.
+let session = await duckconn.retrieveSession()
+
+// If there there is no connect session, connect to the wallet by establishing a session where the
+// user must approve the connection within Ducky Signer
+let session = (await duckconn.establishSession()).session
 
 // Sign a single transaction. The wallet user is prompted to sign the transaction in Ducky Signer.
 const signedTxn = await duckconn.signTransaction(algosdk.makePaymentTxnWithSuggestedParamsFromObject({
