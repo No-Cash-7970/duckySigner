@@ -111,7 +111,6 @@ export interface ConnectOptions {
 export class DuckyConnect {
   #setupComplete: boolean = false
   #connectId: string = ''
-  #connectKeyPair: CryptoKeyPair|undefined
   #baseURL: string
   #dappInfo: DappInfo
   #confirmCodeDisplayFn: (code: string) => void
@@ -131,7 +130,7 @@ export class DuckyConnect {
    *
    * NOTE: Any method that accesses the connect key pair require this initialization.
    *
-   * @returns Instance of this class
+   * @returns This class instance
    */
   async setup(): Promise<DuckyConnect> {
     /*
@@ -142,12 +141,11 @@ export class DuckyConnect {
 
     // Set the connect key pair to whatever is in storage, or generate a key pair if there is no
     // pair in storage
-    if (!(this.#connectKeyPair = await this.#retrieveConnectKeyPair())) {
-      this.#connectKeyPair = await this.#newConnectKeyPair()
-    }
+    const connectKeyPair = await this.#retrieveConnectKeyPair() ?? await this.#newConnectKeyPair()
+    await idbSet(this.#connectKeyPairName, connectKeyPair)
 
     // Set connect ID
-    this.#connectId = await keyToBase64(this.#connectKeyPair.publicKey)
+    this.#connectId = await keyToBase64(connectKeyPair.publicKey)
 
     this.#setupComplete = true
     return this
@@ -214,7 +212,7 @@ export class DuckyConnect {
     const credentials: hawk.client.Credentials = {
       id: sessionConfirm.id,
       key: await deriveSharedKeyB64(
-        this.#connectKeyPair!.privateKey,
+        (await this.#retrieveConnectKeyPair())!.privateKey,
         await base64ToKey(sessionConfirm.id, true), // Convert confirmation ID to public key
       ),
       algorithm: 'sha256'
@@ -292,7 +290,7 @@ export class DuckyConnect {
       const credentials: hawk.client.Credentials = {
         id: sessionId,
         key: await deriveSharedKeyB64(
-          this.#connectKeyPair!.privateKey,
+          (await this.#retrieveConnectKeyPair())!.privateKey,
           await base64ToKey(sessionId, true), // Convert session ID to public key
         ),
         algorithm: 'sha256'
@@ -400,8 +398,9 @@ export class DuckyConnect {
    *                      practice to contact the server.
    */
   async refreshConnectKeyPair(contactServer=true) {
-    this.#connectKeyPair = await this.#newConnectKeyPair(true) // Generate new key pair & replace
-    this.#connectId = await keyToBase64(this.#connectKeyPair.publicKey)
+    const keyPair = await this.#newConnectKeyPair(true) // Generate new key pair
+    this.#connectId = await keyToBase64(keyPair.publicKey)
+    await idbSet(this.#connectKeyPairName, keyPair) // Replace stored key pair
     await this.endSession(contactServer)
   }
 
@@ -440,7 +439,7 @@ export class DuckyConnect {
     const credentials: hawk.client.Credentials = {
       id: sessionId,
       key: await deriveSharedKeyB64(
-        this.#connectKeyPair!.privateKey,
+        (await this.#retrieveConnectKeyPair())!.privateKey,
         await base64ToKey(sessionId, true), // Convert confirmation ID to public key
       ),
       algorithm: 'sha256'
