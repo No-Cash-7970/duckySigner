@@ -6,6 +6,7 @@
 /*.syso
 /wails
 /build/darwin
+/build/ios
 /build/linux
 /build/windows
 /build/icon.ico

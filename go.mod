@@ -5,25 +5,25 @@ go 1.24.0
 toolchain go1.24.3
 
 require (
-	aidanwoods.dev/go-paseto v1.5.4
+	aidanwoods.dev/go-paseto v1.6.0
 	github.com/algorand/go-algorand-sdk/v2 v2.11.1
 	github.com/algorand/go-codec/codec v1.1.10
-	github.com/algorand/go-deadlock v0.2.4
+	github.com/algorand/go-deadlock v0.2.5
 	github.com/awnumar/memguard v0.23.0
-	github.com/go-playground/validator/v10 v10.28.0
+	github.com/go-playground/validator/v10 v10.30.1
 	github.com/hiyosi/hawk v1.0.1
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/karalabe/hid v1.0.0
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
-	github.com/marcboeker/go-duckdb/v2 v2.4.2
-	github.com/onsi/ginkgo/v2 v2.26.0
-	github.com/onsi/gomega v1.38.2
+	github.com/marcboeker/go-duckdb/v2 v2.4.3
+	github.com/onsi/ginkgo/v2 v2.27.5
+	github.com/onsi/gomega v1.39.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.11.1
 	github.com/wailsapp/wails/v3 v3.0.0-alpha.34
-	golang.org/x/crypto v0.43.0
-	modernc.org/sqlite v1.39.0
+	golang.org/x/crypto v0.47.0
+	modernc.org/sqlite v1.43.0
 )
 
 require (
@@ -49,7 +49,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.8.2 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
 	github.com/go-git/go-git/v5 v5.13.2 // indirect
@@ -81,7 +81,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
-	github.com/petermattis/goid v0.0.0-20241025130422-66cb2e6d7274 // indirect
+	github.com/petermattis/goid v0.0.0-20250813065127-a731cc31b4fe // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
@@ -98,22 +98,21 @@ require (
 	github.com/wailsapp/mimetype v1.4.1 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
-	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
-	golang.org/x/mod v0.28.0 // indirect
-	golang.org/x/net v0.45.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.37.0 // indirect
-	golang.org/x/telemetry v0.0.0-20250908211612-aef8a434d053 // indirect
-	golang.org/x/text v0.30.0 // indirect
-	golang.org/x/time v0.11.0 // indirect
-	golang.org/x/tools v0.37.0 // indirect
+	golang.org/x/mod v0.31.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/telemetry v0.0.0-20251203150158-8fff8a5912fc // indirect
+	golang.org/x/text v0.33.0 // indirect
+	golang.org/x/time v0.14.0 // indirect
+	golang.org/x/tools v0.40.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	modernc.org/libc v1.66.3 // indirect
+	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
