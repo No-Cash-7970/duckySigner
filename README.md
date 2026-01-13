@@ -7,6 +7,14 @@ Prototype for a simple desktop Algorand wallet that signs things…maybe.
 
 ## Installation for development
 
+This project requires Wails 3. Install the latest version by running the following:
+
+```bash
+go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+```
+
+Then install the project's dependencies:
+
 ```bash
 git clone https://github.com/No-Cash-7970/duckySigner.git
 cd duckySigner
@@ -54,6 +62,14 @@ yarn upgrade-interactive
 ```
 
 Refer to the installation instructions of the Wails v3 documentation for more information: <https://v3alpha.wails.io/getting-started/installation/#installation_1>.
+
+## Upgrading Wails
+
+On occasion, Wails needs to be updated. Update Wails by installing it again.
+
+```bash
+go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+```
 
 ## Building project
 
