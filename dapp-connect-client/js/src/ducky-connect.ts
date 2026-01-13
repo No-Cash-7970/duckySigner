@@ -98,11 +98,14 @@ export interface ConnectOptions {
   confirmCodeDisplayFn?: (code: string) => void
   /** Name that is used to refer to the connect key pair (connect ID & connect key) in storage. It
    * is the non-cryptographic "key" used in the storage key-value pair (the value being the
-   * cryptographic connect key pair).
+   * cryptographic connect key pair). This only needs to be changed if there needs to be a another
+   * DuckyConnect instance running at the same time.
    */
   connectKeyPairName?: string
   /** Name that is used to refer to the connect session data in storage. It is the non-cryptographic
-   * "key" used in the storage key-value pair (the value being the connect session data).
+   * "key" used in the storage key-value pair (the value being the connect session data). This only
+   * needs to be changed if there needs to be a another DuckyConnect instance running at the same
+   * time.
    */
   sessionDataKeyName?: string
 }
@@ -144,10 +147,9 @@ export class DuckyConnect {
     const connectKeyPair = await this.#retrieveConnectKeyPair() ?? await this.#newConnectKeyPair()
     await idbSet(this.#connectKeyPairName, connectKeyPair)
 
-    // Set connect ID
     this.#connectId = await keyToBase64(connectKeyPair.publicKey)
-
     this.#setupComplete = true
+
     return this
   }
 
@@ -206,6 +208,7 @@ export class DuckyConnect {
 
     const url = `${this.#baseURL}${SESSION_CONFIRM_ENDPOINT}`
     const reqMethod = 'POST'
+    const reqContentType = 'application/json'
     const reqBody = JSON.stringify({ token: sessionConfirm.token, dapp: this.#dappInfo })
 
     // Create Hawk header
@@ -217,7 +220,11 @@ export class DuckyConnect {
       ),
       algorithm: 'sha256'
     }
-    const hawkHeader = hawk.client.header(url, reqMethod, { credentials, payload: reqBody })
+    const hawkHeader = hawk.client.header(url, reqMethod, {
+      credentials,
+      contentType: reqContentType,
+      payload: reqBody,
+    })
 
     // Show confirmation code
     this.#confirmCodeDisplayFn(sessionConfirm.code)
@@ -227,7 +234,7 @@ export class DuckyConnect {
       method: reqMethod,
       body: reqBody,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': reqContentType,
         'Server-Authorization': hawkHeader.header,
       },
     })
@@ -341,7 +348,7 @@ export class DuckyConnect {
    * Resources about the IndexedDB key storage method:
    *
    * - [Are there any security concerns with storing private keys in browser's javascript?](https://security.stackexchange.com/a/219677)
-   * - [Web Crypto API - Is a non-exactrable CryptoKey in IndexedDB safe enough...?](https://stackoverflow.com/questions/52276862/)
+   * - [Web Crypto API - Is a non-extractable CryptoKey in IndexedDB safe enough...?](https://stackoverflow.com/questions/52276862/)
    * - [SubtleCrypto: generateKey() method](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/generateKey)
    * - [Example of saving a CryptoKey into IndexedDB](https://gist.github.com/saulshanabrook/b74984677bccd08b028b30d9968623f5)
    *
@@ -433,6 +440,7 @@ export class DuckyConnect {
 
     const url = `${this.#baseURL}${SIGN_TXN_ENDPOINT}`
     const reqMethod = 'POST'
+    const reqContentType = 'application/json'
     const reqBody = JSON.stringify({ transaction: txnToBeSignedB46, signer: signerAddr || undefined })
 
     // Create Hawk header
@@ -444,7 +452,11 @@ export class DuckyConnect {
       ),
       algorithm: 'sha256'
     }
-    const hawkHeader = hawk.client.header(url, reqMethod, { credentials, payload: reqBody })
+    const hawkHeader = hawk.client.header(url, reqMethod, {
+      credentials,
+      contentType: reqContentType,
+      payload: reqBody,
+    })
 
     promptUserFn()
 
@@ -453,7 +465,7 @@ export class DuckyConnect {
       method: reqMethod,
       body: reqBody,
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': reqContentType,
         'Server-Authorization': hawkHeader.header,
       },
     })
@@ -476,7 +488,7 @@ export class DuckyConnect {
     if (!response.ok) {
       // NOTE: An error from the server will have a 'name' and a 'message'
       throw Error(
-        `Session confirmation failed. Error from server: ${respJSON.message} (${respJSON.name})`
+        `Transaction signing failed. Error from server: ${respJSON.message} (${respJSON.name})`
       )
     }
 

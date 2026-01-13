@@ -370,11 +370,14 @@ describe('Ducky Connect class', () => {
         }
       })
       const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
-      const signedTxn = await duckconn.signTransaction(testTxn, '', vi.fn())
+      const promptUserFn = vi.fn()
+      const signedTxn = await duckconn.signTransaction(testTxn, '', promptUserFn)
+      expect(promptUserFn).toHaveBeenCalledOnce()
 
       // Check if the correct transaction was signed
       expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
       expect(signedTxn.txn.payment?.amount).toBe(0n)
+      expect(promptUserFn).toHaveBeenCalledOnce()
     })
 
     it('signs transaction WITH signer address given', async () => {
@@ -421,49 +424,6 @@ describe('Ducky Connect class', () => {
       // Check if the correct transaction was signed
       expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
       expect(signedTxn.txn.payment?.amount).toBe(0n)
-    })
-
-    it('runs user prompt function when starting to wait for response', async () => {
-      // Mock the responses to connect server requests
-      fetchSpy.mockImplementation(async url => {
-        hawkClientAuthSpy.mockReturnValue({ headers: {'server-authorization': 'fake_header'}})
-        if (url === `${dc.DEFAULT_SERVER_BASE_URL}${dc.SIGN_TXN_ENDPOINT}`) {
-          return new Response(
-            JSON.stringify({
-              signed_transaction: 'gqNzaWfEQHOy8+zozpBTp3wOA1ZzANbN2LXeHTUTFre5xg0WpsPiKTm9Eto4Kq+XuutVHvaTMa9v7KxpWB+tZ79iOeCqDgyjdHhuiKNmZWXNA+iiZnbOAnvsNaNnZW6sdGVzdG5ldC12MS4womdoxCBIY7UYpLPITsgQ8i1PEIHLD3HwWaesIN7GL39w5Qk6IqJsds4Ce/Ado3JjdsQgiwGZNPVYGY6ClrTkNzeS0dFK/BjHmWsRisH9vCzgUvKjc25kxCCLAZk09VgZjoKWtOQ3N5LR0Ur8GMeZaxGKwf28LOBS8qR0eXBlo3BheQ==',
-            }),
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Server-Authorization': 'some_faked_auth_header',
-              }
-            }
-          )
-        }
-        return new Response
-      })
-
-      const testTxn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        sender: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
-        receiver: 'RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A',
-        amount: 0,
-        suggestedParams: {
-          fee: 1000, // 0.001 Algos
-          firstValid: 6000000,
-          lastValid: 6001000,
-          genesisHash: algosdk.base64ToBytes('SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI='),
-          genesisID: 'testnet-v1.0',
-          minFee: 1000,
-        }
-      })
-      const duckconn = await (new dc.DuckyConnect({dapp: { name: 'Test DApp'}})).setup()
-      const promptUserFn = vi.fn()
-      const signedTxn = await duckconn.signTransaction(testTxn, '', promptUserFn)
-
-      // Check if the correct transaction was signed
-      expect(signedTxn.txn.sender.toString()).toBe(testTxn.sender.toString())
-      expect(signedTxn.txn.payment?.amount).toBe(0n)
-      expect(promptUserFn).toHaveBeenCalledOnce()
     })
 
     it('throws error if transaction signing fails', async () => {
