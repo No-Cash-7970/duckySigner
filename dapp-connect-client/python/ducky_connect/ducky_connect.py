@@ -4,17 +4,32 @@ A collection of utilities and classes for connecting to DApp Connect server for
 DuckySigner wallet.
 """
 
+import base64
+import json
+import pathlib
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 
+import keyring
+import requests
+from algosdk import encoding as algosdk_encoding
 from algosdk import transaction
+from cryptography.hazmat.primitives.asymmetric import x25519
+from mohawk import Sender
 
 DEFAULT_SERVER_BASE_URL = 'http://localhost:1323'
 """The default base URL to the wallet connect server"""
 
-DEFAULT_SESSION_FILE_PATH = './.dc_session_info'
+DEFAULT_SESSION_FILE_PATH = './.dc_session'
 """The default file path to the where information of an established session is stored"""
+
+DEFAULT_KEYRING_SERVICE_PREFIX = 'DuckySigner/'
+"""
+The default prefix for the "service" name that is to be specified in the system's
+keyring. The service name is set to
+`[KEYRING_SERVICE_PREFIX][Connect ID (in URL-safe Base64)]`
+"""
 
 SESSION_INIT_ENDPOINT = '/session/init'
 """The endpoint path for initializing a session"""
@@ -62,10 +77,10 @@ class SessionInfo:
 
     id: str
     exp: datetime
-    addrs: tuple[str]
+    addrs: list[str]
 
 @dataclass
-class __SessionConfirmationInfo:
+class _SessionConfirmationInfo:
     """Information needed for an initialized session to be confirmed.
 
     Properties:
@@ -106,7 +121,6 @@ class StoredSessionInfo:
     session: SessionInfo
     dapp: DappInfo
     server_url: str = DEFAULT_SERVER_BASE_URL
-    file_path: str = DEFAULT_SESSION_FILE_PATH
 
 @dataclass
 class ConnectOptions:
@@ -116,34 +130,126 @@ class ConnectOptions:
         dapp -- Information about the dApp connecting to the wallet
         server_url -- Base URL to the wallet's connect server \
                       (default: {DEFAULT_SERVER_BASE_URL})
-        session_file_path -- Path to the file that contains the information for the \
-                             established session
         confirm_code_display_fn -- Function for displaying the confirmation code
+        connect_id -- Public key of the connect key pair used for creating and using \
+                      connect sessions (default: *empty string*). If no connect ID is \
+                      given, new connect key pair will be generated. It is recommended \
+                      that the connect ID be saved in a place that can be retrieved \
+                      later because it would allow the key pair to be removed from the \
+                      user's machine.
+        session_file_path -- Path to the file that contains the information for the \
+                             established session (default: ./.dcsession)
+        confirm_timeout -- Amount of time, in seconds, to wait for session to \
+                           complete. This timeout should be longer than the timeout \
+                           allowed by the DuckySigner connect server to account for \
+                           server process time and network latency. (default: 600)
+        sign_txn_timeout -- Amount of time, in seconds, to wait for the user to \
+                            approve the signing of a transaction. This timeout should \
+                            be longer than the timeout allowed by the DuckySigner \
+                            connect server to account for server process time and \
+                            network latency. (default: 600)
+        keyring_prefix -- Prefix for the "service" name that is to be specified in \
+                          the system's keyring.
+        allow_insecure_responses -- If responses from the server to authenticated \
+                                    requests should be verified to check if they have \
+                                    been tampered with. **FOR TESTING ONLY. DO NOT USE \
+                                    IN PRODUCTION.** (default: False)
     """
 
     dapp: DappInfo
     server_url: str = DEFAULT_SERVER_BASE_URL
+    confirm_code_display_fn: Callable[[str], None] = \
+        lambda code: print('Confirmation code:', code)
+    connect_id: str = ''
     session_file_path: str = DEFAULT_SESSION_FILE_PATH
-    confirm_code_display_fn: Callable[[str], None] = lambda code: print(code)
+    confirm_timeout: float = 600 # 10 minutes
+    sign_txn_timeout: float = 600 # 10 minutes
+    keyring_prefix: str = DEFAULT_KEYRING_SERVICE_PREFIX
+    allow_insecure_responses: bool = False
 
 class DuckyConnect:
     """Class for connecting to and interacting with a DApp Connect server."""
 
+    __connect_id: str
+    __base_url: str
     __dappInfo: DappInfo
-    __server_url: str
-    __session_file: str
     __confirm_code_display_fn: Callable[[str], None]
+    __session_file_path: str
+    __confirm_timeout: int
+    __sign_txn_timeout: int
+    __keyring_prefix: str
+    __allow_insecure_responses: bool
+    __session: SessionInfo = None
 
 
-    def __init__(options: ConnectOptions):
+    def __init__(self, options: ConnectOptions):
         """Initialize the class with the given connection options.
+
+        If session file exists, then the server URL and dApp information in that file
+        will be used instead of the given server URL and dApp information.
 
         Arguments:
             options -- Options for connecting to the DApp Connect Server
         """
-        pass
+        self.__confirm_code_display_fn = options.confirm_code_display_fn
+        self.__session_file_path = options.session_file_path
+        self.__confirm_timeout = options.confirm_timeout
+        self.__sign_txn_timeout = options.sign_txn_timeout
+        self.__keyring_prefix = options.keyring_prefix
+        self.__allow_insecure_responses = options.allow_insecure_responses
 
-    def establish_session() -> SessionInfo:
+        # Load the session file and extract information from that instead
+        if self.load_session() is not None:
+            return
+
+        self.__base_url = options.server_url
+        self.__dappInfo = options.dapp
+
+        if options.connect_id != '': # A connect ID was given
+            self.__connect_id = options.connect_id
+
+        retrieved_connect_key = self.__retrieve_connect_key()
+
+        # Attempt to get the connect key pair saved in the system's keyring
+        if retrieved_connect_key is None:
+            # Generate a new connect key pair
+            connect_sk = x25519.X25519PrivateKey.generate()
+            connect_id_bytes = connect_sk.public_key().public_bytes_raw()
+            self.__connect_id = base64.b64encode(connect_id_bytes).decode()
+            # Save new key pair into the system's keyring
+            keyring.set_password(
+                # Use URL-safe Base64 encoding in case the keyring is sensitive to
+                # services names that have URL-unsafe characters
+                self.__keyring_prefix
+                    + base64.urlsafe_b64encode(connect_id_bytes).decode(),
+                # The user name should be able to handle normal Base-64
+                self.__connect_id,
+                # Base-64 encode the key in case the keyring does not handle bytes well
+                base64.b64encode(connect_sk.private_bytes_raw()).decode(),
+            )
+
+    @property
+    def connect_id(self):
+        """Get the connect ID currently being used.
+
+        The connect ID is the public key of the connect key pair used to create
+        DuckySigner connect session.
+
+        Returns:
+            The connect ID, a Base-64 encoded string
+        """
+        return self.__connect_id
+
+    @property
+    def connect_id_urlsafe(self):
+        """Get the connect ID currently being used as a URL-safe string.
+
+        Returns:
+            The connect ID as a URL-safe Base-64 encoded string
+        """
+        return self.__connect_id.replace('+', '-').replace('/', '_')
+
+    def establish_session(self) -> StoredSessionInfo:
         """Create a new dApp connect session.
 
         The new DApp Connect session can then be used for other actions (e.g. signing a
@@ -152,17 +258,40 @@ class DuckyConnect:
         Returns:
             Information about the newly confirmed (established) session
         """
-        pass
+        confirm = self.__initialize_session()
+        self.__session = self.__confirm_session(confirm)
+        return self.__store_session(self.__session)
 
-    def __initialize_session() -> __SessionConfirmationInfo:
+    def __initialize_session(self) -> _SessionConfirmationInfo:
         """Create and initialize a new session with the dApp connect server.
 
         Returns:
             Information needed to confirm the newly initialized session
         """
-        pass
+        # Make request to server
+        response = requests.post(
+            self.__base_url + SESSION_INIT_ENDPOINT,
+            data=json.dumps({'dapp_id': self.__connect_id}),
+            headers={'Content-Type': 'application/json'},
+            timeout=60 # 1 minute
+        )
+        resp_json = response.json()
 
-    def __confirm_session(session_confirm: __SessionConfirmationInfo) -> SessionInfo:
+        if (response.status_code != requests.codes.ok):
+            # Note: An error from the server will have a 'name' and a 'message'
+            raise requests.exceptions.HTTPError(
+                f'Session initialization failed. Error from server: {resp_json['message']} ({resp_json['name']})'  # noqa: E501
+            )
+
+        # Return session confirmation data
+        return _SessionConfirmationInfo(
+            id=resp_json['id'],
+            code=resp_json['code'],
+            token=resp_json['token'],
+            exp=datetime.fromtimestamp(resp_json['exp'])
+        )
+
+    def __confirm_session(self, confirm: _SessionConfirmationInfo) -> SessionInfo:
         """Confirm an initialized session.
 
         Confirming the initialized session completes the establishment of the session
@@ -170,33 +299,168 @@ class DuckyConnect:
         established session.
 
         Arguments:
-            session_confirm -- Confirmation information about the initialized session. \
-                               Should be what is returned by the \
-                               `__initialize_session()` method.
+            confirm -- Confirmation information about the initialized session. Should \
+                       be what is returned by the `__initialize_session()` method.
 
         Returns:
             Information about the current established session being used.
         """
-        pass
+        url = self.__base_url + SESSION_CONFIRM_ENDPOINT
+        req_content_type = 'application/json'
+        req_body= json.dumps({'token': confirm.token, 'dapp': asdict(self.__dappInfo)})
 
-    def retrieve_session() -> StoredSessionInfo | None:
-        """Retrieve session data from local storage.
+        # Retrieve connect key
+        connect_key_b64 = keyring.get_password(
+            self.__keyring_prefix + self.connect_id_urlsafe,
+            self.__connect_id
+        )
+        connect_sk = x25519.X25519PrivateKey.from_private_bytes(
+            base64.b64decode(connect_key_b64)
+        )
+
+        # Get confirmation ID (as an X25519 object)
+        confirm_pk = x25519.X25519PublicKey.from_public_bytes(
+            base64.b64decode(confirm.id)
+        )
+
+        # Set up Hawk sender
+        credentials = {
+            'id': confirm.id,
+            # Derive shared key
+            'key': base64.b64encode(connect_sk.exchange(confirm_pk)),
+            'algorithm': 'sha256',
+        }
+        hawk_sender = Sender(
+            credentials,
+            url,
+            'POST',
+            content=req_body,
+            content_type=req_content_type
+        )
+
+        # Show confirmation code
+        self.__confirm_code_display_fn(confirm.code)
+
+        # Make request to server
+        response = requests.post(
+            url=url,
+            data=req_body,
+            headers={
+                'Content-Type': req_content_type,
+                'Server-Authorization': hawk_sender.request_header,
+            },
+            timeout=self.__confirm_timeout
+        )
+        resp_json = response.json()
+
+        # Verify server response unless unverified server responses are allowed
+        if not self.__allow_insecure_responses:
+            hawk_sender.accept_response(
+                response.headers['Server-Authorization'],
+                content=response.content,
+                content_type=response.headers['Content-Type'],
+            )
+
+        if response.status_code != requests.codes.ok:
+            # Note: An error from the server will have a 'name' and a 'message'
+            raise requests.exceptions.HTTPError(
+                f'Session confirmation failed. Error from server: {resp_json['message']} ({resp_json['name']})'  # noqa: E501
+            )
+
+        # Return new established session data
+        return SessionInfo(
+            id=resp_json['id'],
+            exp=datetime.fromtimestamp(resp_json['exp']),
+            addrs=resp_json['addrs'],
+        )
+
+    def load_session(self) -> StoredSessionInfo | None:
+        """Load session data from the session file into this class instance.
 
         Returns:
-            The information about the session stored locally.
+            The information about the session stored into the session file.
         """
-        pass
+        try:
+            with open(self.__session_file_path) as f:
+                stored_info_dict = json.load(f)
+        except FileNotFoundError:
+            return None
 
-    def end_session() -> None:
+        self.__connect_id = stored_info_dict['connect_id']
+        self.__base_url = stored_info_dict['server_url']
+        self.__dappInfo = DappInfo(
+            name=stored_info_dict['dapp']['name'],
+            url=stored_info_dict['dapp']['url'],
+            desc=stored_info_dict['dapp']['desc'],
+            icon=stored_info_dict['dapp']['icon'],
+        )
+        self.__session = SessionInfo(
+            id=stored_info_dict['session']['id'],
+            exp=datetime.fromtimestamp(stored_info_dict['session']['exp']),
+            addrs=stored_info_dict['session']['addrs'],
+        )
+
+        return StoredSessionInfo(
+            connect_id=stored_info_dict['connect_id'],
+            session=self.__session,
+            dapp=self.__dappInfo,
+            server_url=self.__base_url,
+        )
+
+    def end_session(self, contact_server=True) -> None:
         """End the current established session.
 
         Ends the current established session by contacting the server, if possible. If
         the server cannot end the session, the stored session information is removed
         anyway.
         """
-        pass
+        if contact_server and self.__session is not None:
+            url = self.__base_url + SESSION_END_ENDPOINT
 
-    def __store_session(session_info: SessionInfo) -> None:
+            # Retrieve connect key
+            connect_key_b64 = keyring.get_password(
+                self.__keyring_prefix + self.connect_id_urlsafe,
+                self.__connect_id
+            )
+            connect_sk = x25519.X25519PrivateKey.from_private_bytes(
+                base64.b64decode(connect_key_b64)
+            )
+
+            # Get session ID (as an X25519 object)
+            session_pk = x25519.X25519PublicKey.from_public_bytes(
+                base64.b64decode(self.__session.id)
+            )
+
+            # Set up Hawk sender
+            credentials = {
+                'id': self.__session.id,
+                # Derive shared key
+                'key': base64.b64encode(connect_sk.exchange(session_pk)),
+                'algorithm': 'sha256',
+            }
+            hawk_sender = Sender(credentials, url, 'GET', always_hash_content=False)
+
+            response = requests.Response()
+
+            # Make request to server
+            try:
+                response = requests.get(
+                    url=url,
+                    headers={'Server-Authorization': hawk_sender.request_header},
+                    timeout=60
+                )
+            except Exception:  # noqa: S110
+                # TODO: Log the error
+                pass
+
+            if response.status_code != requests.codes.ok:
+                # Note: An error from the server will have a 'name' and a 'message'
+                # TODO: Log the error from the server
+                pass
+
+        self.__remove_stored_session()
+
+    def __store_session(self, session_info: SessionInfo) -> StoredSessionInfo:
         """Store the given session information into the session file.
 
         If a session file exists, it is overwritten with the given session information.
@@ -204,41 +468,50 @@ class DuckyConnect:
         Arguments:
             session_info -- Session information to store
         """
-        pass
+        stored_info = StoredSessionInfo(
+            connect_id=self.__connect_id,
+            session=session_info,
+            dapp=self.__dappInfo,
+            server_url=self.__base_url,
+        )
+        stored_info_dict = asdict(stored_info)
+        # Convert datetime object within session data to a timestamp that can be
+        # converted to JSON
+        stored_info_dict['session']['exp'] = int(session_info.exp.timestamp())
 
-    def __remove_stored_session() -> None:
-        """Remove the stored session information."""
-        pass
+        with open(self.__session_file_path, 'w') as f:
+            f.write(json.dumps(stored_info_dict))
+        print(stored_info)
+        return stored_info
 
-    def __store_connect_key(key: str = '') -> None:
-        """Store (and maybe generate) connect key.
+    def __remove_stored_session(self) -> None:
+        """Remove the file for the stored session information."""
+        pathlib.Path(self.__session_file_path).unlink(missing_ok=True)
+        self.__session = None
 
-        Securely store the given Base64-encoded Elliptic-curve Diffie-Hellman (ECDH)
-        secret key ("connect key") that is to be used to identify the dApp to the DApp
-        Connect server. A connect key is required to create and use a session. The
-        connect key may be referred to as the "dApp key" in other documentation.
-
-        Keyword Arguments:
-            key -- Base64-encoded ECDH secret key for the dApp to store. If no key is \
-                   given, one is generated. (default: {''})
-        """
-        pass
-
-    def __retrieve_connect_key() -> str:
+    def __retrieve_connect_key(self) -> str | None:
         """Get the connect key from secure storage.
 
         Returns:
-            Base64-encoded connect key
+            Base64-encoded connect key or None if connect key is not stored
         """
-        pass
+        return keyring.get_password(
+            self.__keyring_prefix + self.connect_id_urlsafe,
+            self.connect_id
+        )
 
-    def __remove_connect_key() -> None:
+    def __remove_connect_key(self) -> None:
         """Remove the connect key from secure storage."""
-        pass
+        keyring.delete_password(
+            self.__keyring_prefix + self.connect_id_urlsafe,
+            self.__connect_id
+        )
 
-    def sign_transaction(
+    def sign_transaction(self,
         txn: transaction.Transaction,
         signer_addr: str = '',
+        prompt_user_fn: Callable[[str], None] = # TODO: Move this into configuration
+            lambda: print('Please sign the transaction.'),
     ) -> transaction.SignedTransaction:
         """Sign the given transaction.
 
@@ -248,5 +521,78 @@ class DuckyConnect:
         Keyword Arguments:
             signer_addr -- Optional signer address, if it is not the sender of the \
                            transaction (default: {''})
+            prompt_user_fn -- Function to run when starting to wait for the user to \
+                              sign the transaction. Should be used to indicate to the \
+                              user that the transaction is ready for them sign.
         """
-        pass
+        if self.__session is None:
+            raise RuntimeError(
+                'No session loaded. Load session or create a new session and try again.'
+            )
+
+        url = self.__base_url + SIGN_TXN_ENDPOINT
+        req_content_type = 'application/json'
+        req_body= json.dumps({
+            'transaction': algosdk_encoding.msgpack_encode(txn),
+            'signer': signer_addr
+        })
+
+        # Retrieve connect key
+        connect_key_b64 = keyring.get_password(
+            self.__keyring_prefix + self.connect_id_urlsafe,
+            self.__connect_id
+        )
+        connect_sk = x25519.X25519PrivateKey.from_private_bytes(
+            base64.b64decode(connect_key_b64)
+        )
+
+        # Get session ID (as an X25519 object)
+        session_pk = x25519.X25519PublicKey.from_public_bytes(
+            base64.b64decode(self.__session.id)
+        )
+
+        # Set up Hawk sender
+        credentials = {
+            'id': self.__session.id,
+            # Derive shared key
+            'key': base64.b64encode(connect_sk.exchange(session_pk)),
+            'algorithm': 'sha256',
+        }
+        hawk_sender = Sender(
+            credentials,
+            url,
+            'POST',
+            content=req_body,
+            content_type=req_content_type
+        )
+
+        # Show prompt to user
+        prompt_user_fn()
+
+        # Make request to server
+        response = requests.post(
+            url=url,
+            data=req_body,
+            headers={
+                'Content-Type': req_content_type,
+                'Server-Authorization': hawk_sender.request_header,
+            },
+            timeout=self.__sign_txn_timeout
+        )
+        resp_json = response.json()
+
+        # Verify server response unless unverified server responses are allowed
+        if not self.__allow_insecure_responses:
+            hawk_sender.accept_response(
+                response.headers['Server-Authorization'],
+                content=response.content,
+                content_type=response.headers['Content-Type'],
+            )
+
+        if response.status_code != requests.codes.ok:
+            # Note: An error from the server will have a 'name' and a 'message'
+            raise requests.exceptions.HTTPError(
+                f'Transaction signing failed. Error from server: {resp_json['message']} ({resp_json['name']})'  # noqa: E501
+            )
+
+        return algosdk_encoding.msgpack_decode(resp_json['signed_transaction'])
