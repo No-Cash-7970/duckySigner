@@ -106,7 +106,7 @@ var _ = Describe("POST /transaction/sign", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.TxnSignPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve transaction")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"data":` + reqBody + `}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"data":` + reqBody + `}`))
 			By("Wallet user: Approving transaction")
 			dcService.WailsApp.Event.Emit(handlers.TxnSignRespEventName, `{"approved":true}`)
 		})
@@ -364,7 +364,7 @@ var _ = Describe("POST /transaction/sign", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.TxnSignPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve transaction")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"data":` + reqBody + `}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"data":` + reqBody + `}`))
 			By("Wallet user: Not responding...")
 		})
 
@@ -405,7 +405,7 @@ var _ = Describe("POST /transaction/sign", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.TxnSignPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve transaction")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"data":` + reqBody + `}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"data":` + reqBody + `}`))
 			By("Wallet user: Approving transaction")
 			dcService.WailsApp.Event.Emit(handlers.TxnSignRespEventName, `{"approved":false}`)
 		})

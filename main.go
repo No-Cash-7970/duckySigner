@@ -2,6 +2,8 @@ package main
 
 import (
 	"embed"
+	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/awnumar/memguard"
@@ -19,6 +21,13 @@ import (
 
 //go:embed all:frontend/build
 var assets embed.FS
+
+// func init() {
+// 	// Register a custom event whose associated data type is string.
+// 	// This is not required, but the binding generator will pick up registered events
+// 	// and provide a strongly typed JS/TS API for them.
+// 	application.RegisterEvent[string]("time")
+// }
 
 // main function serves as the application's entry point. It initializes the application, creates a window,
 // and starts a goroutine that emits a time-based event every second. It subsequently runs the application and
@@ -90,77 +99,77 @@ func main() {
 
 	dcService.WailsApp = app
 
-	// // Create a new window with the necessary options.
-	// // 'Title' is the title of the window.
-	// // 'Mac' options tailor the window when running on macOS.
-	// // 'BackgroundColour' is the background colour of the window.
-	// // 'URL' is the URL that will be loaded into the webview.
-	// app.Window.NewWithOptions(application.WebviewWindowOptions{
-	// 	Title: "Ducky Signer",
-	// 	Mac: application.MacWindow{
-	// 		InvisibleTitleBarHeight: 50,
-	// 		Backdrop:                application.MacBackdropTranslucent,
-	// 		TitleBar:                application.MacTitleBarHiddenInset,
-	// 	},
-	// 	// BackgroundColour: application.NewRGB(27, 38, 54),
-	// 	URL:    "/",
-	// 	Width:  1024,
-	// 	Height: 768,
-	// 	// StartState: application.WindowStateMaximised,
-	// })
+	// Create a new window with the necessary options.
+	// 'Title' is the title of the window.
+	// 'Mac' options tailor the window when running on macOS.
+	// 'BackgroundColour' is the background colour of the window.
+	// 'URL' is the URL that will be loaded into the webview.
+	app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: "Ducky Signer",
+		Mac: application.MacWindow{
+			InvisibleTitleBarHeight: 50,
+			Backdrop:                application.MacBackdropTranslucent,
+			TitleBar:                application.MacTitleBarHiddenInset,
+		},
+		// BackgroundColour: application.NewRGB(27, 38, 54),
+		URL: "/",
+		// Width:  1024,
+		// Height: 768,
+		// StartState: application.WindowStateMaximised,
+	})
 
-	// // Create a goroutine that emits an event containing the current time every second.
-	// // The frontend can listen to this event and update the UI accordingly.
-	// go func() {
-	// 	for {
-	// 		now := time.Now().Format(time.RFC1123)
-	// 		app.Event.Emit("time", now)
-	// 		time.Sleep(time.Second)
-	// 	}
-	// }()
+	// Create a goroutine that emits an event containing the current time every second.
+	// The frontend can listen to this event and update the UI accordingly.
+	go func() {
+		for {
+			now := time.Now().Format(time.RFC1123)
+			app.Event.Emit("time", now)
+			time.Sleep(time.Second)
+		}
+	}()
 
-	// app.Event.On("saveFile", func(e *application.CustomEvent) {
-	// 	dataBytes, _ := base64.StdEncoding.DecodeString(e.Data.(string))
-	// 	fileLoc, _ := application.SaveFileDialog().
-	// 		AddFilter("Algorand Transaction", "*.txn.msgpack").
-	// 		HideExtension(true).
-	// 		PromptForSingleSelection()
-	// 	os.WriteFile(fileLoc, dataBytes, 0666)
-	// })
+	app.Event.On("saveFile", func(e *application.CustomEvent) {
+		dataBytes, _ := base64.StdEncoding.DecodeString(e.Data.(string))
+		fileLoc, _ := app.Dialog.SaveFile().
+			AddFilter("Algorand Transaction", "*.txn.msgpack").
+			HideExtension(true).
+			PromptForSingleSelection()
+		os.WriteFile(fileLoc, dataBytes, 0666)
+	})
 
-	// app.Event.On("session_confirm_prompt", func(e *application.CustomEvent) {
-	// 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-	// 		Title: "Ducky Connect",
-	// 		Mac: application.MacWindow{
-	// 			InvisibleTitleBarHeight: 50,
-	// 			Backdrop:                application.MacBackdropTranslucent,
-	// 			TitleBar:                application.MacTitleBarHiddenInset,
-	// 		},
-	// 		// BackgroundColour: application.NewRGB(27, 38, 54),
-	// 		URL:    "/dapp-connect",
-	// 		Width:  512,
-	// 		Height: 700,
-	// 	})
-	// 	// Send event to load contents in window
-	// 	app.Event.Emit("session_confirm_prompt_load", e.Data)
-	// })
+	app.Event.On("session_confirm_prompt", func(e *application.CustomEvent) {
+		app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title: "Ducky Connect",
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+			// BackgroundColour: application.NewRGB(27, 38, 54),
+			URL:    "/dapp-connect",
+			Width:  512,
+			Height: 700,
+		})
+		// Send event to load contents in window
+		app.Event.Emit("session_confirm_prompt_load", e.Data)
+	})
 
-	// app.Event.On("txn_sign_prompt", func(e *application.CustomEvent) {
-	// 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-	// 		Title: "Sign Transaction",
-	// 		Mac: application.MacWindow{
-	// 			InvisibleTitleBarHeight: 50,
-	// 			Backdrop:                application.MacBackdropTranslucent,
-	// 			TitleBar:                application.MacTitleBarHiddenInset,
-	// 		},
-	// 		// BackgroundColour: application.NewRGB(27, 38, 54),
-	// 		URL:    "/txn-sign-approval",
-	// 		Width:  512,
-	// 		Height: 700,
-	// 	})
-	// 	// Send event to load contents in window
-	// 	app.Event.Emit("txn_sign_prompt_load", e.Data)
-	// })
+	app.Event.On("txn_sign_prompt", func(e *application.CustomEvent) {
+		app.Window.NewWithOptions(application.WebviewWindowOptions{
+			Title: "Sign Transaction",
+			Mac: application.MacWindow{
+				InvisibleTitleBarHeight: 50,
+				Backdrop:                application.MacBackdropTranslucent,
+				TitleBar:                application.MacTitleBarHiddenInset,
+			},
+			// BackgroundColour: application.NewRGB(27, 38, 54),
+			URL:    "/txn-sign-approval",
+			Width:  512,
+			Height: 700,
+		})
+		// Send event to load contents in window
+		app.Event.Emit("txn_sign_prompt_load", e.Data)
+	})
 
 	// Run the application. This blocks until the application has been exited.
 	// If an error occurred while running the application, log it and exit.

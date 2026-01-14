@@ -108,7 +108,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve session connection")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"dapp":{"name":"foo"}}`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
 				handlers.SessionConfirmRespEventName,
@@ -181,7 +181,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve session connection")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"dapp":{"name":"foo"}}`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
 				handlers.SessionConfirmRespEventName,
@@ -506,7 +506,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve session connection")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"dapp":{"name":"foo"}}`))
 			By("Wallet user: Not responding...")
 		})
 
@@ -576,7 +576,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve session connection")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"dapp":{"name":"foo"}}`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(handlers.SessionConfirmRespEventName, `{"code":"","addrs":[]}`)
 		})
@@ -647,7 +647,7 @@ var _ = Describe("POST /session/confirm", Ordered, func() {
 		dcService.WailsApp.Event.On(handlers.SessionConfirmPromptEventName, func(e *application.CustomEvent) {
 			defer GinkgoRecover()
 			By("UI: Prompting user to approve session connection")
-			Expect(fmt.Sprint(e.Data)).To(Equal(`[{"dapp":{"name":"foo"}}]`))
+			Expect(fmt.Sprint(e.Data)).To(Equal(`{"dapp":{"name":"foo"}}`))
 			By("Wallet user: Approving session connection")
 			dcService.WailsApp.Event.Emit(
 				handlers.SessionConfirmRespEventName,

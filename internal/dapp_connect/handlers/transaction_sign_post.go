@@ -185,7 +185,7 @@ func TransactionSignPost(
 		case dataJSON := <-userResp: // Got user's response
 			echoInstance.Logger.Debug("Received transaction approval user response:", dataJSON)
 
-			var userRespData []TxnSignRespEvtData
+			var userRespData TxnSignRespEvtData
 
 			err := json.Unmarshal([]byte(dataJSON), &userRespData)
 			if err != nil {
@@ -198,7 +198,7 @@ func TransactionSignPost(
 			}
 
 			// Respond with error if user rejects
-			if !userRespData[0].Approved {
+			if !userRespData.Approved {
 				apiErr := dc.ApiError{
 					Name:    "txn_sign_rejected",
 					Message: "User rejected the transaction",

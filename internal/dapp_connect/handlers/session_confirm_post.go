@@ -187,7 +187,7 @@ func SessionConfirmPost(
 		case dataJSON := <-userResp: // Got user's response
 			echoInstance.Logger.Debug("Received dApp connect user response:", dataJSON)
 
-			var userRespData []ApproveSessionRespData
+			var userRespData ApproveSessionRespData
 
 			err := json.Unmarshal([]byte(dataJSON), &userRespData)
 			if err != nil {
@@ -198,7 +198,7 @@ func SessionConfirmPost(
 				})
 			}
 
-			userRespCode := userRespData[0].Code
+			userRespCode := userRespData.Code
 
 			// If no confirmation code is given, that means the user rejected
 			if userRespCode == "" {
@@ -228,7 +228,7 @@ func SessionConfirmPost(
 				credStoreConfig.ExtractedConfirm,
 				userRespCode,
 				&reqData.DappData,
-				userRespData[0].Addresses,
+				userRespData.Addresses,
 			)
 			if err != nil {
 				echoInstance.Logger.Error(err)
@@ -265,7 +265,7 @@ func SessionConfirmPost(
 			resp := SessionConfirmPostResp{
 				Id:         base64.StdEncoding.EncodeToString(session.ID().Bytes()),
 				Expiration: session.Expiration().Unix(),
-				Addresses:  userRespData[0].Addresses,
+				Addresses:  userRespData.Addresses,
 			}
 			respJSON, err := json.Marshal(resp)
 			if err != nil {

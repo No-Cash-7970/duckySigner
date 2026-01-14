@@ -1,16 +1,14 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # Wails
-/.task
-/bin
+.task
+bin
 /*.syso
-/wails
-/build/darwin
-/build/ios
-/build/linux
-/build/windows
-/build/icon.ico
-/build/icons.icns
+build/darwin/icons.icns
+build/ios/icon.png
+build/linux/appimage/build
+build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
+build/windows/icon.ico
 
 # misc
 .DS_Store

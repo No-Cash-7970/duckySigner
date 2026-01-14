@@ -21,6 +21,11 @@ cd duckySigner
 go mod download
 ```
 
+> [!TIP]
+> Depending on your operating system, you may need to set the environment variable `CGO_ENABLED=1` to run certain commands. This is especially the case with Windows. In a Bash shell, run `export CGO_ENABLED=1`. If using Windows, you can use Windows Command Prompt to run `set CGO_ENABLED=1`.
+> 
+> These commands only set `CGO_ENABLED=1` for the current terminal (or Command Prompt) session and do not persist after exiting the terminal.
+
 ### Installation on Windows[^1]
 
 You must have the correct version of `gcc` and the necessary runtime libraries installed on Windows. One method to do this is using [MSYS2](https://www.msys2.org/). To begin, install MSYS2 using their installer. Once you installed MSYS2, open a MINGW64 (a component of MSYS) shell and run:
@@ -29,7 +34,7 @@ You must have the correct version of `gcc` and the necessary runtime libraries i
 pacman -S mingw-w64-ucrt-x86_64-gcc
 ```
 
-Select "yes" when necessary; it is okay if the shell closes. Then, add gcc to the path using whatever method you prefer. In powershell this is `$env:PATH = "C:\msys64\ucrt64\bin:$env:PATH"`. After, you can compile this package in Windows.
+Select "yes" when necessary; it is okay if the shell closes. Then, add gcc to the path using whatever method you prefer. In powershell this is `$env:PATH = "C:\msys64\ucrt64\bin:$env:PATH"`. After, you can compile this project in Windows.
 
 ## Upgrading backend dependencies
 
@@ -73,6 +78,9 @@ go install github.com/wailsapp/wails/v3/cmd/wails3@latest
 
 ## Building project
 
+> [!IMPORTANT]
+> This requires `CGO_ENABLED=1`
+
 Run the following to build the project:
 
 ```bash
@@ -83,6 +91,9 @@ The output is placed in the `bin` directory.
 
 ## Dev mode
 
+> [!IMPORTANT]
+> This requires `CGO_ENABLED=1`
+
 Wails v3 provides a "dev mode" that watches for changes and automatically rebuilds the project when there is a change. Activate dev mode by running:
 
 ```bash
@@ -92,6 +103,9 @@ wails3 dev
 Use <kbd>Ctrl</kbd>+<kbd>C</kbd> (<kbd>Cmd</kbd>+<kbd>C</kbd> on Mac) to exit dev mode.
 
 ## Testing
+
+> [!IMPORTANT]
+> Running the backend tests requires `CGO_ENABLED=1`
 
 Unit tests are always in the same directory as the module or class that is being tested.
 
@@ -128,7 +142,7 @@ yarn test
 
 ## Other useful tasks
 
-Look in `Taskfile.yml` for a complete list of tasks available for this project that can be run using `wails3 task TASK_NAME`.
+Look in `Taskfile.yml` for a complete list of tasks available for this project that can be run using `wails3 task TASK_NAME`. Some of those tasks may require `CGO_ENABLED=1`.
 
 ## File structure
 

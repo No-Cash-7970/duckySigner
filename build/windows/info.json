@@ -7,9 +7,9 @@
 			"ProductVersion": "v0.0.1",
 			"CompanyName": "No-Cash-7970",
 			"FileDescription": "Desktop wallet for Algorand",
-			"LegalCopyright": "(c) 2024, No-Cash-7970",
+			"LegalCopyright": "© 2024, No-Cash-7970",
 			"ProductName": "Ducky Signer",
-			"Comments": ""
+			"Comments": "This is a comment"
 		}
 	}
 }
