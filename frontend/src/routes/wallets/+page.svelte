@@ -4,6 +4,7 @@
   import { DappConnectService, KMDService } from '$lib/wails-bindings/duckysigner/services';
   import { Dialog } from "bits-ui";
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation'
 
   let walletId = '';
   let walletInfo: Metadata;
@@ -146,9 +147,14 @@
   async function stopServer() {
     dappConnectOn = await DappConnectService.Stop();
   }
+
+  async function goBack() {
+    await stopServer()
+    goto('/')
+  }
 </script>
 
-<a href="/" class="btn" on:click={stopServer}>Back</a>
+<button class="btn" on:click={goBack}>Back</button>
 
 {#if walletInfo}
   <h1 class="text-center text-4xl mb-8">{atob(walletInfo.Name)}</h1>

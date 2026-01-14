@@ -128,7 +128,7 @@ func (dcs *DappConnectService) Start() bool {
 // server is not running. Returns whether the server is currently running.
 func (dcs *DappConnectService) Stop() bool {
 	if !dcs.serverRunning {
-		dcs.echo.Logger.Warn("Attempted to shut down a server that is not running")
+		dcs.WailsApp.Logger.Warn("Attempted to shut down a server that is not running")
 		return dcs.serverRunning
 	}
 
