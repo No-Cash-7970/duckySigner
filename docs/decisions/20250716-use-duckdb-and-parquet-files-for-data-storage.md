@@ -1,6 +1,6 @@
 # Use DuckDB & Parquet Files for Data Storage
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
 - Date: 2025-07-16
 - Tags: backend, security
