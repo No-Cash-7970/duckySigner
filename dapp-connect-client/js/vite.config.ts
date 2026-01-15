@@ -9,7 +9,6 @@ export default defineConfig({
       tsconfigPath: 'tsconfig.build.json',
     })
   ],
-  // @ts-expect-error
   test: {
 		include: ['src/**/*.{test,spec}.{js,ts}'],
 	},
