@@ -26,7 +26,9 @@ The desktop wallet requires the user's data (e.g. account keys, settings, dApp c
 
 Chose to use DuckDB with Parquet files. DuckDB is a lightweight database that can easily be embedded using Go. Using DuckDB with Parquet files should provide easy support for encrypting whole data files. The robust support for encrypting a whole Parquet file is the primary reason for using DuckDB with Parquet files instead of the other options.
 
-**Confidence**: Low. DuckDB is not designed for use cases similar to this project's use case. If using DuckDB fails, then SQLite will have to be used.
+**Confidence**: (2026-01-14) Medium. DuckDB seems to work well for small number of wallets and accounts. Further testing is needed.
+
+~~**Confidence**: Low. DuckDB is not designed for use cases similar to this project's use case. If using DuckDB fails, then SQLite will have to be used.~~
 
 ### Positive Consequences
 

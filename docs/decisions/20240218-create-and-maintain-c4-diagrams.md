@@ -24,7 +24,9 @@ The software architecture of the [desktop wallet](20231231-build-algorand-deskto
 
 Chose to use C4 diagrams to represent the software architecture. This decision comes after trying C4 diagrams out using [Structurizr](https://structurizr.com/dsl). The diagrams should be updated as the system changes. Their visual graphic form should be accessible to the public.
 
-**Confidence**: Medium. Creating and maintaining the diagrams should be useful, but it is not clear if the extra time and effort required is worth it.
+**Confidence**: (2026-01-14) Medium-High. The diagrams were useful a few times when implementing the backend for the dApp connect API, but it is still unclear whether the extra time and effort required is worth it.
+
+~~**Confidence**: Medium. Creating and maintaining the diagrams should be useful, but it is not clear if the extra time and effort required is worth it.~~
 
 ### Positive Consequences
 

@@ -28,7 +28,9 @@ Which Go web framework should be used to create the local dApp connect server? T
 
 Chose Echo because of its included HTTP/2 and web sockets support with a large number of useful examples in the documentation.
 
-**Confidence**: (2025-07-16) Medium. There have not been any problems in embedding the web server into the wallet app so far. A few basic routes have been implemented with unit tests.
+**Confidence**: (2026-01-14) High. Still no problems with embedding the web server into the wallet app. All of the dApp connect API, with authentication, has been implemented without any complications.
+
+~~**Confidence**: (2025-07-16) Medium. There have not been any problems in embedding the web server into the wallet app so far. A few basic routes have been implemented with unit tests.~~
 
 ~~**Confidence**: Low. Because what is needed to create the local server for the wallet app is uncertain, it is unclear if Echo is the best option.~~
 

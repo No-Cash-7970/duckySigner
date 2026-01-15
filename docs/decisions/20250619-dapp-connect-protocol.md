@@ -28,7 +28,9 @@ For the user to be able to interact with a dApp using the desktop wallet, the dA
 
 Chose Iteration 4. It strikes the right balance between security and UX.
 
-**Confidence**: Low. Despite this protocol being inspired by other protocols like OAuth, it is uncertain if this protocol is too complex for dApps. Because this is a new protocol, there may be some unknown security vulnerabilities lurking within this protocol.
+**Confidence**: (2026-01-14) Medium. After implementing two SDKs for this dApp connect protocol, it seems that this protocol is not too complex for dApps to handle. As long as a dApp uses the SDK, it should be able to easily connect to the wallet. However, it is still unknown what security vulnerabilities are lurking within the protocol.
+
+~~**Confidence**: Low. Despite this protocol being inspired by other protocols like OAuth, it is uncertain if this protocol is too complex for dApps. Because this is a new protocol, there may be some unknown security vulnerabilities lurking within this protocol.~~
 
 ### Positive Consequences
 

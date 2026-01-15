@@ -24,7 +24,9 @@ The [DApp connect protocol](20250619-dapp-connect-protocol.md) requires the serv
 
 Chose PASETO. It is easier to use because it requires less effort to use it securely and transmit it safely through localhost without SSL/TLS.
 
-**Confidence:** Medium. Both the server and dApps should be able to handle PASETOs. However, PASETO is relatively unknown in the web development world.
+**Confidence:** (2026-01-14) High. After implementing 2 SDKs for the dApp connect protocol, it is clear that a dApp does not know or need to know what format the token is in. It is simply a string given by the server to be given back to the server later. It only matters if the server can parse and handle PASETOs.
+
+~~**Confidence:** Medium. Both the server and dApps should be able to handle PASETOs. However, PASETO is relatively unknown in the web development world.~~
 
 ## Pros and Cons of the Options
 

@@ -26,7 +26,9 @@ There is no easy-to-use desktop wallet, that is not a website or a browser exten
 
 Chose to build a desktop wallet from scratch, because if built correctly, the desktop wallet from scratch would be the most secure and possibly longest-lasting solution while giving the developer a chance to build something that is not a website. However, some of KMD's designs can be used as a guide for building a desktop wallet from scratch.
 
-**Confidence:** Medium. Building a desktop wallet should be feasible with a reasonable amount of time and effort. However, despite there being some architecture design ideas to achieve the goals for the desktop app, it is unclear if those design ideas will pan out.
+**Confidence**: (2026-01-14) Medium-High. So far, the architecture and design ideas for the desktop app has been holding up with some tweaks here and there. More testing of dApp connect mechanism is needed. Desktop app also needs to be tested on different operating systems.
+
+~~**Confidence:** Medium. Building a desktop wallet should be feasible with a reasonable amount of time and effort. However, despite there being some architecture design ideas to achieve the goals for the desktop app, it is unclear if those design ideas will pan out.~~
 
 ## Pros and Cons of the Options
 

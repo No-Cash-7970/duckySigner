@@ -28,7 +28,9 @@ For the [dApp connect server](20240102-use-local-server-to-connect-to-dapps.md),
 
 Chose Hawk. Hawk is a solution that in somewhere between OAuth 2.0 and API key authentication. It has most of the powerful features that OAuth 2.0 has with the straightforwardness of API key authentication.
 
-**Confidence:** Very low. Using Hawk may be overkill and not very effective for an HTTP connection that is on localhost. It is also possible that Hawk is not a long-lasting solution and would not be able to adjust to the changing security landscape because of the lack of development.
+**Confidence:** (2026-01-14) Medium. For something that requires high security like a cryptocurrency wallet, it may not be overkill to use an authentication protocol like Hawk. While Hawk has not been significantly updated in years, it seems it holds up well enough for now.
+
+~~**Confidence:** Very low. Using Hawk may be overkill and not very effective for an HTTP connection that is on localhost. It is also possible that Hawk is not a long-lasting solution and would not be able to adjust to the changing security landscape because of the lack of development.~~
 
 ## Pros and Cons of the Options
 
