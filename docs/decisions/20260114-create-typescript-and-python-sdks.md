@@ -1,8 +1,8 @@
 # Create Typescript and Python SDKs
 
-- Status: draft
+- Status: accepted
 - Deciders: No-Cash-7970
-- Date: 2026-01-14
+- Date: 2026-01-15
 - Tags: dapp-connect
 
 ## Context and Problem Statement
@@ -14,7 +14,7 @@ A dApp needs to connect to the desktop wallet and manage its connect sessions wi
 - **Typical use of the language**: Most languages have a wide range of uses. However, in practice, a language's use is typically far narrower than what it is capable of. For example, JavaScript and TypeScript are most frequently used for font-end web development, Python is frequently used for data analysis, and Go is frequently used for back-end web development.
 - **Popularity of the language**: How many developers use the language? It is more worthwhile to create an SDK for a language that many developers use.
 - **Developer's familiarity with the language**: The developer of this project (No-Cash-7970) will not create an SDK for a programming language she is not familiar with
-- **Developer time and resources**: The developer has limited time and resources for developing SDKs. At most 3 SDKs can be made.
+- **Developer time and resources**: The developer has limited time and resources for creating and maintaining SDKs. At most 3 SDKs can be created.
 
 ## Considered Options
 
