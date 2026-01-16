@@ -36,6 +36,10 @@ Not an exhaustive list of threats.
 - [THREAT-028: DApp connect shared secret keys compromised by server](#threat-028-dapp-connect-shared-secret-keys-compromised-by-server)
 - [THREAT-029: Sensitive or secret data written into logs](#threat-029-sensitive-or-secret-data-written-into-logs)
 - [THREAT-030: Database file containing secret data is too big to fit into memory](#threat-030-database-file-containing-secret-data-is-too-big-to-fit-into-memory)
+- [THREAT-031: Malicious or fake binary in update](#threat-031-malicious-or-fake-binary-in-update)
+- [THREAT-032: Malicious or fake update server](#threat-032-malicious-or-fake-update-server)
+- [THREAT-033: Using older version with security vulnerability](#threat-033-using-older-version-with-security-vulnerability)
+- [THREAT-034: New version introduces security vulnerability](#threat-034-new-version-introduces-security-vulnerability)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -572,12 +576,81 @@ When establishing a dApp connect session, the ID the dApp creates and sends to t
 - **Target:** Database file containing secret data
 - **Action:** So much data is placed into a database file over time that the entire file cannot fit into memory when attempting to read the file
 - **Result of the action:** Secret data that was stored in the database file may be temporarily written to disk unencrypted (i.e. paging/swapping)
-- **Occurrence likelihood**: {{How likely will the attacker attempt to exploit threat (high, medium, or low)}}
-- **Impact:** {{What is the severity of the result (high, medium, or low)}}
-- **Threat type:** {{STRIDE (e.g., denial of service, spoofing)}}
+- **Occurrence likelihood**: Low
+- **Impact:** Medium
+- **Threat type:** Information disclosure
 - **Potential mitigations:**
   1. Protect secret data temporarily stored in memory when reading the database file with a software enclave by using something the like [MemGuard](https://pkg.go.dev/github.com/awnumar/memguard) in case a memory paging/swapping occurs
   2. Do not load entire database file at once. Store data in a file format that supports modular encryption like [Parquet](https://github.com/apache/parquet-format/blob/master/Encryption.md), which can be accessed using [DuckDB](https://duckdb.org/docs/stable/data/parquet/encryption). This way, the whole database file does not need to be loaded into memory to decrypt it and access the data within it.
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-031: Malicious or fake binary in update
+
+- **Actor:** Cybercriminal
+- **Purpose:** To compromise the user's wallet accounts to steal funds, to embed spyware into the user's machine and extract sensitive or secret data stored on the user's machine, to embed malware into the user's machine to make it function in a way the user would not approve of
+- **Target:** The software binary executable for the desktop wallet software that is downloaded as an update, the user's funds on chain, the user's sensitive data, the functionality of the user's machine
+- **Action:** The actor somehow uploads a malicious software binary onto the [software binary repository](./00-info.md#trust-09-software-binary-repository). The user then automatically downloads the malicious binary through the [automatic updater](./00-info.md#entry-10-automatic-updater). Through the malicious binary, the actor possibly gains access to the user's funds, sensitive data or machine.
+- **Result of the action:** User's wallet accounts are compromised, user's machine is compromised
+- **Occurrence likelihood**: Medium
+- **Impact:** High
+- **Threat type:** Spoofing, tampering, information disclosure
+- **Potential mitigations:**
+  1. Only check for a new update. Never allow a new binary to be downloaded and run.
+  2. Sign every binary with a key that only the developer/maintainer has and require the automatic updater to check the signature of a downloaded binary before running it
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-032: Malicious or fake update server
+
+Related to [THREAT-031](#threat-031-malicious-or-fake-binary-in-update).
+
+- **Actor:** Cybercriminal
+- **Purpose:** To compromise the user's wallet accounts to steal funds, to embed spyware into the user's machine and extract sensitive or secret data stored on the user's machine, to embed malware into the user's machine to make it function in a way that the user would not approve of
+- **Target:** Initially, the update server used by the software to check for updates; Eventually, the software binary executable that is downloaded as an update, the user's funds on chain, the user's sensitive data, the functionality of the user's machine
+- **Action:** The actor somehow compromises the update server to point a [malicious or fake binary](#threat-031-malicious-or-fake-binary-in-update). When the user automatically updates, they download the malicious binary and their machine is compromised.
+- **Result of the action:** The update server is compromised, the actor possibly has access to data of what machines have the wallet installed, the user's wallet accounts are compromised, the user's machine is compromised
+- **Occurrence likelihood**: Medium
+- **Impact:** High
+- **Threat type:** Spoofing, tampering, information disclosure
+- **Potential mitigations:**
+  1. Make the update server a simple as possible. It should only respond with the latest version number. Very little, if any of user data should be stored.
+  2. Ensure the update server can only be modified by the software developer/maintainer. Whatever key(s) the developer uses to create and maintain the server must be kept securely and rotated regularly.
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-033: Using older version with security vulnerability
+
+- **Actor:** User, cybercriminal
+- **Purpose:** Possibly none, user forgets to update the software; or the user prefers the functionality of the older version that changed in later versions
+- **Target:** The old version of the software with a security vulnerability fixed in a later version
+- **Action:** The user does not update the software, which has a security vulnerability that is mitigated in a later version
+- **Result of the action:** The user continues to use an old vulnerable version of the software, and a cybercriminal uses that vulnerability to possibly compromise the user's wallet accounts or their machine.
+- **Occurrence likelihood**: Medium
+- **Impact:** Low to High, depending on how many vulnerabilities are in the older version of the software and the severity of the vulnerabilities
+- **Threat type:** Tampering, possibly information disclosure
+- **Potential mitigations:**
+  1. Alert user when there is a new version of the software
+  2. Detect the version and alert the user if there is a known vulnerability in that is fixed in later versions
+
+[Back to top ↑](#table-of-contents)
+
+## THREAT-034: New version introduces security vulnerability
+
+Similar to [THREAT-031](#threat-031-malicious-or-fake-binary-in-update), but actors and their intentions are different. Also related to [THREAT-033](#threat-033-using-older-version-with-security-vulnerability).
+
+- **Actor:** Software developer/maintainer, user, Cybercriminal
+- **Purpose:** To improve the software. The security vulnerability was introduced unintentionally and is the result of a bug or mistake.
+- **Target:** Desktop wallet software
+- **Action:** The software developer releases a new version of the desktop wallet software that contains a security vulnerability
+- **Result of the action:** A cybercriminal can utilize the vulnerability to compromise the user's wallet accounts or their machine
+- **Occurrence likelihood**: High, developer mistakes leading to security vulnerabilities are very common, especially for complex software
+- **Impact:** Low to high, depending on the severity of the security vulnerability
+- **Threat type:** Tampering, possibly information disclosure
+- **Potential mitigations:**
+  1. Frequent and regular testing of (almost) all parts of the software
+  2. Strict standards when reviewing code from contributors
+  3. Create and enforce systems for reporting, addressing and fixing security vulnerabilities
 
 [Back to top ↑](#table-of-contents)
 

@@ -26,6 +26,8 @@
   - [TRUST-05: Software developer/maintainer](#trust-05-software-developermaintainer)
   - [TRUST-06: Software contributor](#trust-06-software-contributor)
   - [TRUST-07: Software dependency](#trust-07-software-dependency)
+  - [TRUST-08: Software update server](#trust-08-software-update-server)
+  - [TRUST-09: Software binary repository](#trust-09-software-binary-repository)
 - [Entry Points](#entry-points)
   - [ENTRY-01: Wallet GUI](#entry-01-wallet-gui)
   - [ENTRY-02: Ledger device connection](#entry-02-ledger-device-connection)
@@ -36,6 +38,7 @@
   - [ENTRY-07: Algorand node API](#entry-07-algorand-node-api)
   - [ENTRY-08: Software dependency](#entry-08-software-dependency)
   - [ENTRY-09: Codebase contribution](#entry-09-codebase-contribution)
+  - [ENTRY-10: Automatic Updater](#entry-10-automatic-updater)
 - [Exit Points](#exit-points)
   - [EXIT-01: Wallet GUI](#exit-01-wallet-gui)
   - [EXIT-02: Ledger device connection](#exit-02-ledger-device-connection)
@@ -46,6 +49,7 @@
   - [EXIT-07: Algorand node API](#exit-07-algorand-node-api)
   - [EXIT-08: External server connection](#exit-08-external-server-connection)
   - [EXIT-09: Logs](#exit-09-logs)
+  - [EXIT-10: Automatic Updater](#exit-10-automatic-updater)
 - [Assets](#assets)
   - [ASSET-01: Account private keys](#asset-01-account-private-keys)
   - [ASSET-02: User preferences](#asset-02-user-preferences)
@@ -114,6 +118,14 @@ In an open source project, a contributor is a third party who contributes to the
 ### TRUST-07: Software dependency
 
 A software dependency is external software that is integrated into the codebase. A software dependency could be core to the functionality of the software using the dependency, so a malicious or malfunctioning dependency could compromise the software entirely.
+
+### TRUST-08: Software update server
+
+The server used by an automatic updater to check if there is a new version of the software. This server will most likely host a list of links pointing to the software binaries on the [software binary repository](#trust-09-software-binary-repository) instead of hosting the binaries itself.
+
+### TRUST-09: Software binary repository
+
+The place where the software binary executables are hosted for users to download. This repository should only be modified by the [software developer/maintainer](#trust-05-software-developermaintainer).
 
 ## Entry Points
 
@@ -213,6 +225,18 @@ An open source project usually allows for anyone to contribute to the project. A
 
 1. Software developer/maintainer
 2. Software contributor
+
+### ENTRY-10: Automatic Updater
+
+If there are automatic updates, then the software for automatically updating the desktop wallet software is an entry point. This includes the remote server connection the updater uses to check for and download updates, and includes the executable binary the updater downloads.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. Anonymous wallet user
+3. Software update server
+4. Software binary repository
+5. Software developer/maintainer
 
 ## Exit Points
 
@@ -314,6 +338,17 @@ Logs are used for debugging during development and troubleshooting in production
 2. Software dependency
 3. Authenticated wallet user
 4. Anonymous wallet user
+
+### EXIT-10: Automatic Updater
+
+If there are automatic updates, then the automatic updater is an exit point. It would send information (like software version and operating system) to a remote server.
+
+**Trust Levels**:
+
+1. Authenticated wallet user
+2. Anonymous wallet user
+3. Software update server
+4. Software developer/maintainer
 
 ## Assets
 
