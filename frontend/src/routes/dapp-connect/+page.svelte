@@ -11,7 +11,7 @@
   async function confirmConnect() {
     Events.Emit(
       'session_confirm_response',
-      JSON.stringify([{ code: confirmCode, addrs: [] }]),
+      JSON.stringify({ code: confirmCode, addrs: [] }),
     )
     Window.Close()
   }

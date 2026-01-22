@@ -12,7 +12,7 @@
   })
 
   async function sendTxnApproval(approved: boolean) {
-    Events.Emit('txn_sign_response', JSON.stringify([{approved}]))
+    Events.Emit('txn_sign_response', JSON.stringify({approved}))
     Window.Close()
   }
 </script>
