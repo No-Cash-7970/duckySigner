@@ -94,7 +94,7 @@ func (dcs *DappConnectService) Start() bool {
 	dc.SetupCustomValidator(dcs.echo)
 	dcs.setupServerRoutes(dcs.echo)
 
-	// Allow for the server to be gracefully stop if there was an interrupt
+	// Allow for the server to gracefully stop if there was an interrupt
 	// (e.g. Ctrl+C)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	dcs.serverRunning = true
