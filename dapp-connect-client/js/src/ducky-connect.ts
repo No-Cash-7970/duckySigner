@@ -235,7 +235,7 @@ export class DuckyConnect {
       body: reqBody,
       headers: {
         'Content-Type': reqContentType,
-        'Server-Authorization': hawkHeader.header,
+        'Authorization': hawkHeader.header,
       },
     })
     const respText = await response.text()
@@ -246,7 +246,7 @@ export class DuckyConnect {
       response as any,
       credentials,
       hawkHeader.artifacts,
-      { payload: respText }
+      { payload: respText.trim() }
     )
     // If the response is valid the authentication header is returned, otherwise no headers are
     // returned or an error is thrown
@@ -306,7 +306,7 @@ export class DuckyConnect {
 
       // Make request to server. No need to know what the server's response is this time.
       try {
-        await fetch(url, {method: reqMethod, headers: {'Server-Authorization': hawkHeader.header}})
+        await fetch(url, {method: reqMethod, headers: {'Authorization': hawkHeader.header}})
       } catch (e: any) {
         console.warn(e)
       }
@@ -477,19 +477,20 @@ export class DuckyConnect {
       response as any,
       credentials,
       hawkHeader.artifacts,
-      { payload: respText }
+      { payload: respText.trim() }
     )
-    // If the response is valid the authentication header is returned, otherwise no headers are
-    // returned or an error is thrown
-    if (Object.keys(authResult.headers).length === 0) {
-      throw new Error('Server response failed verification')
-    }
 
     if (!response.ok) {
       // NOTE: An error from the server will have a 'name' and a 'message'
       throw Error(
         `Transaction signing failed. Error from server: ${respJSON.message} (${respJSON.name})`
       )
+    }
+
+    // If the response is valid the authentication header is returned, otherwise no headers are
+    // returned or an error is thrown
+    if (Object.keys(authResult.headers).length === 0) {
+      throw new Error('Server response failed verification')
     }
 
     return algosdk.decodeSignedTransaction(algosdk.base64ToBytes(respJSON['signed_transaction']))
