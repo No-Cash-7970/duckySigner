@@ -205,10 +205,11 @@ class DuckyConnect:
         self.__base_url = options.server_url
         self.__dappInfo = options.dapp
 
+        retrieved_connect_key = None
+
         if options.connect_id != '': # A connect ID was given
             self.__connect_id = options.connect_id
-
-        retrieved_connect_key = self.__retrieve_connect_key()
+            retrieved_connect_key = self.__retrieve_connect_key()
 
         # Attempt to get the connect key pair saved in the system's keyring
         if retrieved_connect_key is None:
@@ -335,7 +336,7 @@ class DuckyConnect:
             url,
             'POST',
             content=req_body,
-            content_type=req_content_type
+            content_type=req_content_type,
         )
 
         # Show confirmation code
@@ -347,24 +348,28 @@ class DuckyConnect:
             data=req_body,
             headers={
                 'Content-Type': req_content_type,
-                'Server-Authorization': hawk_sender.request_header,
+                'Authorization': hawk_sender.request_header,
             },
             timeout=self.__confirm_timeout
         )
         resp_json = response.json()
 
-        # Verify server response unless unverified server responses are allowed
-        if not self.__allow_insecure_responses:
-            hawk_sender.accept_response(
-                response.headers['Server-Authorization'],
-                content=response.content,
-                content_type=response.headers['Content-Type'],
-            )
-
         if response.status_code != requests.codes.ok:
             # Note: An error from the server will have a 'name' and a 'message'
             raise requests.exceptions.HTTPError(
                 f'Session confirmation failed. Error from server: {resp_json['message']} ({resp_json['name']})'  # noqa: E501
+            )
+
+        # Verify server response unless unverified server responses are allowed
+        if not self.__allow_insecure_responses:
+            # XXX: The "seen_nonce was None" warning is a known issue that has yet to be
+            # resolved. Server response headers from the server do not have nonce, so
+            # this warning can be ignored.
+            # More info: <https://github.com/kumar303/mohawk/issues/50>
+            hawk_sender.accept_response(
+                response.headers['Server-Authorization'],
+                content=response.content.decode().strip(),
+                content_type=response.headers['Content-Type'],
             )
 
         # Return new established session data
@@ -481,7 +486,6 @@ class DuckyConnect:
 
         with open(self.__session_file_path, 'w') as f:
             f.write(json.dumps(stored_info_dict))
-        print(stored_info)
         return stored_info
 
     def __remove_stored_session(self) -> None:
@@ -583,9 +587,13 @@ class DuckyConnect:
 
         # Verify server response unless unverified server responses are allowed
         if not self.__allow_insecure_responses:
+            # XXX: The "seen_nonce was None" warning is a known issue that has yet to be
+            # resolved. Server response headers from the server do not have nonce, so
+            # this warning can be ignored.
+            # More info: <https://github.com/kumar303/mohawk/issues/50>
             hawk_sender.accept_response(
                 response.headers['Server-Authorization'],
-                content=response.content,
+                content=response.content.decode().strip(),
                 content_type=response.headers['Content-Type'],
             )
 
