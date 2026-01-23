@@ -7,8 +7,8 @@ info:
     name: GNU AGPLv3
     url: https://www.gnu.org/licenses/agpl.txt
 servers:
-  - url: http://localhost:1323
-  - url: http://127.0.0.1:1323
+  - url: http://localhost:3231
+  - url: http://127.0.0.1:3231
 security:
   - Hawk: []
 tags:
