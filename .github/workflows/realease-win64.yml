@@ -34,7 +34,7 @@ jobs:
         env:
           CGO_ENABLED: 1
       - name: Rename executable
-        run: mv bin/duckSigner.exe bin/duckySigner-win_x64.exe
+        run: mv bin/duckySigner.exe bin/duckySigner-win_x64.exe
       - name: Upload executable to latest release
         uses: softprops/action-gh-release@v2
         with:
