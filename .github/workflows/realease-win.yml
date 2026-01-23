@@ -1,4 +1,4 @@
-name: Release - Windows x64
+name: Release - Windows
 
 on:
   release:
@@ -27,14 +27,12 @@ jobs:
           go-version: '1.25'
       - name: Install Wails
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
-      - name: Downloand and install dependencies
+      - name: Download and install dependencies
         run: go mod download
       - name: Build
         run: wails3 build
         env:
           CGO_ENABLED: 1
-      - name: Rename executable
-        run: mv bin/duckySigner.exe bin/duckySigner-win_x64.exe
       - name: Upload executable to latest release
         uses: softprops/action-gh-release@v2
         with:
