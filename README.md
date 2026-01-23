@@ -7,11 +7,23 @@ Prototype for a simple desktop Algorand wallet that signs things…maybe.
 
 ## Installation for development
 
-This project requires Wails 3. Install the latest version by running the following:
+### Requirements for the development environment
 
-```bash
-go install github.com/wailsapp/wails/v3/cmd/wails3@latest
-```
+- Access to the command-line interface (CLI), such as Terminal, PowerShell or
+  Command Prompt
+- [Git](https://git-scm.com/) installed
+- [Node.js](https://nodejs.org/en) version 20.0.0 or higher installed.
+- [Yarn](https://yarnpkg.com/getting-started/install) package manager installed.
+  Version 2.0.0 or higher, version 4.0.0 or higher is recommended.
+   > NOTE: If you have Yarn 1.x.x installed, install and switch to Yarn 2.0.0 or
+   > higher by running `corepack enable && yarn set version stable`.
+- [Wails 3 (currently in alpha)](https://v3alpha.wails.io/). Install the latest version by running the following:
+
+    ```bash
+    go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+    ```
+
+### Install the dependencies
 
 Then install the project's dependencies:
 
@@ -23,7 +35,7 @@ go mod download
 
 > [!TIP]
 > Depending on your operating system, you may need to set the environment variable `CGO_ENABLED=1` to run certain commands. This is especially the case with Windows. In a Bash shell, run `export CGO_ENABLED=1`. If using Windows, you can use Windows Command Prompt to run `set CGO_ENABLED=1`.
-> 
+>
 > These commands only set `CGO_ENABLED=1` for the current terminal (or Command Prompt) session and do not persist after exiting the terminal.
 
 ### Installation on Windows[^1]
