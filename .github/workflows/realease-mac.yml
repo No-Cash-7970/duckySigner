@@ -1,0 +1,38 @@
+name: Release - macOS
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch: null
+permissions:
+  contents: write
+jobs:
+  build:
+    timeout-minutes: 30
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Enable Corepack for Yarn
+        run: corepack enable
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+      - name: Download and install project dependencies
+        run: go mod download
+      - name: Build & package
+        run: wails3 package
+        env:
+          CGO_ENABLED: 1
+      - name: Upload executables to latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: bin/*
