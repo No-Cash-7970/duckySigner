@@ -27,7 +27,7 @@ import (
 	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-codec/codec"
 	"github.com/awnumar/memguard"
-	_ "github.com/marcboeker/go-duckdb/v2"
+	_ "github.com/duckdb/duckdb-go/v2"
 	logging "github.com/sirupsen/logrus"
 )
 
