@@ -87,6 +87,7 @@ def main() -> None:  # noqa: PLR0911, PLR0912, PLR0915
         amt=0,
         # Retrieving real suggested parameters for an example is unnecessary
         sp=transaction.SuggestedParams(
+            flat_fee=True,
             fee=1000, # 0.001 Algos
             first=6000000,
             last=6001000,
