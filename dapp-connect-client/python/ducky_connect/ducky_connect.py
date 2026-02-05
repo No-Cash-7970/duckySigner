@@ -579,7 +579,7 @@ class DuckyConnect:
             data=req_body,
             headers={
                 'Content-Type': req_content_type,
-                'Server-Authorization': hawk_sender.request_header,
+                'Authorization': hawk_sender.request_header,
             },
             timeout=self.__sign_txn_timeout
         )
