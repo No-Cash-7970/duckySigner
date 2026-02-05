@@ -40,6 +40,7 @@ Not an exhaustive list of threats.
 - [THREAT-032: Malicious or fake update server](#threat-032-malicious-or-fake-update-server)
 - [THREAT-033: Using older version with security vulnerability](#threat-033-using-older-version-with-security-vulnerability)
 - [THREAT-034: New version introduces security vulnerability](#threat-034-new-version-introduces-security-vulnerability)
+- [THREAT-035: No internet access](#threat-035-no-internet-access)
 
 ## THREAT-001: Impersonation of a trustworthy dApp or platform
 
@@ -653,6 +654,20 @@ Similar to [THREAT-031](#threat-031-malicious-or-fake-binary-in-update), but act
   3. Create and enforce systems for reporting, addressing and fixing security vulnerabilities
 
 [Back to top ↑](#table-of-contents)
+
+## THREAT-035: No internet access
+
+- **Actor:** User's machine, user
+- **Purpose:** Malfunction (no purpose)
+- **Target:** None
+- **Action:** The user loses access to the internet for some reason, often because of a malfunction in the internet service the user is using or a malfunction in the part part of the user's device that handles network connections
+- **Result of the action:** The user loses access to the certain information about their accounts (e.g. balance, assets), the user cannot send a transaction.
+- **Occurrence likelihood**: High
+- **Impact:** Medium
+- **Threat type:** Denial of service
+- **Potential mitigations:**
+  1. Save or cache the most recent account information
+  2. Notify user when access is lost
 
 <!--
 
