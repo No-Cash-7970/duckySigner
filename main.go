@@ -139,7 +139,7 @@ func main() {
 
 	app.Event.On("session_confirm_prompt", func(e *application.CustomEvent) {
 		app.Window.NewWithOptions(application.WebviewWindowOptions{
-			Title: "Ducky Connect",
+			Title: "Connect Wallet",
 			Mac: application.MacWindow{
 				InvisibleTitleBarHeight: 50,
 				Backdrop:                application.MacBackdropTranslucent,
