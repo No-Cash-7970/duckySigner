@@ -24,6 +24,12 @@ describe('DApp Connect Confirmation Page', () => {
     expect(await screen.findByText('Foobar')).toBeInTheDocument()
   });
 
+  it('has list of accounts', async () => {
+		render(DappConnectPage);
+    expect(await screen.findByText('Choose accounts to connect')).toBeInTheDocument()
+    expect(await screen.findByText('No accounts')).toBeInTheDocument()
+  });
+
   it('responds to backend & closes window when confirmation code submitted', async () => {
 		render(DappConnectPage);
 
