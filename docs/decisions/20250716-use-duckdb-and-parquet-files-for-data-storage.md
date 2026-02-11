@@ -1,6 +1,6 @@
 # Use DuckDB & Parquet Files for Data Storage
 
-- Status: accepted
+- Status: superseded by [20260210-use-encrypted-duckdb-files-for-data-storage](20260210-use-encrypted-duckdb-files-for-data-storage.md)
 - Deciders: No-Cash-7970
 - Date: 2025-07-16
 - Tags: backend, security
