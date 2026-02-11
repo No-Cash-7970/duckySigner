@@ -466,7 +466,7 @@ export class DuckyConnect {
       body: reqBody,
       headers: {
         'Content-Type': reqContentType,
-        'Server-Authorization': hawkHeader.header,
+        'Authorization': hawkHeader.header,
       },
     })
     const respText = await response.text()
