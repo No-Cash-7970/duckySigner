@@ -1,7 +1,6 @@
 package driver_test
 
 import (
-	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"os"
@@ -19,44 +18,42 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("Parquet Wallet Driver", func() {
+var _ = Describe("DuckDB Wallet Driver", func() {
 
-	Describe("ParquetWalletDriver", func() {
+	Describe("DuckDbWalletDriver", func() {
 
 		Describe("ListWalletMetadatas()", Ordered, func() {
-			const walletDirName = ".test_pq_list_metas"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_list_metas"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("returns no wallet metadatas and does not generate a `metadatas.parquet` file if there are no wallets", func() {
+			It("returns no wallet metadatas if there are no wallets", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
-				Expect(parquetDriver.ListWalletMetadatas()).To(BeEmpty(), "Returns no wallet metadatas")
-				_, err := os.Stat(walletDirName + "/" + driver.ParquetMetadatasFile)
-				Expect(err).To(MatchError(os.ErrNotExist), "No `metadatas.parquet` file was generated")
+				Expect(duckDbDriver.ListWalletMetadatas()).To(BeEmpty(), "Returns no wallet metadatas")
 			})
 
-			It("returns the wallet metadatas of the wallets in the wallet directory if `metadatas.parquet` file exists", func() {
+			It("returns the wallet metadatas of the wallets in the wallet directory", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
 
 				By("Creating 2 wallets (which generates a metadatas file)")
 				const walletId1 = "000"
 				const walletId2 = "001"
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId1),
 					[]byte("password"),
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
-				err = parquetDriver.CreateWallet(
+				err = duckDbDriver.CreateWallet(
 					[]byte("Bar"),
 					[]byte(walletId2),
 					[]byte("password"),
@@ -65,47 +62,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing wallets")
-				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
-
-				By("Checking `metadatas.parquet` file")
-				db, err := sql.Open("duckdb", "")
-				Expect(err).ToNot(HaveOccurred())
-				defer db.Close()
-
-				rows, err := db.Query(
-					"SELECT wallet_id FROM read_parquet('" + walletDirName + "/" + driver.ParquetMetadatasFile + "')",
-				)
-				Expect(err).ToNot(HaveOccurred())
-
-				var metaWalletId string
-
-				// Get first wallet metadata
-				rows.Next()
-				err = rows.Scan(&metaWalletId)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(metaWalletId).To(Equal(walletId1), "The first wallet is in the metadatas")
-				// Get second wallet metadata
-				rows.Next()
-				err = rows.Scan(&metaWalletId)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(metaWalletId).To(Equal(walletId2), "The second wallet is in the metadatas")
-				rows.Close()
-			})
-
-			It("generates a `metadatas.parquet` file containing the metadata of each wallet if the file does not exist", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that multiple wallets have been created
-
-				By("Removing the generated `metadatas.parquet` file")
-				err := os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Listing wallets")
-				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
-
-				By("Checking if a new `metadatas.parquet` file was generated")
-				_, err = os.Stat(walletDirName + "/" + driver.ParquetMetadatasFile)
-				Expect(err).ToNot(HaveOccurred(), "A new `metadatas.parquet` file was generated")
+				Expect(duckDbDriver.ListWalletMetadatas()).To(HaveLen(2), "Returns 2 wallet metadatas")
 			})
 
 			It("skips listing directories that are not wallets", func() {
@@ -114,17 +71,17 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Listing wallets")
-				Expect(parquetDriver.ListWalletMetadatas()).To(HaveLen(2),
+				Expect(duckDbDriver.ListWalletMetadatas()).To(HaveLen(2),
 					"Returns 2 wallet metadatas")
 			})
 		})
 
 		Describe("CreateWallet()", Ordered, func() {
-			const walletDirName = ".test_pq_create_wallet"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_create_wallet"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -133,7 +90,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			It("fails if wallet name is too long", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"),
 					[]byte("abc123"),
 					[]byte("password"),
@@ -145,7 +102,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			It("fails if wallet ID is too long", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte("000000000000000000000000000000000000000000000000000000000000000000000"),
 					[]byte("password"),
@@ -162,7 +119,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				walletName := "Foo"
 
 				By("Creating a new wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte(walletName),
 					[]byte(walletId),
 					[]byte("password"),
@@ -171,54 +128,16 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking if wallet metadata file exists")
-				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.ParquetWalletMetadataFile)
+				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.DuckDbWalletMetadataFile)
 				Expect(err).ToNot(HaveOccurred())
-				metadata := &driver.ParquetWalletMetadata{}
+				metadata := &driver.DuckDbWalletMetadata{}
 				err = json.Unmarshal(metadataFileContents, metadata)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(metadata.DriverName).To(Equal("parquet"))
+				Expect(metadata.DriverName).To(Equal("duckdb"))
 				Expect(metadata.DriverVersion).To(Equal(1))
 				Expect(metadata.WalletId).To(Equal(walletId))
 				Expect(metadata.WalletName).To(Equal(walletName))
 				Expect(metadata.MEPEncrypted).ToNot(BeEmpty())
-				Expect(metadata.MDKEncrypted).ToNot(BeEmpty())
-				Expect(metadata.MaxKeyIdxEncrypted).ToNot(BeEmpty())
-
-				By("Checking if wallet is added to metadatas file")
-				db, err := sql.Open("duckdb", "")
-				Expect(err).ToNot(HaveOccurred())
-				defer db.Close()
-
-				row := db.QueryRow(
-					"FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
-					walletId,
-				)
-				var (
-					metaDriverName         string
-					metaDriverVersion      int
-					metaWalletId           string
-					metaWalletName         string
-					metaMepEncrypted       []byte
-					metaMdkEncrypted       []byte
-					metaMaxKeyIdxEncrypted []byte
-				)
-				err = row.Scan(
-					&metaDriverName,
-					&metaDriverVersion,
-					&metaWalletId,
-					&metaWalletName,
-					&metaMepEncrypted,
-					&metaMdkEncrypted,
-					&metaMaxKeyIdxEncrypted,
-				)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(metaDriverName).To(Equal("parquet"))
-				Expect(metaDriverVersion).To(Equal(1))
-				Expect(metaWalletId).To(Equal(walletId))
-				Expect(metaWalletName).To(Equal(walletName))
-				Expect(metaMepEncrypted).ToNot(BeEmpty())
-				Expect(metaMdkEncrypted).ToNot(BeEmpty())
-				Expect(metaMaxKeyIdxEncrypted).ToNot(BeEmpty())
 			})
 
 			It("fails if directory for wallet already exists", func() {
@@ -228,7 +147,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				walletId := "0000000000"
 
 				By("Attempting to create a new wallet using same wallet ID")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte("password"),
@@ -245,7 +164,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				walletName := "Bar"
 
 				By("Creating a new wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte(walletName),
 					[]byte(walletId),
 					[]byte("password"),
@@ -254,84 +173,34 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking if wallet metadata file exists")
-				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.ParquetWalletMetadataFile)
+				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.DuckDbWalletMetadataFile)
 				Expect(err).ToNot(HaveOccurred())
-				metadata := &driver.ParquetWalletMetadata{}
+				metadata := &driver.DuckDbWalletMetadata{}
 				err = json.Unmarshal(metadataFileContents, metadata)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(metadata.DriverName).To(Equal("parquet"))
+				Expect(metadata.DriverName).To(Equal("duckdb"))
 				Expect(metadata.DriverVersion).To(Equal(1))
 				Expect(metadata.WalletId).To(Equal(walletId))
 				Expect(metadata.WalletName).To(Equal(walletName))
 				Expect(metadata.MEPEncrypted).ToNot(BeEmpty())
-				Expect(metadata.MDKEncrypted).ToNot(BeEmpty())
-				Expect(metadata.MaxKeyIdxEncrypted).ToNot(BeEmpty())
-
-				By("Checking if wallet is added to metadatas file")
-				db, err := sql.Open("duckdb", "")
-				Expect(err).ToNot(HaveOccurred())
-				defer db.Close()
-
-				row := db.QueryRow(
-					"FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
-					walletId,
-				)
-				var (
-					metaDriverName         string
-					metaDriverVersion      int
-					metaWalletId           string
-					metaWalletName         string
-					metaMepEncrypted       []byte
-					metaMdkEncrypted       []byte
-					metaMaxKeyIdxEncrypted []byte
-				)
-				err = row.Scan(
-					&metaDriverName,
-					&metaDriverVersion,
-					&metaWalletId,
-					&metaWalletName,
-					&metaMepEncrypted,
-					&metaMdkEncrypted,
-					&metaMaxKeyIdxEncrypted,
-				)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(metaDriverName).To(Equal("parquet"))
-				Expect(metaDriverVersion).To(Equal(1))
-				Expect(metaWalletId).To(Equal(walletId))
-				Expect(metaWalletName).To(Equal(walletName))
-				Expect(metaMepEncrypted).ToNot(BeEmpty())
-				Expect(metaMdkEncrypted).ToNot(BeEmpty())
-				Expect(metaMaxKeyIdxEncrypted).ToNot(BeEmpty())
 			})
 		})
 
 		Describe("RenameWallet()", Ordered, func() {
-			const walletDirName = ".test_pq_rename_wallet"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_rename_wallet"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("fails when there is no metadatas file", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that no wallets have been created yet
-				By("Attempting to rename wallet with the given ID")
-				err := parquetDriver.RenameWallet(
-					[]byte("my new name"),
-					[]byte("000"),
-					[]byte("password"),
-				)
-				Expect(err).To(MatchError("wallet not found"))
-			})
-
 			It("renames the wallet to the new name", func() {
 				By("Creating a wallet")
 				const walletId = "000"
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte("password"),
@@ -341,33 +210,18 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 				By("Renaming the wallet")
 				const newWalletName = "my new name"
-				err = parquetDriver.RenameWallet(
+				err = duckDbDriver.RenameWallet(
 					[]byte(newWalletName),
 					[]byte("000"),
 					[]byte("password"),
 				)
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Checking if the wallet has new name in the metadatas file")
-				db, err := sql.Open("duckdb", "")
-				Expect(err).ToNot(HaveOccurred())
-				defer db.Close()
-
-				row := db.QueryRow(
-					"SELECT wallet_name FROM read_parquet('"+walletDirName+"/"+driver.ParquetMetadatasFile+"') WHERE wallet_id = ?",
-					walletId,
-				)
-				var retrievedWalletName string
-				err = row.Scan(&retrievedWalletName)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(retrievedWalletName).To(Equal(newWalletName),
-					"The wallet is renamed in the wallet's metadata file")
-
 				By("Checking if the wallet's metadata file has the new name")
-				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.ParquetWalletMetadataFile)
+				metadataFileContents, err := os.ReadFile(walletDirName + "/" + walletId + "/" + driver.DuckDbWalletMetadataFile)
 				Expect(err).ToNot(HaveOccurred())
 
-				metadata := driver.ParquetWalletMetadata{}
+				metadata := driver.DuckDbWalletMetadata{}
 				err = json.Unmarshal(metadataFileContents, &metadata)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(metadata.WalletName).To(Equal(newWalletName),
@@ -378,30 +232,13 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that a wallet has been created
 				By("Attempting to rename wallet with the given ID with an incorrect password")
-				err := parquetDriver.RenameWallet(
+				err := duckDbDriver.RenameWallet(
 					[]byte("another new name"),
 					[]byte("000"),
 					[]byte("not the password"),
 				)
 				Expect(err).ToNot(HaveOccurred(),
 					"Renaming the wallet succeeds despite having the wrong password")
-			})
-
-			It("fails when a wallet with the given ID does not exist in the metadatas file", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that a wallet has been created
-
-				By("Remove metadatas file")
-				err := os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Attempting to rename wallet with the given ID")
-				err = parquetDriver.RenameWallet(
-					[]byte("my new name"),
-					[]byte("000"),
-					[]byte("password"),
-				)
-				Expect(err).To(MatchError("wallet not found"))
 			})
 
 			It("fails if the directory for the wallet does not have a metadata.json file", func() {
@@ -411,7 +248,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to rename wallet with the given ID")
-				err = parquetDriver.RenameWallet(
+				err = duckDbDriver.RenameWallet(
 					[]byte("my new name"),
 					[]byte(walletId),
 					[]byte("password"),
@@ -421,7 +258,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 			It("fails if the new name is too long", func() {
 				By("Attempting to rename wallet with the given ID")
-				err := parquetDriver.RenameWallet(
+				err := duckDbDriver.RenameWallet(
 					[]byte("looooooooooooooooooooooooooooooooooooooooooooooooooooooooong new name"),
 					[]byte("000"),
 					[]byte("password"),
@@ -431,7 +268,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 			It("fails if no ID is given", func() {
 				By("Attempting to rename wallet with no ID")
-				err := parquetDriver.RenameWallet(
+				err := duckDbDriver.RenameWallet(
 					[]byte("looooooooooooooooooooooooooooooooooooooooooooooooooooooooong new name"),
 					[]byte{},
 					[]byte("password"),
@@ -441,28 +278,20 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("FetchWallet()", Ordered, func() {
-			const walletDirName = ".test_pq_fetch_wallet"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_fetch_wallet"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("fails when there is no metadatas file", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that no wallets have been created yet
-				By("Attempting to fetch wallet with an ID")
-				_, err := parquetDriver.FetchWallet([]byte("000"))
-				Expect(err).To(MatchError("wallet not found"))
-			})
-
 			It("returns wallet with the given ID", func() {
 				By("Creating a wallet")
 				const walletId = "000"
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte("password"),
@@ -471,7 +300,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				wallet, err := duckDbDriver.FetchWallet([]byte("000"))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking fetched wallet's metadata")
@@ -484,39 +313,39 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that a wallet has been created
 				By("Attempting to fetch wallet with a different ID")
-				_, err := parquetDriver.FetchWallet([]byte("111"))
+				_, err := duckDbDriver.FetchWallet([]byte("111"))
 				Expect(err).To(MatchError("wallet not found"))
 			})
 
 			It("fails if no ID is given", func() {
 				By("Attempting to fetch wallet with no ID")
-				_, err := parquetDriver.FetchWallet([]byte{})
+				_, err := duckDbDriver.FetchWallet([]byte{})
 				Expect(err.Error()).To(ContainSubstring("no ID is given"))
 			})
 		})
 	})
 
-	Describe("ParquetWallet", func() {
+	Describe("DuckDbWallet", func() {
 
 		Describe("Metadata()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_metadata"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_metadata"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("returns the wallet's metadata if it is in the metadatas file", func() {
+			It("returns the wallet's metadata", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
 				const walletId = "000"
 				const walletName = "Foo"
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte(walletName),
 					[]byte(walletId),
 					[]byte("password"),
@@ -525,7 +354,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte("000"))
+				wallet, err := duckDbDriver.FetchWallet([]byte("000"))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Getting the wallet's metadata")
@@ -533,36 +362,19 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(metadata.ID).To(Equal([]byte(walletId)))
 				Expect(metadata.Name).To(Equal([]byte(walletName)))
-				Expect(metadata.DriverName).To(Equal("parquet"))
-			})
-
-			It("fails if the wallet's metadata is not in the metadatas file", func() {
-				// NOTE: Because this `Describe` container is "Ordered", it is
-				// assumed that a wallet has been created
-
-				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte("000"))
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Remove metadatas file")
-				err = os.Remove(walletDirName + "/" + driver.ParquetMetadatasFile)
-				Expect(err).ToNot(HaveOccurred())
-
-				By("Getting the wallet's metadata")
-				_, err = wallet.Metadata()
-				Expect(err).To(MatchError("wallet not found"))
+				Expect(metadata.DriverName).To(Equal("duckdb"))
 			})
 		})
 
 		Describe("CheckPassword()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_ck_pw"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_ck_pw"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -570,7 +382,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 			It("does not return error if the given wallet password is correct", func() {
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -579,7 +391,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -594,7 +406,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -606,14 +418,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ExportMasterDerivationKey()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_export_mdk"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_export_mdk"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -621,7 +433,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 			It("returns master derivation key when given the correct password", func() {
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -630,7 +442,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -646,7 +458,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -658,8 +470,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("CheckAddrInWallet()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_check_addr"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_check_addr"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
@@ -670,13 +482,13 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			var wallet wallet.Wallet
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -685,7 +497,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err = parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err = duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -717,14 +529,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ListKeys()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_list_keys"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_list_keys"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -735,7 +547,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -744,7 +556,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -760,7 +572,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -779,8 +591,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ImportKey()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_import_key"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_import_key"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
@@ -789,7 +601,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -800,7 +612,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -809,7 +621,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -833,7 +645,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with one key within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -859,7 +671,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with 2 keys within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -889,7 +701,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -903,8 +715,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ExportKey()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_export_key"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_export_key"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
@@ -913,7 +725,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -924,7 +736,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -933,7 +745,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -950,7 +762,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with no keys within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -976,7 +788,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -994,7 +806,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1009,14 +821,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("GenerateKey()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_gen_key"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_gen_key"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -1024,7 +836,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 
 			It("generates a new key when there are no keys in the wallet", func() {
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1033,7 +845,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1043,9 +855,9 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(newAddr).To(HaveLen(32))
 
-				By("Checking if new key was added to the file")
-				_, err = os.Stat(walletDirName + "/" + walletId + "/" + driver.ParquetWalletKeysFile)
-				Expect(err).ToNot(HaveOccurred(), "The keys file was created")
+				By("Checking if new key was added")
+				_, err = os.Stat(walletDirName + "/" + walletId + "/" + driver.DuckDbWalletAcctsFile)
+				Expect(err).ToNot(HaveOccurred(), "The key was added")
 			})
 
 			It("generates a new key when there is at least one key in the wallet", func() {
@@ -1053,7 +865,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1063,16 +875,16 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(newAddr).To(HaveLen(32))
 
-				By("Checking if new key was added to the file")
+				By("Checking if new key was added")
 				addrs, err := wallet.ListKeys()
 				Expect(err).ToNot(HaveOccurred())
-				Expect(addrs).To(HaveLen(2), "New key was added to the keys file")
+				Expect(addrs).To(HaveLen(2), "New key was added")
 			})
 		})
 
 		Describe("DeleteKey()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_del_key"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_del_key"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
@@ -1081,18 +893,18 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("fails if there is no keys file", func() {
+			It("does not fail if there are no keys", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1101,7 +913,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1110,7 +922,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
-				Expect(err).To(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("removes the key for the given address", func() {
@@ -1118,7 +930,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with no keys within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1146,7 +958,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1164,7 +976,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1178,14 +990,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ImportMultisigAddr()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_import_msig"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_import_msig"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -1196,7 +1008,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1205,7 +1017,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1237,7 +1049,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1269,7 +1081,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// multisig address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1289,8 +1101,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("LookupMultisigPreimage()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_multisig_lookup"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_multisig_lookup"
+			var duckDbDriver driver.DuckDbWalletDriver
 			var msigAcct crypto.MultisigAccount
 			var msigAddr algoTypes.Address
 
@@ -1308,7 +1120,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				msigAddr, err = msigAcct.Address()
 				Expect(err).ToNot(HaveOccurred())
 
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -1319,7 +1131,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1328,7 +1140,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1345,7 +1157,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with no keys within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1368,7 +1180,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1386,7 +1198,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1401,14 +1213,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("ListMultisigAddrs()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_list_msigs"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_list_msigs"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
 
 			BeforeAll(func() {
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -1419,7 +1231,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1428,7 +1240,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1445,7 +1257,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// multisig address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1474,8 +1286,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("DeleteMultisigAddr()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_del_msig"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_del_msig"
+			var duckDbDriver driver.DuckDbWalletDriver
 			var msigAcct crypto.MultisigAccount
 			var msigAddr algoTypes.Address
 
@@ -1493,18 +1305,18 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				msigAddr, err = msigAcct.Address()
 				Expect(err).ToNot(HaveOccurred())
 
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
 			})
 
-			It("fails if there is no keys file", func() {
+			It("does not fail if there are no multisig addresses", func() {
 				// NOTE: Because this `Describe` container is "Ordered", it is
 				// assumed that no wallets have been created yet
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1513,14 +1325,14 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 
-				By("Attempting to delete a multisig address")
+				By("Attempting to delete a multisig address that is not in the wallet")
 				err = wallet.DeleteMultisigAddr(algoTypes.Digest(msigAddr), []byte(walletPassword))
-				Expect(err).To(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("removes the given multisig address", func() {
@@ -1528,7 +1340,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with no keys within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1552,7 +1364,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// multisig address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1568,7 +1380,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// multisig address within it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1580,8 +1392,8 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 		})
 
 		Describe("SignTransaction()", Ordered, func() {
-			const walletDirName = ".test_pq_wallet_sign_txn"
-			var parquetDriver driver.ParquetWalletDriver
+			const walletDirName = ".test_ddb_wallet_sign_txn"
+			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
@@ -1604,7 +1416,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				err = knownSignedTxn.FromBase64String(knownSignedTxnB64)
 				Expect(err).NotTo(HaveOccurred())
 
-				setupParquetWalletDriver(&parquetDriver, walletDirName)
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
 				DeferCleanup(func() {
 					createKmdServiceCleanup(walletDirName)
 				})
@@ -1615,7 +1427,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// assumed that a wallet has been created with no keys within it
 
 				By("Creating a wallet")
-				err := parquetDriver.CreateWallet(
+				err := duckDbDriver.CreateWallet(
 					[]byte("Foo"),
 					[]byte(walletId),
 					[]byte(walletPassword),
@@ -1624,7 +1436,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1652,7 +1464,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1672,7 +1484,7 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 				// in it
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := parquetDriver.FetchWallet([]byte(walletId))
+				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
 				err = wallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
@@ -1723,16 +1535,16 @@ var _ = XDescribe("Parquet Wallet Driver", func() {
 	})
 })
 
-// setupParquetWalletDriver configures and initializes the given parquet driver
+// setupDuckDbWalletDriver configures and initializes the given DuckDB driver
 // for use in a test
-func setupParquetWalletDriver(parquetDriver *driver.ParquetWalletDriver, walletDirName string) {
+func setupDuckDbWalletDriver(duckDbDriver *driver.DuckDbWalletDriver, walletDirName string) {
 	logger := logging.New()
 	logger.SetLevel(logging.InfoLevel)
 
-	err := parquetDriver.InitWithConfig(config.KMDConfig{
+	err := duckDbDriver.InitWithConfig(config.KMDConfig{
 		SessionLifetimeSecs: 3600,
 		DriverConfig: config.DriverConfig{
-			ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+			DuckDbWalletDriverConfig: config.DuckDbWalletDriverConfig{
 				WalletsDir:   walletDirName,
 				UnsafeScrypt: true, // For testing purposes only
 				ScryptParams: config.ScryptParams{ScryptN: 2, ScryptR: 1, ScryptP: 1},

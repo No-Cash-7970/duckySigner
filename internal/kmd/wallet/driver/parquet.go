@@ -1,4 +1,6 @@
-// XXX: This driver is a modified version of a modified version of the sqlite driver in go-algorand. This is modified to use DuckDB instead of SQLite.
+// XXX: This driver is a modified version of a modified version of the sqlite
+// driver in go-algorand. This is modified to use DuckDB parquet files (with
+// encryption) instead of SQLite.
 // Modified SQLite driver: https://github.com/No-Cash-7970/duckySigner/blob/0f5365f1062a36c20af88379dd61d53693314b11/internal/kmd/wallet/driver/sqlite.go
 // Original SQLite driver: https://github.com/algorand/go-algorand/tree/c2d7047585f6109d866ebaf9fca0ee7490b16c6a/daemon/kmd/wallet/driver/sqlite.go
 
@@ -288,7 +290,7 @@ func (parqwd *ParquetWalletDriver) ListWalletMetadatas() ([]wallet.Metadata, err
 			})
 		}
 
-		// Create write temporary metadatas table to file
+		// Write temporary metadatas table to file
 		_, err = db.Exec(fmt.Sprintf("COPY metadatas TO '%s' (FORMAT parquet)", metadatasPath))
 		if err != nil {
 			return metadatas, err
@@ -318,7 +320,6 @@ func (parqwd *ParquetWalletDriver) CreateWallet(name []byte, id []byte, pw []byt
 	// Create directory for new wallet
 	err := os.Mkdir(walletPath, parquetWalletsDirPermissions)
 	if err != nil {
-
 		return err
 	}
 
@@ -1894,35 +1895,6 @@ func parquetWalletMetadataFromPath(walletPath string) (metadata ParquetWalletMet
 	}
 
 	return
-}
-
-// removeTempFile attempts to remove the temporary file used when modifying the
-// file with the given file name.
-func removeTempFile(originalFilename string) error {
-	// Check if temporary file exists
-	_, err := os.Stat(originalFilename + tempFileSuffix)
-	if os.IsNotExist(err) {
-		return nil
-	}
-	if err != nil {
-		// Could not access file some reason other than that it does not exist
-		// (e.g. permissions, drive failure)
-		return err
-	}
-
-	// Remove the original file
-	err = os.Remove(originalFilename)
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-
-	// Rename the temporary file
-	err = os.Rename(originalFilename+tempFileSuffix, originalFilename)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 /********** Wallet Driver Helpers **********/

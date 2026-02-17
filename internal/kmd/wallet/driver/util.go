@@ -20,6 +20,7 @@ package driver
 
 import (
 	"crypto/ed25519"
+	"os"
 
 	"github.com/algorand/go-algorand-sdk/v2/types"
 )
@@ -27,4 +28,33 @@ import (
 func publicKeyToAddress(pk ed25519.PublicKey) (addr types.Digest) {
 	copy(addr[:], pk[:])
 	return
+}
+
+// removeTempFile attempts to remove the temporary file used when modifying the
+// file with the given file name.
+func removeTempFile(originalFilename string) error {
+	// Check if temporary file exists
+	_, err := os.Stat(originalFilename + tempFileSuffix)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		// Could not access file some reason other than that it does not exist
+		// (e.g. permissions, drive failure)
+		return err
+	}
+
+	// Remove the original file
+	err = os.Remove(originalFilename)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	// Rename the temporary file
+	err = os.Rename(originalFilename+tempFileSuffix, originalFilename)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

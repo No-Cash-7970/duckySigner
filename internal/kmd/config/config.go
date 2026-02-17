@@ -49,6 +49,7 @@ type DriverConfig struct {
 	SQLiteWalletDriverConfig  SQLiteWalletDriverConfig  `json:"sqlite"`
 	LedgerWalletDriverConfig  LedgerWalletDriverConfig  `json:"ledger"`
 	ParquetWalletDriverConfig ParquetWalletDriverConfig `json:"parquet"`
+	DuckDbWalletDriverConfig  DuckDbWalletDriverConfig  `json:"duckdb"`
 }
 
 // SQLiteWalletDriverConfig is configuration specific to the SQLiteWalletDriver
@@ -66,6 +67,14 @@ type LedgerWalletDriverConfig struct {
 
 // ParquetWalletDriverConfig is configuration specific to the ParquetWalletDriver
 type ParquetWalletDriverConfig struct {
+	Disable      bool         `json:"disable"`
+	WalletsDir   string       `json:"wallets_dir"`
+	UnsafeScrypt bool         `json:"allow_unsafe_scrypt"`
+	ScryptParams ScryptParams `json:"scrypt"`
+}
+
+// DuckDbWalletDriverConfig is configuration specific to the DuckDbWalletDriver
+type DuckDbWalletDriverConfig struct {
 	Disable      bool         `json:"disable"`
 	WalletsDir   string       `json:"wallets_dir"`
 	UnsafeScrypt bool         `json:"allow_unsafe_scrypt"`
