@@ -14,6 +14,7 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 	mw "duckysigner/internal/dapp_connect/middleware"
 	"duckysigner/internal/dapp_connect/session"
+	"duckysigner/internal/tools"
 	"duckysigner/internal/wallet_session"
 )
 
@@ -60,7 +61,7 @@ func TransactionSignPost(
 	wailsApp *application.App,
 	walletSession *wallet_session.WalletSession,
 	sessionManager *session.Manager,
-	ecdhCurve dc.ECDHCurve,
+	ecdhCurve tools.ECDHCurve,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if walletSession == nil {

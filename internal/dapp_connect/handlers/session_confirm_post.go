@@ -12,6 +12,7 @@ import (
 
 	dc "duckysigner/internal/dapp_connect"
 	"duckysigner/internal/dapp_connect/session"
+	"duckysigner/internal/tools"
 	"duckysigner/internal/wallet_session"
 )
 
@@ -62,7 +63,7 @@ type (
 		// function to return something other than Hawk credentials.
 		ExtractedConfirm *session.Confirmation
 		// The ECDH curve used for encryption
-		ECDHCurve dc.ECDHCurve
+		ECDHCurve tools.ECDHCurve
 	}
 
 	// ConfirmCredentialStore is a Hawk CredentialStore use for retrieving
@@ -88,7 +89,7 @@ func SessionConfirmPost(
 	wailsApp *application.App,
 	walletSession *wallet_session.WalletSession,
 	sessionManager *session.Manager,
-	ecdhCurve dc.ECDHCurve,
+	ecdhCurve tools.ECDHCurve,
 ) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if walletSession == nil {

@@ -32,6 +32,7 @@ var walletDrivers = map[string]Driver{
 	sqliteWalletDriverName:  &SQLiteWalletDriver{},
 	ledgerWalletDriverName:  &LedgerWalletDriver{},
 	parquetWalletDriverName: &ParquetWalletDriver{},
+	duckDbWalletDriverName:  &DuckDbWalletDriver{},
 }
 
 // Driver is the interface that all wallet drivers must expose in order to be

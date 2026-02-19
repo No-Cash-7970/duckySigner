@@ -17,6 +17,7 @@ import (
 	dc "duckysigner/internal/dapp_connect"
 	"duckysigner/internal/dapp_connect/handlers"
 	"duckysigner/internal/dapp_connect/session"
+	"duckysigner/internal/tools"
 )
 
 // DappConnectService is a Wails binding allows for a Wails frontend to interact
@@ -26,10 +27,10 @@ type DappConnectService struct {
 	// (e.g. ":1323"), the server will be served at localhost.
 	// Default: ":1323"
 	ServerAddr string
-	// The level of log messages to include in the log, which is output to the
-	// console in dev mode.
+	// The level of log messages to include in the server log, which is output
+	// to the console in dev mode.
 	// Default: 2 (INFO)
-	LogLevel log.Lvl
+	ServerLogLevel log.Lvl
 	// Hide the banner that is printed in the console when the server starts.
 	// Default: no (false)
 	HideServerBanner bool
@@ -47,7 +48,7 @@ type DappConnectService struct {
 	// session key pair. Typically used to set a mock curve when
 	// testing.
 	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
-	ECDHCurve dc.ECDHCurve
+	ECDHCurve tools.ECDHCurve
 	// Instance of the KMD service that is being used to access the wallets
 	KMDService *KMDService
 	// Amount of time (in seconds) to wait for user approval of a session
@@ -72,18 +73,18 @@ func (dcs *DappConnectService) Start() bool {
 
 	// Do nothing if the server is already running
 	if dcs.serverRunning {
-		dcs.echo.Logger.Warn("Attempted to start a server is already running")
+		log.Warn("Attempted to start a server is already running")
 		return dcs.serverRunning
 	}
 
 	// Set server log level to default if none was specified
-	if dcs.LogLevel == 0 {
-		dcs.LogLevel = log.INFO
+	if dcs.ServerLogLevel == 0 {
+		dcs.ServerLogLevel = log.INFO
 	}
 
 	// Setup
 	dcs.echo = echo.New()
-	dcs.echo.Logger.SetLevel(dcs.LogLevel)
+	dcs.echo.Logger.SetLevel(dcs.ServerLogLevel)
 	dcs.echo.HideBanner = dcs.HideServerBanner
 	dcs.echo.HidePort = dcs.HideServerPort
 	// Set ECDH curve if it is not set
@@ -113,8 +114,8 @@ func (dcs *DappConnectService) Start() bool {
 			// NOTE: echo.Start() function does not end until the process running it is killed
 			if err := dcs.echo.Start(dcs.ServerAddr); err != nil && err != http.ErrServerClosed {
 				dcs.serverRunning = false
-				dcs.echo.Logger.Error(err)
-				dcs.echo.Logger.Fatal("Unexpected error occurred in starting the server")
+				log.Error(err)
+				log.Fatal("Unexpected error occurred in starting the server")
 			}
 
 			stop()
@@ -128,11 +129,11 @@ func (dcs *DappConnectService) Start() bool {
 // server is not running. Returns whether the server is currently running.
 func (dcs *DappConnectService) Stop() bool {
 	if !dcs.serverRunning {
-		dcs.WailsApp.Logger.Warn("Attempted to shut down a server that is not running")
+		log.Warn("Attempted to shut down a server that is not running")
 		return dcs.serverRunning
 	}
 
-	dcs.echo.Logger.Info("Shutting down server...")
+	log.Info("Shutting down server...")
 	//gracefully shutdown the server with a timeout of 10 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -142,7 +143,7 @@ func (dcs *DappConnectService) Stop() bool {
 		return dcs.serverRunning
 	}
 
-	dcs.echo.Logger.Info("Server has been shut down")
+	log.Info("Server has been shut down")
 	dcs.serverRunning = false
 
 	return dcs.serverRunning

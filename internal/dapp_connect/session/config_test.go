@@ -39,8 +39,7 @@ var _ = Describe("Session Configuration", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			sessionConfig := session.SessionConfig{
-				SessionsFile:        "foo_sessions.parquet",
-				ConfirmsFile:        "bar_confirms.parquet",
+				DataFile:            "foo_sessions.duckdb",
 				DataDir:             "foobar",
 				SessionLifetimeSecs: 42,
 				ConfirmLifetimeSecs: 8,
@@ -74,8 +73,7 @@ var _ = Describe("Session Configuration", func() {
 		It("loads session configuration file", func() {
 			By("Creating a session configuration file")
 			sessionConfig := session.SessionConfig{
-				SessionsFile:        "foo_sessions.parquet",
-				ConfirmsFile:        "bar_confirms.parquet",
+				DataFile:            "foo_sessions.duckdb",
 				DataDir:             "foobar",
 				SessionLifetimeSecs: 42,
 				ConfirmLifetimeSecs: 8,
@@ -87,10 +85,8 @@ var _ = Describe("Session Configuration", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Checking loaded configuration")
-			Expect(loadedConfig.SessionsFile).To(Equal(sessionConfig.SessionsFile),
+			Expect(loadedConfig.DataFile).To(Equal(sessionConfig.DataFile),
 				"Loads sessions file setting in configuration")
-			Expect(loadedConfig.ConfirmsFile).To(Equal(sessionConfig.ConfirmsFile),
-				"Loads confirmation keystore file setting in configuration")
 			Expect(loadedConfig.DataDir).To(Equal(sessionConfig.DataDir),
 				"Loads data directory setting in configuration")
 			Expect(loadedConfig.SessionLifetimeSecs).To(Equal(sessionConfig.SessionLifetimeSecs),

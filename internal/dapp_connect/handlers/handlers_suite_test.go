@@ -48,7 +48,7 @@ func setUpDcService(port string, mockSessionKey string) {
 		// Make sure to use a port that is not used in another test so the
 		// tests can be run in parallel
 		ServerAddr:       ":" + port,
-		LogLevel:         log.ERROR,
+		ServerLogLevel:   log.ERROR,
 		HideServerBanner: true,
 		HideServerPort:   true,
 		WailsApp: application.New(application.Options{
@@ -80,7 +80,7 @@ func createKmdService(walletDirName string) *KMDService {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
-				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+				DuckDbWalletDriverConfig: config.DuckDbWalletDriverConfig{
 					WalletsDir:   walletDirName,
 					UnsafeScrypt: true, // For testing purposes only
 					ScryptParams: config.ScryptParams{
@@ -89,12 +89,9 @@ func createKmdService(walletDirName string) *KMDService {
 						ScryptP: 1,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
-					UnsafeScrypt: true,
-					Disable:      true,
-					WalletsDir:   walletDirName,
-				},
-				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				SQLiteWalletDriverConfig:  config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				LedgerWalletDriverConfig:  config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
 	}

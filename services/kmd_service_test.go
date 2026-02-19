@@ -2,6 +2,7 @@ package services_test
 
 import (
 	"duckysigner/internal/kmd/config"
+	"duckysigner/services"
 	. "duckysigner/services"
 	"encoding/base64"
 	"os"
@@ -15,7 +16,7 @@ import (
 )
 
 var _ = Describe("KmdService", func() {
-	Context("using Parquet driver", func() {
+	Context("using DuckDB driver", func() {
 		// XXX: I shouldn't have to tell you this, but don't use the following
 		// mnemonics for anything other than testing purposes
 		const testWalletMnemonic = "increase document mandate absorb chapter valve apple amazing pipe hope impact travel away comfort two desk business robust brand sudden vintage scheme valve above inmate"
@@ -44,7 +45,7 @@ var _ = Describe("KmdService", func() {
 			By("Creating a new wallet")
 			newWalletInfoA, err := kmdService.CreateWallet("wallet_A", "passwordA")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(newWalletInfoA.DriverName).To(Equal("parquet"))
+			Expect(newWalletInfoA.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(newWalletInfoA.Name).To(BeEquivalentTo("wallet_A"), "1st wallet should have been created")
 
 			By("Not giving error if a given wallet password is correct")
@@ -58,7 +59,7 @@ var _ = Describe("KmdService", func() {
 			By("Creating another new wallet")
 			newWalletInfoB, err := kmdService.CreateWallet("wallet_B", "passwordB")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(newWalletInfoB.DriverName).To(Equal("parquet"))
+			Expect(newWalletInfoB.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(newWalletInfoB.Name).To(BeEquivalentTo("wallet_B"), "2nd wallet should have been created")
 
 			By("Listing multiple wallets")
@@ -69,7 +70,7 @@ var _ = Describe("KmdService", func() {
 			By("Retrieving information of a wallet with the given ID")
 			retrievedWalletInfoA, err := kmdService.GetWalletInfo(string(newWalletInfoA.ID))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(retrievedWalletInfoA.DriverName).To(Equal("parquet"))
+			Expect(retrievedWalletInfoA.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(retrievedWalletInfoA.Name).To(BeEquivalentTo("wallet_A"), "Should have the information of the correct wallet")
 
 			By("Renaming a wallet")
@@ -106,7 +107,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Session Mgmt Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
+			Expect(importedWalletInfo.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -116,7 +117,7 @@ var _ = Describe("KmdService", func() {
 			By("Retrieving information of the wallet in the current session")
 			retrievedWalletInfo, err := kmdService.Session().GetWalletInfo()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(retrievedWalletInfo.DriverName).To(Equal("parquet"))
+			Expect(retrievedWalletInfo.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(retrievedWalletInfo.Name).To(BeEquivalentTo("Session Mgmt Test Wallet"), "Should have the information of the correct wallet")
 
 			By("Checking if session is for wallet with given (incorrect) ID")
@@ -170,7 +171,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Import-Export Test Wallet", "password for imported wallet")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
+			Expect(importedWalletInfo.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Import-Export Test Wallet"), "Wallet should have been imported")
 
 			By("Listing all wallets")
@@ -201,7 +202,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Acct Mgmt Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
+			Expect(importedWalletInfo.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Acct Mgmt Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -280,7 +281,7 @@ var _ = Describe("KmdService", func() {
 			By("Importing a wallet")
 			importedWalletInfo, err := kmdService.ImportWalletMnemonic(testWalletMnemonic, "Sign Txn Test Wallet", "bad password")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(importedWalletInfo.DriverName).To(Equal("parquet"))
+			Expect(importedWalletInfo.DriverName).To(Equal(services.KMDServiceWalletDriver))
 			Expect(importedWalletInfo.Name).To(BeEquivalentTo("Sign Txn Test Wallet"), "Wallet should have been imported")
 
 			By("Starting a new wallet session with the imported wallet")
@@ -323,7 +324,7 @@ func createKmdService(walletDirName string) KMDService {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
-				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+				DuckDbWalletDriverConfig: config.DuckDbWalletDriverConfig{
 					WalletsDir:   walletDirName,
 					UnsafeScrypt: true, // For testing purposes only
 					ScryptParams: config.ScryptParams{
@@ -332,12 +333,9 @@ func createKmdService(walletDirName string) KMDService {
 						ScryptP: 1,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
-					UnsafeScrypt: true,
-					Disable:      true,
-					WalletsDir:   walletDirName,
-				},
-				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				SQLiteWalletDriverConfig:  config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				LedgerWalletDriverConfig:  config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
 	}

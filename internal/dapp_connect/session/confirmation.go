@@ -8,7 +8,7 @@ import (
 
 	"aidanwoods.dev/go-paseto"
 
-	dc "duckysigner/internal/dapp_connect"
+	"duckysigner/internal/tools"
 )
 
 const (
@@ -141,7 +141,7 @@ func (confirm *Confirmation) GenerateTokenString() (string, error) {
 // confirmation key and extracts the contents of the token into a Confirmation.
 // The given curve is used to parse ECDH public and private key strings within
 // the token. The same curve used to generate the ECDH keys must be used here.
-func DecryptToken(confirmToken string, confirmKey *ecdh.PrivateKey, curve dc.ECDHCurve) (*Confirmation, error) {
+func DecryptToken(confirmToken string, confirmKey *ecdh.PrivateKey, curve tools.ECDHCurve) (*Confirmation, error) {
 	pasetoKey, err := paseto.V4SymmetricKeyFromBytes(confirmKey.Bytes())
 	if err != nil {
 		return nil, err

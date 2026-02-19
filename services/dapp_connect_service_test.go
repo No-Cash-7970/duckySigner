@@ -19,7 +19,7 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so
 				// the tests can be run in parallel
 				ServerAddr:       ":1324",
-				LogLevel:         log.ERROR,
+				ServerLogLevel:   log.ERROR,
 				HideServerBanner: true,
 				HideServerPort:   true,
 				KMDService:       kmdService,
@@ -40,7 +40,7 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so
 				// the tests can be run in parallel
 				ServerAddr:       ":1325",
-				LogLevel:         log.ERROR,
+				ServerLogLevel:   log.ERROR,
 				HideServerBanner: true,
 				HideServerPort:   true,
 				KMDService:       kmdService,
@@ -65,7 +65,7 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
 				ServerAddr:       ":1344",
-				LogLevel:         log.ERROR,
+				ServerLogLevel:   log.ERROR,
 				HideServerBanner: true,
 				HideServerPort:   true,
 				KMDService:       kmdService,
@@ -87,7 +87,7 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
 				ServerAddr:       ":1345",
-				LogLevel:         log.ERROR,
+				ServerLogLevel:   log.ERROR,
 				HideServerBanner: true,
 				HideServerPort:   true,
 				KMDService:       kmdService,
@@ -113,7 +113,7 @@ var _ = Describe("DappConnectService", func() {
 				// Make sure to use a port that is not used in another test so the
 				// tests can be run in parallel
 				ServerAddr:       ":1364",
-				LogLevel:         log.ERROR,
+				ServerLogLevel:   log.ERROR,
 				HideServerBanner: true,
 				HideServerPort:   true,
 				KMDService:       kmdService,
@@ -145,7 +145,7 @@ func createKmdServiceForDCS(walletDirName string) *KMDService {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: 3600,
 			DriverConfig: config.DriverConfig{
-				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+				DuckDbWalletDriverConfig: config.DuckDbWalletDriverConfig{
 					WalletsDir:   walletDirName,
 					UnsafeScrypt: true, // For testing purposes only
 					ScryptParams: config.ScryptParams{
@@ -154,12 +154,9 @@ func createKmdServiceForDCS(walletDirName string) *KMDService {
 						ScryptP: 1,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{
-					UnsafeScrypt: true,
-					Disable:      true,
-					WalletsDir:   walletDirName,
-				},
-				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				SQLiteWalletDriverConfig:  config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				LedgerWalletDriverConfig:  config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
 	}

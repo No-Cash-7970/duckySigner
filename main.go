@@ -42,15 +42,16 @@ func main() {
 		Config: config.KMDConfig{
 			SessionLifetimeSecs: uint64((1 * time.Hour).Seconds()),
 			DriverConfig: config.DriverConfig{
-				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{
+				DuckDbWalletDriverConfig: config.DuckDbWalletDriverConfig{
 					ScryptParams: config.ScryptParams{
 						ScryptN: 65536,
 						ScryptR: 1,
 						ScryptP: 32,
 					},
 				},
-				SQLiteWalletDriverConfig: config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "parquet_wallets"},
-				LedgerWalletDriverConfig: config.LedgerWalletDriverConfig{Disable: true},
+				ParquetWalletDriverConfig: config.ParquetWalletDriverConfig{Disable: true, WalletsDir: "duckdb_wallets"},
+				SQLiteWalletDriverConfig:  config.SQLiteWalletDriverConfig{Disable: true, UnsafeScrypt: true, WalletsDir: "duckdb_wallets"},
+				LedgerWalletDriverConfig:  config.LedgerWalletDriverConfig{Disable: true},
 			},
 		},
 	}

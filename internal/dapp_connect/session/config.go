@@ -12,12 +12,9 @@ const (
 	// DefaultConfigFile is the default file name for the session configuration
 	// file
 	DefaultConfigFile = "session_config.paseto"
-	// DefaultSessionsFile is the default file name for the database file where
-	// established sessions are stored
-	DefaultSessionsFile = "sessions.parquet"
-	// DefaultConfirmsFile is the default file name for the database file where
-	// the keys for pending confirmations are stored
-	DefaultConfirmsFile = "confirms.parquet"
+	// DefaultDataFile is the default file name for the database file where
+	// established sessions and pending confirmations are stored
+	DefaultDataFile = "sessions.duckdb"
 	// DefaultDataDir is the name of the directory where data files, such as the
 	// sessions database and the confirmation keystore, are stored
 	DefaultDataDir = "./dapp_connect"
@@ -41,11 +38,9 @@ const (
 // SessionConfig is used to configure the session manager when creating a new
 // session manager
 type SessionConfig struct {
-	// File name of the database file where the established sessions are stored
-	SessionsFile string `json:"sessions_file,omitempty"`
-	// File name of the database file where the keys for pending confirmations
-	// are stored
-	ConfirmsFile string `json:"confirms_file,omitempty"`
+	// File name of the database file where the established sessions and pending
+	// confirmations are stored
+	DataFile string `json:"sessions_file,omitempty"`
 	// Name of the directory where the data files (e.g. database files) are
 	// stored
 	DataDir string `json:"data_dir,omitempty"`
@@ -60,6 +55,8 @@ type SessionConfig struct {
 	// The length of time to wait for a user to approve a dApp connect session.
 	// This must be less than the confirmation lifetime.
 	ApprovalTimeoutSecs uint64 `json:"approval_timeout_secs,omitempty"`
+
+	// TODO: Create mutex lock to protect config from races
 }
 
 // ToFile creates the session configuration file by encapsulating the session
@@ -128,12 +125,8 @@ func ConfigFromFile(configFilePath string, encryptKey []byte) (config *SessionCo
 // fillWithDefaults fills in all unset configuration fields with their
 // respective default values
 func (sc *SessionConfig) fillWithDefaults() {
-	if sc.SessionsFile == "" {
-		sc.SessionsFile = DefaultSessionsFile
-	}
-
-	if sc.ConfirmsFile == "" {
-		sc.ConfirmsFile = DefaultConfirmsFile
+	if sc.DataFile == "" {
+		sc.DataFile = DefaultDataFile
 	}
 
 	if sc.DataDir == "" {

@@ -19,7 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = XDescribe("Parquet Wallet Driver", func() {
+var _ = Describe("Parquet Wallet Driver", func() {
 
 	Describe("ParquetWalletDriver", func() {
 

@@ -2,6 +2,7 @@ package dapp_connect
 
 import (
 	"crypto/ecdh"
+	"duckysigner/internal/tools"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -44,7 +45,7 @@ func SetupCustomValidator(e *echo.Echo) {
 // given curve (that is to be used for ECDH (Elliptic-curve Diffie–Hellman)).
 // Returns the dAppId as a ECDH public key if successful. Returns an error and
 // an API error message if unsuccessful.
-func ValidateDappID(dAppID string, curve ECDHCurve) (dappIdPk *ecdh.PublicKey, apiErr ApiError, err error) {
+func ValidateDappID(dAppID string, curve tools.ECDHCurve) (dappIdPk *ecdh.PublicKey, apiErr ApiError, err error) {
 	// Check if given dApp ID is a valid Base64 string by attempting to decode it
 	dappIdBytes, err := base64.StdEncoding.DecodeString(dAppID)
 	if err != nil {

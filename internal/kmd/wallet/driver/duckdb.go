@@ -645,15 +645,15 @@ func (ddbw *DuckDbWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, 
 			return
 		}
 
-		// Decrypt the master encryption key stored in enclave into a local copy
-		mekBuf, mekOpenErr := ddbw.masterEncryptionKey.Open()
-		if mekOpenErr != nil {
-			return addr, mekOpenErr
+		// Decrypt the master derivation key stored in enclave into a local copy
+		mdkBuf, mdkOpenErr := ddbw.masterDerivationKey.Open()
+		if mdkOpenErr != nil {
+			return addr, mdkOpenErr
 		}
-		defer mekBuf.Destroy() // Destroy the copy when we return
+		defer mdkBuf.Destroy() // Destroy the copy when we return
 
 		// Compute the secret key and public key for nextIndex
-		genPK, genSK, err = extractKeyWithIndex(mekBuf.Bytes(), nextIndex)
+		genPK, genSK, err = extractKeyWithIndex(mdkBuf.Bytes(), nextIndex)
 		if err != nil {
 			return
 		}
@@ -1435,6 +1435,8 @@ func (ddbw *DuckDbWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateK
 // openAccountsDb opens the encrypted accounts database file using the master
 // encryption key
 func (ddbw *DuckDbWallet) openAccountsDb() (db *sql.DB, err error) {
+	// TODO: Add mutex lock to protect against data races
+
 	// Open database
 	db, err = sql.Open("duckdb", "")
 	if err != nil {

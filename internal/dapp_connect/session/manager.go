@@ -17,6 +17,7 @@ import (
 	"github.com/duckdb/duckdb-go/v2"
 
 	dc "duckysigner/internal/dapp_connect"
+	"duckysigner/internal/tools"
 )
 
 const (
@@ -28,71 +29,39 @@ const (
 	confirmsTblName = "confirms"
 )
 
-// addParquetKeySQL is the SQL statement for setting the Parquet file encryption
-// key within DuckDB. The file encryption key is used for encrypting and
-// decrypting all the Parquet files that are used as the database files.
-// Requires the file encryption key in Base64.
-const addParquetKeySQL = "PRAGMA add_parquet_key('key', '%s');"
-
-// itemsWriteToDbFileSQL is the SQL statement for directing DuckDB to write
-// a in-memory table to a new file (or overwrite the file if it exists).
-// Requires the in-memory table name and the name of the new file.
-const itemsWriteToDbFileSQL = `
-COPY %s TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
+// attachEncDuckDbSQL is the SQL statement for opening or creating an encrypted
+// DuckDB file. The file encryption key is used for encrypting and decrypting
+// all the encrypted Duck DB files. Requires the file encryption key in Base64.
+// NOTE: These SQL statements will create the file if it does not exist.
+const attachEncDuckDbSQL = `
+LOAD httpfs; -- use OpenSSL library to increase speed
+ATTACH '%s' AS db (ENCRYPTION_KEY '%s');
 `
 
 // findItemByIdSQL is the SQL statement for finding an item (e.g. session)
-// within a database file by ID. Requires the database file name.
-const findItemByIdSQL = `
-FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-WHERE id = ?
-`
+// within a database file by ID. Requires the database table name.
+const findItemByIdSQL = "FROM db.%s WHERE id = ?"
 
-// allItemsSQL is the SQL statement for getting all stored items (eg. sessions,
-// confirmation keys). Requires the database file name.
-const allItemsSQL = "FROM read_parquet('%s', encryption_config = {footer_key: 'key'})"
+// getAllItemsSQL is the SQL statement for getting all stored items (eg. sessions,
+// confirmation keys). Requires the database table name.
+const getAllItemsSQL = "FROM db.%s"
+
+// removeAllItemsSQL is the SQL statement for deleting all stored items (eg. sessions,
+// confirmation keys). Requires the database table name.
+const removeAllItemsSQL = "TRUNCATE db.%s"
 
 // removeItemSQL is the SQL statement for removing an item (e.g. session,
-// confirmation key) from a database file. Removing an item is done by copying
-// all items except for the item to be removed to a new file (or overwriting the
-// existing file). Requires the database file name, the ID of the item to
-// remove, and the file name of the new database (if overwriting the database
-// file, use the name of the old file).
-const removeItemSQL = `
-COPY (
-    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-    WHERE id != ?
-) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
-`
+// confirmation key) from a database file. Requires the database table name.
+const removeItemSQL = "DELETE FROM db.%s WHERE id=?"
 
 // countItemsSQL is the SQL statement for counting the number of items stored in
 // a database file.
-const countItemsSQL = `
-SELECT count(id) FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-`
+const countItemsSQL = "SELECT count(1) FROM db.%s"
 
-// itemsAddToDbFileSQL is the SQL statement for adding items (e.g. sessions,
-// confirmation keys) from a in-memory table to a database file. Adding an item
-// to a database file is done by combining the in-memory table and the items
-// already stored in the file, and then writing that combination to a new file
-// (or overwriting the existing file).
-// NOTE: Sorting by ID tends to reduce the file size for some reason (Maybe due
-// to compression algorithm?). Requires the database file name, the name of the
-// in-memory table and the new database (if overwriting the database file, use
-// the name of the old file).
-const itemsAddToDbFileSQL = `
-COPY (
-    (FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-    UNION
-    FROM %s)
-)
-TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
-`
-
-// sessionsCreateTblSQL is the SQL statement for created the `sessions`
-// in-memory database table
-const sessionsCreateTblSQL = `
-CREATE TABLE sessions (
+// sessionsSchema is the SQL statement for creating the tables in the session
+// data file
+const sessionsSchema = `
+CREATE TABLE IF NOT EXISTS db.sessions (
     id VARCHAR PRIMARY KEY,
     key BLOB NOT NULL,
     expiry TIMESTAMP_S NOT NULL,
@@ -104,37 +73,23 @@ CREATE TABLE sessions (
     dapp_icon VARCHAR,
     addrs VARCHAR[],
 );
-`
 
-// confirmsCreateTblSQL is the SQL statement for created the `confirms`
-// in-memory database table
-const confirmsCreateTblSQL = `
-CREATE TABLE confirms (
+CREATE TABLE IF NOT EXISTS db.confirms (
     id VARCHAR PRIMARY KEY,
     key BLOB NOT NULL
 );
 `
 
-// sessionSimpleInsertSQL is the SQL statement for inserting a session into a
-// in-memory table.
-const sessionSimpleInsertSQL = "INSERT INTO sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+// sessionInsertSQL is the SQL statement for inserting a session into a table
+const sessionInsertSQL = "INSERT INTO db.sessions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-// confirmSimpleInsertSQL is the SQL statement for inserting a confirmation key
-// pair into a in-memory table.
-const confirmSimpleInsertSQL = "INSERT INTO confirms VALUES (?, ?)"
+// confirmInsertSQL is the SQL statement for inserting a confirmation key pair
+// into a table
+const confirmInsertSQL = "INSERT INTO db.confirms VALUES (?, ?)"
 
 // removeExpiredSessionsSQL is the SQL statement for removing all expired items
-// (e.g. sessions, confirmation keys) from a database file. Removing all expired
-// items is done by copying all items except the invalid items to a new file (or
-// overwriting the existing file). Requires the database file name, the current
-// date-time, and the file name of the new database (if overwriting the database
-// file, use the name of the old file).
-const removeExpiredSessionsSQL = `
-COPY (
-    FROM read_parquet('%s', encryption_config = {footer_key: 'key'})
-    WHERE expiry > ?
-) TO '%s' (FORMAT parquet, ENCRYPTION_CONFIG {footer_key: 'key'});
-`
+// (e.g. sessions, confirmation keys) from a database file.
+const removeExpiredSessionsSQL = "DELETE FROM db.sessions WHERE expiry < ?"
 
 /*******************************************************************************
  * Manager
@@ -143,12 +98,10 @@ COPY (
 // Manager is the dApp connect session manager
 type Manager struct {
 	// The ECDH curve to use for generating a keys or processing stored keys
-	curve dc.ECDHCurve
-	// File name of the database file where the established sessions are stored
-	sessionsFile string
-	// File name of the database file where the keys for pending confirmations
-	// are stored
-	confirmsFile string
+	curve tools.ECDHCurve
+	// File name of the database file where the established sessions and pending
+	// confirmations are stored
+	dataFile string
 	// Name of the directory where the data files (e.g. database files) are
 	// stored
 	dataDir string
@@ -168,13 +121,12 @@ type Manager struct {
 // creating sessions. The given ECDH curve will be used by this new session
 // manager to generate session keys. If the given session configuration is nil,
 // the default configuration will be used.
-func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
+func NewManager(curve tools.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 	var (
 		sessionLife        time.Duration
 		confirmLife        time.Duration
 		dataDir            string
-		sessionsFile       string
-		confirmsFile       string
+		dataFile           string
 		confirmCodeCharset string
 		confirmCodeLen     uint
 		approvalTimeout    time.Duration
@@ -185,8 +137,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		sessionLife = DefaultSessionLifetime
 		confirmLife = DefaultConfirmLifetime
 		dataDir = DefaultDataDir
-		sessionsFile = DefaultSessionsFile
-		confirmsFile = DefaultConfirmsFile
+		dataFile = DefaultDataFile
 		confirmCodeCharset = DefaultConfirmCodeCharset
 		confirmCodeLen = DefaultConfirmCodeLen
 		approvalTimeout = DefaultApprovalTimeout
@@ -194,8 +145,7 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		sessionLife = time.Duration(sessionConfig.SessionLifetimeSecs) * time.Second
 		confirmLife = time.Duration(sessionConfig.ConfirmLifetimeSecs) * time.Second
 		dataDir = sessionConfig.DataDir
-		sessionsFile = sessionConfig.SessionsFile
-		confirmsFile = sessionConfig.ConfirmsFile
+		dataFile = sessionConfig.DataFile
 		confirmCodeCharset = sessionConfig.ConfirmCodeCharset
 		confirmCodeLen = sessionConfig.ConfirmCodeLen
 		approvalTimeout = time.Duration(sessionConfig.ApprovalTimeoutSecs) * time.Second
@@ -215,13 +165,9 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 			confirmLife = DefaultConfirmLifetime
 		}
 
-		// If no file name for the sessions database file was given
-		if sessionsFile == "" {
-			sessionsFile = DefaultSessionsFile
-		}
-		// If no file name for the confirmations database file was given
-		if confirmsFile == "" {
-			confirmsFile = DefaultConfirmsFile
+		// If no file name for the data file was given
+		if dataFile == "" {
+			dataFile = DefaultDataFile
 		}
 
 		// If no confirmation code character set was given
@@ -253,24 +199,17 @@ func NewManager(curve dc.ECDHCurve, sessionConfig *SessionConfig) *Manager {
 		sessionLifetime:    sessionLife,
 		confirmLifetime:    confirmLife,
 		dataDir:            filepath.Join(escapedDataDirParts...),
-		sessionsFile:       url.PathEscape(sessionsFile),
-		confirmsFile:       url.PathEscape(confirmsFile),
+		dataFile:           url.PathEscape(dataFile),
 		confirmCodeCharset: confirmCodeCharset,
 		confirmCodeLen:     confirmCodeLen,
 		approvalTimeout:    approvalTimeout,
 	}
 }
 
-// SessionsFile returns the file name of the database file for storing
+// DataFile returns the file name of the database file for storing
 // established sessions
-func (sm *Manager) SessionsFile() string {
-	return sm.sessionsFile
-}
-
-// ConfirmationsFile returns the file name of the database file for storing the
-// keys for pending confirmations
-func (sm *Manager) ConfirmationsFile() string {
-	return sm.confirmsFile
+func (sm *Manager) DataFile() string {
+	return sm.dataFile
 }
 
 // DataDir returns the data directory used for storing the database files
@@ -332,17 +271,9 @@ func (sm *Manager) GenerateSession(dappId *ecdh.PublicKey, dappData *dc.DappData
 }
 
 // GetSession attempts to retrieve the stored session with the given ID (in
-// base64) using the given file encryption key to decrypt the sessions database
-// file. Returns nil without an error if no session with the given ID is found.
+// base64) using the given file encryption key to decrypt the session data file.
+// Returns nil without an error if no session with the given ID is found.
 func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, error) {
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if os.IsNotExist(err) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return nil, err
@@ -362,7 +293,7 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 		retrievedDappIcon        string
 		retrievedAddrs           duckdb.Composite[[]string]
 	)
-	sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, sessionsFilePath), sessionId)
+	sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, sessionsTblName), sessionId)
 	err = sessionRow.Scan(
 		&retrievedSessionId,
 		&retrievedSessionKeyBytes,
@@ -397,28 +328,18 @@ func (sm *Manager) GetSession(sessionId string, fileEncKey []byte) (*Session, er
 }
 
 // GetAllSessions attempts to retrieve all stored sessions using the given file
-// encryption key to decrypt the sessions database file.
-func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if os.IsNotExist(err) {
-		return []*Session{}, nil
-	}
-	if err != nil {
-		return []*Session{}, err
-	}
-
+// encryption key to decrypt the session data file.
+func (sm *Manager) GetAllSessions(fileEncKey []byte) (retrievedSessions []*Session, err error) {
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
-		return []*Session{}, err
+		return
 	}
 	defer db.Close()
 
-	sessionsRows, err := db.Query(fmt.Sprintf(allItemsSQL, sessionsFilePath))
+	sessionsRows, err := db.Query(fmt.Sprintf(getAllItemsSQL, sessionsTblName))
 	if err != nil {
-		return []*Session{}, err
+		return
 	}
-
-	var retrievedSessions []*Session
 
 	// Convert each row into a Session
 	for sessionsRows.Next() {
@@ -435,7 +356,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			retrievedAddrs           duckdb.Composite[[]string]
 		)
 
-		err := sessionsRows.Scan(
+		err = sessionsRows.Scan(
 			&retrievedSessionId,
 			&retrievedSessionKeyBytes,
 			&retrievedExp,
@@ -450,10 +371,10 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 		if err != nil {
 			// An unexpected error occurred
 			// Return the incomplete set along with the error
-			return retrievedSessions, err
+			return
 		}
 
-		session, err := sm.rowToSession(
+		session, convertErr := sm.rowToSession(
 			retrievedSessionKeyBytes,
 			retrievedExp,
 			retrievedEst,
@@ -464,9 +385,9 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 			retrievedDappIcon,
 			retrievedAddrs.Get(),
 		)
-		if err != nil {
+		if convertErr != nil {
 			// Return the incomplete set along with the error
-			return retrievedSessions, err
+			return
 		}
 
 		retrievedSessions = append(retrievedSessions, session)
@@ -476,7 +397,7 @@ func (sm *Manager) GetAllSessions(fileEncKey []byte) ([]*Session, error) {
 }
 
 // StoreSession attempts to store the given session using the given file
-// encryption key to access the sessions database file
+// encryption key to access the session data file
 func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error) {
 	if session == nil {
 		return errors.New(NoSessionGivenErrMsg)
@@ -500,6 +421,7 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 	b64Encoder := base64.StdEncoding
 	sessionIdB64 := b64Encoder.EncodeToString(session.key.PublicKey().Bytes())
 	dappIdB64 := b64Encoder.EncodeToString(session.dappId.Bytes())
+
 	// Ensure dApp data is not nil
 	var dappData *dc.DappData
 	if session.dappData == nil {
@@ -508,14 +430,8 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		dappData = session.dappData
 	}
 
-	// Create temporary table in memory
-	_, err = db.Exec(sessionsCreateTblSQL)
-	if err != nil {
-		return
-	}
-
-	// Insert session into temporary table
-	_, err = db.Exec(sessionSimpleInsertSQL,
+	// Insert session into table
+	_, err = db.Exec(sessionInsertSQL,
 		sessionIdB64,
 		session.key.Bytes(),
 		// DuckDB uses ISO8601 format for timestamps
@@ -530,58 +446,22 @@ func (sm *Manager) StoreSession(session *Session, fileEncKey []byte) (err error)
 		session.addrs,
 	)
 	if err != nil {
-		return
-	}
-
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if err != nil && !os.IsNotExist(err) {
-		return
-	}
-
-	// Write the session data in the temporary table into the file
-	if !os.IsNotExist(err) { // If session file exists
-		// Check if session is already stored in the file
-		sessionRow := db.QueryRow(
-			fmt.Sprintf(findItemByIdSQL, sessionsFilePath),
-			sessionIdB64,
-		)
-		if sessionRow.Scan() != sql.ErrNoRows {
-			return errors.New(SessionExistsErrMsg)
-		}
-
-		// Combine the sessions within the file with the new session
-		_, err = db.Exec(fmt.Sprintf(
-			itemsAddToDbFileSQL, sessionsFilePath, sessionsTblName, sessionsFilePath+tempFileSuffix,
-		))
-		if err != nil {
+		// If the session already exists
+		if strings.Contains(strings.ToLower(err.Error()), "constraint") {
+			err = errors.New(SessionExistsErrMsg)
 			return
 		}
 
-		err = removeTempFile(sessionsFilePath)
-		if err != nil {
-			return err
-		}
-	} else { // Session file does not exist
-		// Create a new file and write the session data into it
-		_, err = db.Exec(fmt.Sprintf(itemsWriteToDbFileSQL, sessionsTblName, sessionsFilePath))
-		if err != nil {
-			return
-		}
+		// Unexpected error
+		return
 	}
 
 	return
 }
 
-// RemoveSession attempts to remove the stored session with the given ID
+// RemoveSession attempts to remove the stored session with the given ID and the
+// given file encryption key to access the session data file
 func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if os.IsNotExist(err) {
-		return errors.New(RemoveSessionNotStoredErrMsg)
-	}
-	if err != nil {
-		return err
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
@@ -589,12 +469,7 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 	defer db.Close()
 
 	// Remove session
-	_, err = db.Exec(fmt.Sprintf(removeItemSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix), sessionId)
-	if err != nil {
-		return err
-	}
-
-	err = removeTempFile(sessionsFilePath)
+	_, err = db.Exec(fmt.Sprintf(removeItemSQL, sessionsTblName), sessionId)
 	if err != nil {
 		return err
 	}
@@ -602,77 +477,44 @@ func (sm *Manager) RemoveSession(sessionId string, fileEncKey []byte) error {
 	return nil
 }
 
-// PurgeAllSessions attempts to completely delete all stored sessions. It
-// returns the number of sessions that were deleted.
+// PurgeAllSessions attempts to completely delete all stored sessions with the
+// given ID and the given file encryption key to access the session data file.
+// Returns the number of sessions that were deleted.
 func (sm *Manager) PurgeAllSessions(fileEncKey []byte) (numPurged uint, err error) {
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if err != nil {
-		return 0, nil
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return 0, err
 	}
 	defer db.Close()
 
-	// Count number of sessions in the file
-	row := db.QueryRow(fmt.Sprintf(countItemsSQL, sessionsFilePath))
-	row.Scan(&numPurged)
-	if err != nil {
-		return 0, err
-	}
-
-	// Remove the file
-	err = os.Remove(sessionsFilePath)
-	if err != nil && !os.IsNotExist(err) {
-		return 0, err
-	}
+	// Remove all sessions
+	row := db.QueryRow(fmt.Sprintf(removeAllItemsSQL, sessionsTblName))
+	err = row.Scan(&numPurged)
 
 	return
 }
 
-// PurgeExpiredSessions attempts to delete all expired stored sessions. It
-// returns the number of sessions that were deleted.
-func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (uint, error) {
-	sessionsFilePath, err := sm.getSessionsFilePath()
-	if err != nil {
-		return 0, nil
-	}
-
+// PurgeExpiredSessions attempts to delete all expired stored sessions with the
+// given ID and the given file encryption key to access the session data file.
+// Returns the number of sessions that were deleted.
+func (sm *Manager) PurgeExpiredSessions(fileEncKey []byte) (numPurged uint, err error) {
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return 0, err
 	}
 	defer db.Close()
 
-	// Count number of sessions in the file before removing anything
-	row := db.QueryRow(fmt.Sprintf(countItemsSQL, sessionsFilePath))
-	var totalSessions uint
-	err = row.Scan(&totalSessions)
-	if err != nil {
-		return 0, err
-	}
+	// Remove all expired sessions
+	row := db.QueryRow(removeExpiredSessionsSQL, time.Now().UTC())
+	err = row.Scan(&numPurged)
 
-	// Remove expired sessions by exclusion
-	row = db.QueryRow(
-		fmt.Sprintf(removeExpiredSessionsSQL, sessionsFilePath, sessionsFilePath+tempFileSuffix),
-		time.Now().UTC(),
-	)
-	var numValid uint
-	row.Scan(&numValid)
-
-	err = removeTempFile(sessionsFilePath)
-	if err != nil {
-		return 0, err
-	}
-
-	return (totalSessions - numValid), nil
+	return
 }
 
 // EstablishSession creates a new established session using the given dApp data
 // and connect addresses after checking the given confirmation token, code and
-// key
+// key. NOTE: The established session is not saved into the data file. Use
+// `StoreSession()` to save the session.
 func (sm *Manager) EstablishSession(
 	token string,
 	code string,
@@ -712,7 +554,9 @@ func (sm *Manager) EstablishSession(
 
 // EstablishSessionWithConfirm creates a new established session using the given
 // dApp data and connect addresses after checking the given confirmation code
-// (given by the user) using the data within the given confirmation
+// (given by the wallet user) using the data within the given confirmation.
+// NOTE: The established session is not saved into the data file. Use
+// `StoreSession()` to save the session.
 func (sm *Manager) EstablishSessionWithConfirm(
 	confirm *Confirmation,
 	codeFromUser string,
@@ -785,18 +629,10 @@ func (sm *Manager) GenerateConfirmation(dappId *ecdh.PublicKey) (confirm *Confir
 }
 
 // GetConfirmKey attempts to retrieve the stored confirmation key with the given
-// ID (in base64) using the given file encryption key to decrypt the
-// confirmation keystore file. Returns nil without an error if no confirmation
-// with the given ID is found.
+// ID (in base64) using the given file encryption key to decrypt the session
+// data file. Returns nil without an error if no confirmation with the given ID
+// is found.
 func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.PrivateKey, error) {
-	confirmsFilePath, err := sm.getConfirmsFilePath()
-	if os.IsNotExist(err) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, err
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return nil, err
@@ -806,9 +642,13 @@ func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.Pri
 	// Retrieve confirmation key from database
 	var retrievedId string
 	var retrievedKeyBytes []byte
-	row := db.QueryRow(fmt.Sprintf(findItemByIdSQL, confirmsFilePath), confirmId)
+	row := db.QueryRow(fmt.Sprintf(findItemByIdSQL, confirmsTblName), confirmId)
 	err = row.Scan(&retrievedId, &retrievedKeyBytes)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
 	if err != nil {
+		// An unexpected error occurred
 		return nil, err
 	}
 
@@ -821,45 +661,35 @@ func (sm *Manager) GetConfirmKey(confirmId string, fileEncKey []byte) (*ecdh.Pri
 }
 
 // GetAllConfirmKeys attempts to retrieve all stored confirmation keys using the
-// given file encryption key to decrypt the confirmation keystore file.
-func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, error) {
-	confirmsFilePath, err := sm.getConfirmsFilePath()
-	if os.IsNotExist(err) {
-		return []*ecdh.PrivateKey{}, nil
-	}
-	if err != nil {
-		return []*ecdh.PrivateKey{}, err
-	}
-
+// given file encryption key to decrypt the session data file
+func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) (retrievedKeys []*ecdh.PrivateKey, err error) {
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
-		return []*ecdh.PrivateKey{}, err
+		return
 	}
 	defer db.Close()
 
-	rows, err := db.Query(fmt.Sprintf(allItemsSQL, confirmsFilePath))
+	rows, err := db.Query(fmt.Sprintf(getAllItemsSQL, confirmsTblName))
 	if err != nil {
-		return []*ecdh.PrivateKey{}, err
+		return
 	}
-
-	var retrievedKeys []*ecdh.PrivateKey
 
 	// Convert each row into an ECDH private key
 	for rows.Next() {
 		var id string
 		var keyBytes []byte
 
-		err := rows.Scan(&id, &keyBytes)
+		err = rows.Scan(&id, &keyBytes)
 		if err != nil {
 			// An unexpected error occurred
 			// Return the incomplete set along with the error
-			return retrievedKeys, err
+			return
 		}
 
-		key, err := sm.curve.NewPrivateKey(keyBytes)
-		if err != nil {
+		key, newKeyErr := sm.curve.NewPrivateKey(keyBytes)
+		if newKeyErr != nil {
 			// Return the incomplete set along with the error
-			return retrievedKeys, err
+			return retrievedKeys, newKeyErr
 		}
 
 		retrievedKeys = append(retrievedKeys, key)
@@ -869,7 +699,7 @@ func (sm *Manager) GetAllConfirmKeys(fileEncKey []byte) ([]*ecdh.PrivateKey, err
 }
 
 // StoreConfirmKey attempts to store the given confirmation key using the given
-// file encryption key to access the confirmation keystore file
+// file encryption key to access the session data file
 func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) error {
 	if key == nil {
 		return errors.New(NoConfirmKeyGivenErrMsg)
@@ -881,80 +711,29 @@ func (sm *Manager) StoreConfirmKey(key *ecdh.PrivateKey, fileEncKey []byte) erro
 	}
 	defer db.Close()
 
-	// Create temporary table in memory
-	_, err = db.Exec(confirmsCreateTblSQL)
-	if err != nil {
-		return err
-	}
-
 	idB64 := base64.StdEncoding.EncodeToString(key.PublicKey().Bytes())
 
-	// Insert confirmation key pair into temporary table
-	_, err = db.Exec(confirmSimpleInsertSQL, idB64, key.Bytes())
+	// Insert confirmation key pair into table
+	_, err = db.Exec(confirmInsertSQL, idB64, key.Bytes())
 	if err != nil {
 		return err
-	}
-
-	confirmsFilePath, err := sm.getConfirmsFilePath()
-	if err != nil && !os.IsNotExist(err) {
-		return err
-	}
-
-	// Write the confirmation key pair in the temporary table into the file
-	if !os.IsNotExist(err) { // If confirmation keystore file exists
-		// Check if confirmation key pair is already stored in the file
-		sessionRow := db.QueryRow(fmt.Sprintf(findItemByIdSQL, confirmsFilePath), idB64)
-		if sessionRow.Scan() != sql.ErrNoRows {
-			return errors.New(ConfirmKeyExistsErrMsg)
-		}
-
-		// Combine the confirmation key within the file with the new session
-		_, err = db.Exec(fmt.Sprintf(
-			itemsAddToDbFileSQL, confirmsFilePath, confirmsTblName, confirmsFilePath+tempFileSuffix,
-		))
-		if err != nil {
-			return err
-		}
-
-		err = removeTempFile(confirmsFilePath)
-		if err != nil {
-			return err
-		}
-	} else { // Confirmation keystore file does not exist
-		// Create a new file and write the confirmation key pair into it
-		_, err = db.Exec(fmt.Sprintf(itemsWriteToDbFileSQL, confirmsTblName, confirmsFilePath))
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
 }
 
 // RemoveConfirmKey attempts to remove the confirmation key with the given ID
-// from the confirmation keystore
+// from the session data file using the given file encryption key to access the
+// session data file
 func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
-	confirmsFilePath, err := sm.getConfirmsFilePath()
-	if os.IsNotExist(err) {
-		return errors.New(RemoveConfirmKeyNotStoredErrMsg)
-	}
-	if err != nil {
-		return err
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	// Remove confirmation key
-	_, err = db.Exec(fmt.Sprintf(removeItemSQL, confirmsFilePath, confirmsFilePath+tempFileSuffix), confirmId)
-	if err != nil {
-		return err
-	}
-
-	err = removeTempFile(confirmsFilePath)
+	// Remove confirmation
+	_, err = db.Exec(fmt.Sprintf(removeItemSQL, confirmsTblName), confirmId)
 	if err != nil {
 		return err
 	}
@@ -965,29 +744,15 @@ func (sm *Manager) RemoveConfirmKey(confirmId string, fileEncKey []byte) error {
 // PurgeConfirmKeystore attempts to delete the entire confirmation keystore. It
 // returns the number of confirmation keys that were deleted.
 func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (numPurged uint, err error) {
-	confirmsFilePath, err := sm.getConfirmsFilePath()
-	if err != nil {
-		return 0, nil
-	}
-
 	db, err := sm.OpenDb(fileEncKey)
 	if err != nil {
 		return 0, err
 	}
 	defer db.Close()
 
-	// Count number of confirmation keys in the file
-	row := db.QueryRow(fmt.Sprintf(countItemsSQL, confirmsFilePath))
-	row.Scan(&numPurged)
-	if err != nil {
-		return 0, err
-	}
-
-	// Remove the file
-	err = os.Remove(confirmsFilePath)
-	if err != nil && !os.IsNotExist(err) {
-		return 0, err
-	}
+	// Remove all confirmations
+	row := db.QueryRow(fmt.Sprintf(removeAllItemsSQL, confirmsTblName))
+	err = row.Scan(&numPurged)
 
 	return
 }
@@ -997,45 +762,33 @@ func (sm *Manager) PurgeConfirmKeystore(fileEncKey []byte) (numPurged uint, err 
  ******************************************************************************/
 
 // OpenDb is a helper function that opens the database connection for a database
-// and sets the file encryption key that will be used to encrypt and decrypt
-// database file(s). This function usually does not need to be called directly
-// outside of testing. The file encryption key is only set within the database
-// connection. The key is NOT checked if it is correct. Returns a database
-// handle if there are no errors.
+// using the given file encryption key. This function usually does not need to
+// be called directly outside of testing.
 func (sm *Manager) OpenDb(fileEncKey []byte) (db *sql.DB, err error) {
+	// TODO: Add mutex lock to protect against data races
+
 	// Open DuckDB in in-memory mode
 	db, err = sql.Open("duckdb", "")
 	if err != nil {
 		return
 	}
 
-	// Add key for decrypting and encrypting file
-	// NOTE: This PRAGMA statement does not work as a prepared statement, but
-	// there is no risk of SQL injection in this case
-	_, err = db.Exec(fmt.Sprintf(addParquetKeySQL, base64.StdEncoding.EncodeToString(fileEncKey)))
+	dataFilePath, err := sm.getDataFilePath()
 	if err != nil {
-		db.Close() // Fatal error, so close the database connection
-		return nil, err
-	}
-
-	return
-}
-
-// getSessionsFilePath returns the file path of the sessions database file. If
-// the data directory does not exist, it tries to created it. It also checks if
-// the file exists. If the file does not exist, an os.ErrNotExist is returned as
-// the error.
-func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
-	filePath = filepath.Join(sm.dataDir, sm.sessionsFile)
-
-	// Ensure data directory exists
-	err = os.Mkdir(sm.dataDir, dataDirPermissions)
-	if err != nil && !os.IsExist(err) {
 		return
 	}
 
-	// Check if session file exists
-	_, err = os.Stat(filePath)
+	// Open and decrypt accounts database file
+	_, err = db.Exec(fmt.Sprintf(attachEncDuckDbSQL,
+		dataFilePath,
+		base64.StdEncoding.EncodeToString(fileEncKey),
+	))
+	if err != nil {
+		return
+	}
+
+	// Create tables if they do not exist
+	_, err = db.Exec(sessionsSchema)
 	if err != nil {
 		return
 	}
@@ -1043,26 +796,20 @@ func (sm *Manager) getSessionsFilePath() (filePath string, err error) {
 	return
 }
 
-// getConfirmsFilePath returns the file path of the confirmation keystore file.
-// If the data directory does not exist, it tries to created it. It also checks
-// if the file exists. If the file does not exist, an os.ErrNotExist is returned
-// as the error.
-func (sm *Manager) getConfirmsFilePath() (filePath string, err error) {
-	filePath = filepath.Join(sm.dataDir, sm.confirmsFile)
+// getDataFilePath returns the file path of the data file. If the data
+// directory does not exist, it tries to created it. It DOES NOT check if the
+// data file exists.
+func (sm *Manager) getDataFilePath() (filePath string, err error) {
+	filePath = filepath.Join(sm.dataDir, sm.dataFile)
 
 	// Ensure data directory exists
 	err = os.Mkdir(sm.dataDir, dataDirPermissions)
 	if err != nil && !os.IsExist(err) {
+		// Unexpected error
 		return
 	}
 
-	// Check if confirmation keystore file exists
-	_, err = os.Stat(filePath)
-	if err != nil {
-		return
-	}
-
-	return
+	return filePath, nil
 }
 
 // rowToSession converts the given data of a sessions database row into a

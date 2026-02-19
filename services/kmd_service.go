@@ -1,7 +1,7 @@
 package services
 
 import (
-	"os"
+	"crypto/ecdh"
 	"path/filepath"
 	"sync"
 	"time"
@@ -15,8 +15,12 @@ import (
 	"duckysigner/internal/kmd/config"
 	"duckysigner/internal/kmd/wallet"
 	"duckysigner/internal/kmd/wallet/driver"
+	"duckysigner/internal/tools"
 	ws "duckysigner/internal/wallet_session"
 )
+
+const KMDServiceWalletDriver = "duckdb"
+const KMDServiceWalletDir = "duckdb_wallets"
 
 // KMDService as a Wails binding allows for a Wails frontend to interact and
 // manage KMD wallets
@@ -26,6 +30,11 @@ type KMDService struct {
 	// Path to the configuration file for KMD. The configuration file used only
 	// if `Config` is not set
 	ConfigPath string
+	// Instance of the an ECDH curve to be used for generating the wallet
+	// session key pair. Typically used to set a mock curve when
+	// testing.
+	// Default: `ecdh.X25519()` from the `crypto/ecdh` package
+	ECDHCurve tools.ECDHCurve
 
 	// If KMD configuration and drivers have been initialized
 	kmdInitialized bool
@@ -53,10 +62,10 @@ func (service *KMDService) StartSession(walletID, password string) (err error) {
 
 	var walletDir string
 	// Calculate the path of the wallet directory
-	if service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir != "" {
-		walletDir = filepath.Join(service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir, walletID)
+	if service.Config.DriverConfig.DuckDbWalletDriverConfig.WalletsDir != "" {
+		walletDir = filepath.Join(service.Config.DriverConfig.DuckDbWalletDriverConfig.WalletsDir, walletID)
 	} else {
-		walletDir = filepath.Join(service.Config.DataDir, "parquet_wallets", walletID)
+		walletDir = filepath.Join(service.Config.DataDir, KMDServiceWalletDir, walletID)
 	}
 
 	// Initialize wallet in order to securely load master derivation key (MDK)
@@ -136,7 +145,7 @@ func (service *KMDService) ListWallets() ([]wallet.Metadata, error) {
 	return driver.ListWalletMetadatas()
 }
 
-// CreateWallet creates a new Parquet wallet with the given walletName and
+// CreateWallet creates a new wallet with the given walletName and
 // password
 func (service *KMDService) CreateWallet(walletName, password string) (newWalletData wallet.Metadata, err error) {
 	err = service.init()
@@ -150,8 +159,8 @@ func (service *KMDService) CreateWallet(walletName, password string) (newWalletD
 		return
 	}
 
-	// Get Parquet driver
-	pqDriver, err := driver.FetchWalletDriver("parquet")
+	// Get driver
+	pqDriver, err := driver.FetchWalletDriver(KMDServiceWalletDriver)
 	if err != nil {
 		return
 	}
@@ -193,7 +202,7 @@ func (service *KMDService) RenameWallet(walletID string, newName string, passwor
 		return err
 	}
 
-	pqDriver, err := driver.FetchWalletDriver("parquet")
+	pqDriver, err := driver.FetchWalletDriver(KMDServiceWalletDriver)
 	if err != nil {
 		return err
 	}
@@ -215,8 +224,8 @@ func (service *KMDService) ImportWalletMnemonic(walletMnemonic, walletName, pass
 		return
 	}
 
-	// Get Parquet driver
-	pqDriver, err := driver.FetchWalletDriver("parquet")
+	// Get driver
+	pqDriver, err := driver.FetchWalletDriver(KMDServiceWalletDriver)
 	if err != nil {
 		return
 	}
@@ -279,35 +288,18 @@ func (service *KMDService) CleanUp() error {
 	/* Purge the MemGuard session */
 	memguard.Purge()
 
-	/* Remove dApp connect session confirmation files in all wallets */
-	walletMetas, err := service.ListWallets()
-	if err != nil {
-		return err
-	}
-	// Remove dApp connect session confirmation file in each wallet (if it
-	// exists)
-	for _, wm := range walletMetas {
-		var confirmsPath string
-		// Calculate the path of the wallet directory
-		if service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir != "" {
-			confirmsPath = filepath.Join(
-				service.Config.DriverConfig.ParquetWalletDriverConfig.WalletsDir,
-				string(wm.ID),
-				session.DefaultConfirmsFile,
-			)
-		} else {
-			confirmsPath = filepath.Join(
-				service.Config.DataDir,
-				"parquet_wallets",
-				string(wm.ID),
-				session.DefaultConfirmsFile,
-			)
+	/* Purge all expired dApp connect sessions and pending confirmations */
+	if service.session != nil { // If a *wallet* (not dApp connect) session was started
+		sessionManager := session.NewManager(
+			service.ECDHCurve,
+			&session.SessionConfig{DataDir: service.Session().FilePath},
+		)
+		mek, err := service.session.GetMasterKey()
+		if err != nil {
+			return nil
 		}
-		// Delete dApp connect session confirmation file
-		err := os.Remove(confirmsPath)
-		if err != nil && !os.IsNotExist(err) {
-			return err
-		}
+		sessionManager.PurgeExpiredSessions(mek)
+		sessionManager.PurgeConfirmKeystore(mek)
 	}
 
 	// XXX: May do other stuff (e.g. end db session properly) to clean up in the future
@@ -342,6 +334,11 @@ func (service *KMDService) init() (err error) {
 		return
 	}
 
+	// Set ECDH curve if it is not set
+	if service.ECDHCurve == nil {
+		service.ECDHCurve = ecdh.X25519()
+	}
+
 	service.kmdInitialized = true
 
 	return
@@ -349,7 +346,7 @@ func (service *KMDService) init() (err error) {
 
 // getWallet gets the wallet with the given walletID
 func (service *KMDService) getWallet(walletID string) (wallet.Wallet, error) {
-	pqDriver, err := driver.FetchWalletDriver("parquet")
+	pqDriver, err := driver.FetchWalletDriver(KMDServiceWalletDriver)
 	if err != nil {
 		return nil, err
 	}

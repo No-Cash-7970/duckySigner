@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -28,7 +27,15 @@ var _ = Describe("DApp Connect Session Manager", func() {
 		It("creates a new session manager with given configuration", func() {
 			sessionManager := session.NewManager(
 				curve,
-				&session.SessionConfig{"", "", "somewhere/dc", 42, 8, "0123456789ABCDEF", 6, 2},
+				&session.SessionConfig{
+					DataFile:            "",
+					DataDir:             "somewhere/dc",
+					SessionLifetimeSecs: 42,
+					ConfirmLifetimeSecs: 8,
+					ConfirmCodeCharset:  "0123456789ABCDEF",
+					ConfirmCodeLen:      6,
+					ApprovalTimeoutSecs: 2,
+				},
 			)
 			Expect(sessionManager.DataDir()).To(Equal(filepath.FromSlash("somewhere/dc")), "Has correct data directory")
 			Expect(sessionManager.SessionLifetime()).To(Equal(42*time.Second),
@@ -104,7 +111,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns nil when attempting to get a session and there is no sessions file", func() {
+		It("returns nil when attempting to get a session and there is no session data file", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 
@@ -181,7 +188,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns an empty slice if there is no sessions file", func() {
+		It("returns an empty slice if there is no session data file", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 			By("Attempting to retrieve all stored sessions")
@@ -269,10 +276,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
-			storedSessionRow := db.QueryRow(fmt.Sprintf(
-				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.SessionsFile(),
-			))
+			storedSessionRow := db.QueryRow("FROM db.sessions LIMIT 1")
 			storedSessionRow.Scan(
 				&storedSessionId, &storedSessionKey,
 				&storedExp, &storedEst,
@@ -303,7 +307,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				"Stored session has correct number of addresses")
 		})
 
-		It("can add session to a database file that already exists", func() {
+		It("can add session to a data file that already exists", func() {
 			dirName := ".test_dc_store_session_exists"
 			sessionManager := session.NewManager(curve, &session.SessionConfig{DataDir: dirName})
 			DeferCleanup(sessionManagerCleanup(dirName))
@@ -337,8 +341,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			dappId2 := dappKey2.PublicKey()
 			sessionKey2, err := curve.GenerateKey(rand.Reader)
 			Expect(err).ToNot(HaveOccurred())
-			sessionId2 := sessionKey2.PublicKey()
-			sessionId2B64 := b64encoder.EncodeToString(sessionId2.Bytes())
+			sessionId2B64 := b64encoder.EncodeToString(sessionKey2.PublicKey().Bytes())
 			est2 := time.Now().Add(1 * time.Minute)
 			exp2 := time.Now().Add(10 * time.Minute)
 			testDappData := dc.DappData{
@@ -370,13 +373,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
-			storedSessionRow := db.QueryRow(
-				fmt.Sprintf(
-					"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE id = ?;",
-					dirName+"/"+sessionManager.SessionsFile(),
-				),
-				sessionId2B64,
-			)
+			storedSessionRow := db.QueryRow("FROM db.sessions WHERE id=?", sessionId2B64)
 			storedSessionRow.Scan(
 				&storedSessionId, &storedSessionKey,
 				&storedExp, &storedEst,
@@ -385,7 +382,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				&storedAddrs,
 			)
 
-			Expect(storedSessionId).To(Equal(b64encoder.EncodeToString(sessionId2.Bytes())),
+			Expect(storedSessionId).To(Equal(sessionId2B64),
 				"Stored session has correct ID")
 			Expect(storedSessionKey).To(Equal(sessionKey2.Bytes()),
 				"Stored session has correct key")
@@ -454,10 +451,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedDappIcon   string
 				storedAddrs      duckdb.Composite[[]string]
 			)
-			storedSessionRow := db.QueryRow(fmt.Sprintf(
-				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.SessionsFile(),
-			))
+			storedSessionRow := db.QueryRow("FROM db.sessions LIMIT 1")
 			storedSessionRow.Scan(
 				&storedSessionId, &storedSessionKey,
 				&storedExp, &storedEst,
@@ -602,7 +596,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("fails when attempting to remove a session when sessions file does not exist", func() {
+		It("does not fail when attempting to remove a session when session file does not exist", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 
@@ -612,7 +606,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			sessionId := b64encoder.EncodeToString(sessionKey.PublicKey().Bytes())
 			// Check that removing the session failed
 			err = sessionManager.RemoveSession(sessionId, fileEncryptKey[:])
-			Expect(err).To(MatchError(session.RemoveSessionNotStoredErrMsg))
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("removes the session with the given ID if it is stored", func() {
@@ -635,10 +629,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
-			storedSessionRow := db.QueryRow(fmt.Sprintf(
-				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.SessionsFile(),
-			))
+			storedSessionRow := db.QueryRow("FROM db.sessions LIMIT 1")
 			err = storedSessionRow.Scan()
 
 			Expect(err).To(MatchError(sql.ErrNoRows), "Session is not in the database file anymore")
@@ -774,10 +765,10 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
-			removedSessionRow := db.QueryRow(fmt.Sprintf(
-				"SELECT id FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) WHERE id = ?;",
-				dirName+"/"+sessionManager.SessionsFile(),
-			), b64encoder.EncodeToString(sessionKey.PublicKey().Bytes()))
+			removedSessionRow := db.QueryRow(
+				"SELECT id FROM db.sessions WHERE id = ?",
+				b64encoder.EncodeToString(sessionKey.PublicKey().Bytes()),
+			)
 			var retrievedSessionId string
 			err = removedSessionRow.Scan(&retrievedSessionId)
 			Expect(err).To(MatchError(sql.ErrNoRows), "Expired session is not in the database file anymore")
@@ -1043,7 +1034,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns nil when attempting to get a confirmation key and there is no confirmation keystore file", func() {
+		It("returns nil when attempting to get a confirmation key and an empty confirmation keystore", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 
@@ -1098,7 +1089,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("returns an empty slice if there is no confirmations file", func() {
+		It("returns an empty slice if there is no session data file", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 			By("Attempting to retrieve all stored confirmation keys")
@@ -1160,11 +1151,8 @@ var _ = Describe("DApp Connect Session Manager", func() {
 				storedConfirmId  string
 				storedConfirmKey []byte
 			)
-			storedSessionRow := db.QueryRow(fmt.Sprintf(
-				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.ConfirmationsFile(),
-			))
-			storedSessionRow.Scan(&storedConfirmId, &storedConfirmKey)
+			storedConfirmRow := db.QueryRow("FROM db.confirms LIMIT 1")
+			storedConfirmRow.Scan(&storedConfirmId, &storedConfirmKey)
 
 			Expect(storedConfirmId).To(Equal(confirmId), "Stored confirmation key has correct ID")
 			Expect(storedConfirmKey).To(Equal(confirmKey.Bytes()), "Stored the correct key")
@@ -1198,7 +1186,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			DeferCleanup(sessionManagerCleanup(dirName))
 		})
 
-		It("fails when attempting to remove a confirmation key when confirmation keystore file does not exist", func() {
+		It("does not fail when attempting to remove a confirmation key when session data file does not exist", func() {
 			// NOTE: Because this `Describe` container is "Ordered", the session
 			// database file is assumed to not have been created yet
 
@@ -1208,7 +1196,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			confirmId := b64encoder.EncodeToString(confirmKey.PublicKey().Bytes())
 			// Check that removing the confirmation key failed
 			err = sessionManager.RemoveConfirmKey(confirmId, fileEncryptKey[:])
-			Expect(err).To(MatchError(session.RemoveConfirmKeyNotStoredErrMsg))
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("removes the confirmation key with the given ID if it exists", func() {
@@ -1228,10 +1216,7 @@ var _ = Describe("DApp Connect Session Manager", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer db.Close()
 
-			confirmRow := db.QueryRow(fmt.Sprintf(
-				"FROM read_parquet('%s', encryption_config = {footer_key: 'key'}) LIMIT 1;",
-				dirName+"/"+sessionManager.ConfirmationsFile(),
-			))
+			confirmRow := db.QueryRow("FROM db.confirms LIMIT 1")
 			err = confirmRow.Scan()
 
 			Expect(err).To(MatchError(sql.ErrNoRows), "Key is not in the database file anymore")
@@ -1314,11 +1299,7 @@ func sessionManagerCleanup(dataDirName string) func() {
 // generateAndStoreSession generates a session, sets its dApp data to the given
 // dApp data, and stores it using the given session manager and file encryption
 // key
-func generateAndStoreSession(
-	sessionManager *session.Manager,
-	fileEncryptKey []byte,
-	dappData *dc.DappData,
-) *session.Session {
+func generateAndStoreSession(sessionManager *session.Manager, fileEncryptKey []byte, dappData *dc.DappData) *session.Session {
 	dappKey, err := curve.GenerateKey(rand.Reader)
 	Expect(err).ToNot(HaveOccurred())
 	sessionKey, err := curve.GenerateKey(rand.Reader)

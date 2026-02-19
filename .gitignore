@@ -22,6 +22,7 @@ build/windows/icon.ico
 **/kmd_config.json*
 **/sqlite_wallets
 **/parquet_wallets
+**/duckdb_wallets
 
 # Testing
 **/.test*
