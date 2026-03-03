@@ -32,7 +32,7 @@ const (
 	defaultSessionLifetimeSecs = 60
 	defaultScryptN             = 65536
 	defaultScryptR             = 1
-	defaultScryptP             = 32
+	defaultScryptP             = 32 // Want scrypt to be heavy on CPU (or GPU) usage and light on memory
 )
 
 // KMDConfig contains global configuration information for kmd
