@@ -1863,6 +1863,42 @@ func (pqw *ParquetWallet) MultisigSignProgram(data []byte, src types.Digest, pk 
 	return
 }
 
+func (pqw *ParquetWallet) ListAccounts() ([]wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (pqw *ParquetWallet) GetAccount(addr string) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (pqw *ParquetWallet) DeleteAccount(addr string, pw []byte) error {
+	return errNotSupported
+}
+
+func (pqw *ParquetWallet) UpdateAccountName(addr string, name string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (pqw *ParquetWallet) UpdateAccountRekeyedTo(addr string, rekeyedTo string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (pqw *ParquetWallet) AddAccountAbove(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (pqw *ParquetWallet) AddAccountBelow(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (pqw *ParquetWallet) MoveAccountAbove(moveAddr string, refAddr string) error {
+	return errNotSupported
+}
+
+func (pqw *ParquetWallet) MoveAccountBelow(moveAddr string, refAddr string) error {
+	return errNotSupported
+}
+
 /*******************************************************************************
  * Helpers
  ******************************************************************************/

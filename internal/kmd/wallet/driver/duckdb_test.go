@@ -1532,6 +1532,358 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 		// 		// TODO
 		// 	})
 		// })
+
+		PDescribe("ListAccounts()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_list_accts"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns no accounts if there are no accounts stored", func() {
+				// TODO
+			})
+
+			It("returns all accounts stored within the wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("GetAccount()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_get_acct"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("fails if there are no accounts stored in the wallet", func() {
+				// TODO
+			})
+
+			It("returns the account for the given address if it is stored in the wallet", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("DeleteAccount()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_delete_acct"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("does not fail if there are no accounts", func() {
+				// TODO
+			})
+
+			It("removes the account for the given address", func() {
+				// TODO
+			})
+
+			It("fails if given the wrong password", func() {
+				// TODO
+			})
+
+			It("does not fail if account to be removed is not in wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("UpdateAccountName()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_update_acct_name"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("fails if there are no accounts stored in the wallet", func() {
+				// TODO
+			})
+
+			It("updates the account name and returns the account with the new name", func() {
+				// TODO
+			})
+
+			It("fails if given the wrong password", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("UpdateAccountRekeyedTo()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_update_acct_rekey"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("fails if there are no accounts stored in the wallet", func() {
+				// TODO
+			})
+
+			It("updates the account rekeyed-to address and returns the account with the new rekeyed-to address", func() {
+				// TODO
+			})
+
+			It("fails if given the wrong password", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("MoveAccountAbove()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_move_acct_above"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("fails if there are no accounts stored in the wallet", func() {
+				// TODO
+			})
+
+			It("moves the given account above the given reference account", func() {
+				// TODO
+			})
+
+			It("moves account to the beginning if no reference address is given", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("MoveAccountBelow()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_move_acct_below"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("fails if there are no accounts stored in the wallet", func() {
+				// TODO
+			})
+
+			It("moves the given account below the given reference account", func() {
+				// TODO
+			})
+
+			It("moves account to the end if no reference address is given", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("AddAccountAbove()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_add_acct_above"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("adds the given account above the given reference account", func() {
+				// TODO
+			})
+
+			It("adds account to the beginning if no reference address is given", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
+
+		PDescribe("AddAccountBelow()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_add_acct_below"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("adds the given account below the given reference account", func() {
+				// TODO
+			})
+
+			It("adds account to the end if no reference address is given (empty wallet)", func() {
+				// TODO
+			})
+
+			It("adds account to the end if no reference address is given (non-empty wallet)", func() {
+				// TODO
+			})
+
+			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				// TODO
+			})
+		})
 	})
 })
 

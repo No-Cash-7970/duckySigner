@@ -70,18 +70,20 @@ LOAD httpfs; -- use OpenSSL library to increase speed
 ATTACH '%s' AS db (ENCRYPTION_KEY '%s');
 `
 
+// XXX: DuckDB does not support cascading deletes for foreign keys
+// Source: <https://duckdb.org/docs/stable/sql/statements/create_table#limitations>
+
 var duckDbAcctsSchema = `
 CREATE TABLE IF NOT EXISTS db.info (
 	mdk BLOB PRIMARY KEY,
-	max_key_idx INT NOT NULL
+	max_key_idx UINT64 NOT NULL
 );
 
-CREATE TYPE db.acct_type AS ENUM ('kmd_hd', 'standalone', 'ledger', 'msig', 'watch');
-
-CREATE TABLE IF NOT EXISTS db.addresses (
-	addr BLOB PRIMARY KEY,
-    pos_num INT,
-    type acct_type NOT NULL,
+CREATE TABLE IF NOT EXISTS db.accounts (
+	address BLOB PRIMARY KEY,
+    position UINT64,
+    position_ts TIMESTAMP,
+    type TEXT NOT NULL,
     name TEXT,
     rekeyed BOOL NOT NULL
 );
@@ -89,16 +91,18 @@ CREATE TABLE IF NOT EXISTS db.addresses (
 CREATE TABLE IF NOT EXISTS db.keys (
 	address BLOB PRIMARY KEY,
 	key BLOB NOT NULL,
-	key_idx INT
+	key_idx UINT64
 );
 
 CREATE TABLE IF NOT EXISTS db.msig_addrs (
 	address BLOB PRIMARY KEY,
-	version INT NOT NULL,
-	threshold INT NOT NULL,
+	version UINT64 NOT NULL,
+	threshold UINT64 NOT NULL,
 	pks BLOB NOT NULL
 );
 `
+
+// TODO?: Replace acct_type enum with a table that includes SupportedTransactions for each type
 
 // DuckDbWalletDriver is the default wallet driver used by kmd. Keys are stored
 // as authenticated-encrypted blobs in a sqlite 3 database.
@@ -121,6 +125,8 @@ type DuckDbWallet struct {
 	walletsPath string
 	// If the wallet has been initialized
 	initialized bool
+
+	// TODO: Add read-write mutex lock to protect against data races
 }
 
 type DuckDbWalletMetadata struct {
@@ -482,7 +488,7 @@ func (ddbw *DuckDbWallet) CheckAddrInWallet(addr string) (bool, error) {
 	return true, nil
 }
 
-// ListKeys lists all the addresses in the wallet
+// ListKeys lists all the addresses of KMD or standalone type of accounts
 func (ddbw *DuckDbWallet) ListKeys() (addrs []types.Digest, err error) {
 	if !ddbw.initialized {
 		return addrs, fmt.Errorf("wallet not initialized")
@@ -601,7 +607,7 @@ func (ddbw *DuckDbWallet) ExportKey(addr types.Digest, pw []byte) (ed25519.Priva
 	return ddbw.fetchSecretKey(addr)
 }
 
-// GenerateKey generates a key from system entropy and imports it
+// GenerateKey generates a KMD account key (using a key index) and imports it
 func (ddbw *DuckDbWallet) GenerateKey(displayMnemonic bool) (addr types.Digest, err error) {
 	if !ddbw.initialized {
 		return addr, fmt.Errorf("wallet not initialized")
@@ -1220,6 +1226,73 @@ func (ddbw *DuckDbWallet) MultisigSignProgram(data []byte, src types.Digest, pk 
 	return
 }
 
+// ListAccounts list the accounts in the wallet. The list is ordered according
+// to position number.
+func (ddbw *DuckDbWallet) ListAccounts() ([]wallet.Account, error) {
+	// TODO
+	return nil, errNotSupported
+}
+
+// GetAccount gets the information of the account with the given address
+func (ddbw *DuckDbWallet) GetAccount(addr string) (*wallet.Account, error) {
+	// TODO
+	return nil, errNotSupported
+}
+
+// TODO?: Get account by name
+
+// DeleteAccount deletes the account with the given address
+func (ddbw *DuckDbWallet) DeleteAccount(addr string, pw []byte) error {
+	// TODO
+	return errNotSupported
+}
+
+// UpdaAccountName updates the name of the account with the given address to the
+// given name
+func (ddbw *DuckDbWallet) UpdateAccountName(addr string, name string, pw []byte) (*wallet.Account, error) {
+	// TODO
+	return nil, errNotSupported
+}
+
+// UpdateAccountRekeyedTo updates the "rekeyed to" address of the account with
+// given address to the given new "rekeyed to" address
+func (ddbw *DuckDbWallet) UpdateAccountRekeyedTo(addr string, rekeyedTo string, pw []byte) (*wallet.Account, error) {
+	// TODO
+	return nil, errNotSupported
+}
+
+// AddAccountAbove adds the given account  above the "reference" account with
+// the given address in the list of accounts. If no reference address is given,
+// the account is placed first in the list.
+func (ddbw *DuckDbWallet) AddAccountAbove(acct *wallet.Account, refAddr string) error {
+	// TODO
+	return errNotSupported
+}
+
+// AddAccountBelow moves the account with the given address below the
+// "reference" account with the given address in the list of accounts. If no
+// reference address is given, the account is placed last in the list.
+func (ddbw *DuckDbWallet) AddAccountBelow(acct *wallet.Account, refAddr string) error {
+	// TODO
+	return errNotSupported
+}
+
+// MoveAccountAbove moves the account with the given address above the
+// "reference" account with the given address in the list of accounts. If no
+// reference address is given, the account is placed first in the list.
+func (ddbw *DuckDbWallet) MoveAccountAbove(moveAddr string, refAddr string) error {
+	// TODO
+	return errNotSupported
+}
+
+// MoveAccountBelow moves the account with the given address below the
+// "reference" account with the given address in the list of accounts. If no
+// reference address is given, the account is placed last in the list.
+func (ddbw *DuckDbWallet) MoveAccountBelow(moveAddr string, refAddr string) error {
+	// TODO
+	return errNotSupported
+}
+
 /*******************************************************************************
  * Helpers
  ******************************************************************************/
@@ -1435,8 +1508,6 @@ func (ddbw *DuckDbWallet) fetchSecretKey(addr types.Digest) (sk ed25519.PrivateK
 // openAccountsDb opens the encrypted accounts database file using the master
 // encryption key
 func (ddbw *DuckDbWallet) openAccountsDb() (db *sql.DB, err error) {
-	// TODO: Add mutex lock to protect against data races
-
 	// Open database
 	db, err = sql.Open("duckdb", "")
 	if err != nil {

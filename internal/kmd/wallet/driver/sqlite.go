@@ -1494,3 +1494,39 @@ func (sw *SQLiteWallet) MultisigSignProgram(data []byte, src types.Digest, pk ed
 
 	return
 }
+
+func (sw *SQLiteWallet) ListAccounts() ([]wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (sw *SQLiteWallet) GetAccount(addr string) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (sw *SQLiteWallet) DeleteAccount(addr string, pw []byte) error {
+	return errNotSupported
+}
+
+func (sw *SQLiteWallet) UpdateAccountName(addr string, name string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (sw *SQLiteWallet) UpdateAccountRekeyedTo(addr string, rekeyedTo string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (sw *SQLiteWallet) AddAccountAbove(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (sw *SQLiteWallet) AddAccountBelow(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (sw *SQLiteWallet) MoveAccountAbove(moveAddr string, refAddr string) error {
+	return errNotSupported
+}
+
+func (sw *SQLiteWallet) MoveAccountBelow(moveAddr string, refAddr string) error {
+	return errNotSupported
+}

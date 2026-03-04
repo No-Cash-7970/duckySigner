@@ -569,3 +569,39 @@ func (lw *LedgerWallet) signProgramHelper(_ []byte) (sig types.Signature, err er
 	err = errors.New("signing programs not yet implemented for ledger wallet")
 	return
 }
+
+func (lw *LedgerWallet) ListAccounts() ([]wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (lw *LedgerWallet) GetAccount(addr string) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (lw *LedgerWallet) DeleteAccount(addr string, pw []byte) error {
+	return errNotSupported
+}
+
+func (lw *LedgerWallet) UpdateAccountName(addr string, name string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (lw *LedgerWallet) UpdateAccountRekeyedTo(addr string, rekeyedTo string, pw []byte) (*wallet.Account, error) {
+	return nil, errNotSupported
+}
+
+func (lw *LedgerWallet) AddAccountAbove(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (lw *LedgerWallet) AddAccountBelow(acct *wallet.Account, refAddr string) error {
+	return errNotSupported
+}
+
+func (lw *LedgerWallet) MoveAccountAbove(moveAddr string, refAddr string) error {
+	return errNotSupported
+}
+
+func (lw *LedgerWallet) MoveAccountBelow(moveAddr string, refAddr string) error {
+	return errNotSupported
+}

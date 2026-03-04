@@ -61,7 +61,58 @@ type Wallet interface {
 	MultisigSignProgram(program []byte, src types.Digest, pk ed25519.PublicKey, partial types.MultisigSig, pw []byte) (types.MultisigSig, error)
 
 	DecryptAndGetMasterKey(pw []byte) ([]byte, error)
+
+	ListAccounts() ([]Account, error)
+	GetAccount(addr string) (*Account, error)
+	DeleteAccount(addr string, pw []byte) error
+	UpdateAccountName(addr string, name string, pw []byte) (*Account, error)
+	UpdateAccountRekeyedTo(addr string, rekeyedTo string, pw []byte) (*Account, error)
+	AddAccountAbove(acct *Account, refAddr string) error
+	AddAccountBelow(acct *Account, refAddr string) error
+	MoveAccountAbove(moveAddr string, refAddr string) error
+	MoveAccountBelow(moveAddr string, refAddr string) error
 }
+
+type Account struct {
+	// Address of the account
+	Address types.Digest
+	// Type of account
+	Type AccountType
+	// Position of the account in the list of accounts. The list of accounts is
+	// a list typically ordered by position number.
+	Position string
+	// Name of the account
+	Name string
+	// Address the account is rekeyed to, if the account is rekeyed
+	RekeyedTo types.Digest
+}
+
+/* BEGIN AccountType "enum" */
+// Based on: <https://gobyexample.com/enums>
+
+type AccountType int
+
+func (acctType AccountType) String() string {
+	return acctTypeName[acctType]
+}
+
+const (
+	AcctTypeKMD AccountType = iota
+	AcctTypeStandalone
+	AcctTypeLedger
+	AcctTypeMsig
+	AcctTypeWatch
+)
+
+var acctTypeName = map[AccountType]string{
+	AcctTypeKMD:        "kmd_hd",
+	AcctTypeStandalone: "standalone",
+	AcctTypeLedger:     "ledger",
+	AcctTypeMsig:       "msig",
+	AcctTypeWatch:      "watch",
+}
+
+/* END */
 
 // Metadata represents high-level information about a wallet, like its name, id
 // and what operations it supports
