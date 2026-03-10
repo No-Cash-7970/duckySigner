@@ -479,7 +479,7 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
 			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
-			var wallet wallet.Wallet
+			var testWallet wallet.Wallet
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -497,19 +497,19 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
-				err = wallet.Init([]byte(walletPassword))
+				err = testWallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Generating a key")
-				_, err = wallet.GenerateKey(false)
+				_, err = testWallet.GenerateKey(false)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("returns false if address is NOT in wallet", func() {
 				By("Checking if a certain address is stored in wallet")
-				check, err := wallet.CheckAddrInWallet(acctAddr)
+				check, err := testWallet.CheckAddrInWallet(acctAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(check).To(BeFalse())
 			})
@@ -518,11 +518,11 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 				By("Importing a key")
 				sk, err := mnemonic.ToPrivateKey(acctMnemonic)
 				Expect(err).ToNot(HaveOccurred())
-				_, err = wallet.ImportKey(sk)
+				_, err = testWallet.ImportKey(sk)
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Checking if a certain address is stored in wallet")
-				check, err := wallet.CheckAddrInWallet(acctAddr)
+				check, err := testWallet.CheckAddrInWallet(acctAddr)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(check).To(BeTrue())
 			})
@@ -913,15 +913,15 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Fetching the wallet and initializing it")
-				wallet, err := duckDbDriver.FetchWallet([]byte(walletId))
+				testWallet, err := duckDbDriver.FetchWallet([]byte(walletId))
 				Expect(err).ToNot(HaveOccurred())
-				err = wallet.Init([]byte(walletPassword))
+				err = testWallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 
 				By("Attempting to delete a key")
 				decodedAcctAddr, err := algoTypes.DecodeAddress(acctAddr)
 				Expect(err).ToNot(HaveOccurred())
-				err = wallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
+				err = testWallet.DeleteKey(algoTypes.Digest(decodedAcctAddr), []byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -1533,12 +1533,16 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 		// 	})
 		// })
 
-		PDescribe("ListAccounts()", Ordered, func() {
+		Describe("ListAccounts()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_list_accts"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acct1Addr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acct2Addr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1554,23 +1558,57 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("returns no accounts if there are no accounts stored", func() {
-				// TODO
+			XIt("returns no accounts if there are no accounts stored", func() {
+				By("Listing all accounts")
+				accts, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(accts).To(HaveLen(0), "No accounts were returned")
 			})
 
-			It("returns all accounts stored within the wallet", func() {
-				// TODO
+			XIt("returns all accounts stored within the wallet", func() {
+				By("Adding Account #1")
+				decodedAddr1, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Address: algoTypes.Digest(decodedAddr1),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Adding Account #2")
+				decodedAddr2, err := algoTypes.DecodeAddress(acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Address: algoTypes.Digest(decodedAddr2),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Listing all accounts")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(2), "All accounts were returned")
 			})
 		})
 
-		PDescribe("GetAccount()", Ordered, func() {
+		Describe("GetAccount()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_get_acct"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1586,27 +1624,56 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("fails if there are no accounts stored in the wallet", func() {
-				// TODO
+			XIt("fails if there are no accounts stored in the wallet", func() {
+				By("Attempting to get account")
+				_, err := testWallet.GetAccount(acctAddr)
+				Expect(err).To(MatchError("account does not exist in this wallet"), "Account retrieval failed")
 			})
 
-			It("returns the account for the given address if it is stored in the wallet", func() {
-				// TODO
+			XIt("returns the account for the given address if it is stored in the wallet", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to get account")
+				acct, _ := testWallet.GetAccount(acctAddr)
+				Expect(acct.Name).To(Equal("Test Account"), "Returned account has correct name")
+				Expect(acct.Address).To(
+					Equal(algoTypes.Digest(decodedAddr)), "Returned account has correct address")
+				Expect(acct.Type).To(Equal(wallet.AcctTypeKMD), "Returned account has correct type")
 			})
 
-			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
-				// TODO
+			XIt("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				By("Attempting to get account")
+				_, err := testWallet.GetAccount(acctAddr)
+				Expect(err).To(MatchError("account does not exist in this wallet"), "Account retrieval failed")
 			})
 		})
 
-		PDescribe("DeleteAccount()", Ordered, func() {
+		Describe("DeleteAccount()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_delete_acct"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1622,31 +1689,59 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("does not fail if there are no accounts", func() {
-				// TODO
+			XIt("does not fail if there are no accounts", func() {
+				By("Attempting to delete an account")
+				err := testWallet.DeleteAccount(acctAddr, []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("removes the account for the given address", func() {
-				// TODO
+			XIt("removes the account for the given address", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to delete an account")
+				err = testWallet.DeleteAccount(acctAddr, []byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("fails if given the wrong password", func() {
-				// TODO
+			XIt("fails if given the wrong password", func() {
+				By("Attempting to delete an account")
+				err := testWallet.DeleteAccount(acctAddr, []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Account deletion failed")
 			})
 
-			It("does not fail if account to be removed is not in wallet", func() {
-				// TODO
+			XIt("does not fail if account to be removed is not in wallet", func() {
+				By("Attempting to delete an account")
+				err := testWallet.DeleteAccount(acctAddr, []byte("password"))
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 
-		PDescribe("UpdateAccountName()", Ordered, func() {
+		Describe("UpdateAccountName()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_update_acct_name"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1662,31 +1757,61 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("fails if there are no accounts stored in the wallet", func() {
-				// TODO
+			XIt("fails if there are no accounts stored in the wallet", func() {
+				By("Attempting to update account")
+				_, err := testWallet.UpdateAccountName(acctAddr, "Updated Account", []byte(walletPassword))
+				Expect(err).To(MatchError("account does not exist in this wallet"), "Failed to update account name")
 			})
 
-			It("updates the account name and returns the account with the new name", func() {
-				// TODO
+			XIt("updates the account name and returns the account with the new name", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acctAddr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to update account name")
+				acct, _ := testWallet.UpdateAccountName(acctAddr, "Updated Account", []byte(walletPassword))
+				Expect(acct.Name).To(Equal("Updated Account"), "Returned account has correct name")
+				Expect(acct.Address).To(
+					Equal(algoTypes.Digest(decodedAddr)), "Returned account has correct address")
 			})
 
-			It("fails if given the wrong password", func() {
-				// TODO
+			XIt("fails if given the wrong password", func() {
+				By("Attempting to update account name")
+				_, err := testWallet.UpdateAccountName(acctAddr, "Updated Account", []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Failed to update account name")
 			})
 
-			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
-				// TODO
+			XIt("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				By("Attempting to update account name")
+				_, err := testWallet.UpdateAccountName(acctAddr, "Updated Account", []byte("not the password"))
+				Expect(err).To(HaveOccurred(), "Failed to update account name")
 			})
 		})
 
-		PDescribe("UpdateAccountRekeyedTo()", Ordered, func() {
+		Describe("UpdateAccountRekeyedTo()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_update_acct_rekey"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acctAddr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acctMnemonic = "minor print what witness play daughter matter light sign tip blossom anger artwork profit cart garment buzz resemble warm hole speed super bamboo abandon bonus"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1702,119 +1827,77 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
-			})
 
-			It("fails if there are no accounts stored in the wallet", func() {
-				// TODO
-			})
-
-			It("updates the account rekeyed-to address and returns the account with the new rekeyed-to address", func() {
-				// TODO
-			})
-
-			It("fails if given the wrong password", func() {
-				// TODO
-			})
-
-			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
-				// TODO
-			})
-		})
-
-		PDescribe("MoveAccountAbove()", Ordered, func() {
-			const walletDirName = ".test_ddb_wallet_move_acct_above"
-			var duckDbDriver driver.DuckDbWalletDriver
-
-			const walletId = "000"
-			const walletPassword = "password"
-
-			BeforeAll(func() {
-				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
-				DeferCleanup(func() {
-					createKmdServiceCleanup(walletDirName)
-				})
-
-				By("Creating a wallet")
-				err := duckDbDriver.CreateWallet(
-					[]byte("Foo"),
-					[]byte(walletId),
-					[]byte(walletPassword),
-					algoTypes.MasterDerivationKey{},
-				)
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("fails if there are no accounts stored in the wallet", func() {
-				// TODO
+			XIt("fails if there are no accounts stored in the wallet", func() {
+				By("Attempting to update account")
+				_, err := testWallet.UpdateAccountRekeyedTo(acctAddr, "Updated Account", []byte(walletPassword))
+				Expect(err).To(MatchError("account does not exist in this wallet"), "Failed to update account name")
 			})
 
-			It("moves the given account above the given reference account", func() {
-				// TODO
-			})
-
-			It("moves account to the beginning if no reference address is given", func() {
-				// TODO
-			})
-
-			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
-				// TODO
-			})
-
-			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
-				// TODO
-			})
-		})
-
-		PDescribe("MoveAccountBelow()", Ordered, func() {
-			const walletDirName = ".test_ddb_wallet_move_acct_below"
-			var duckDbDriver driver.DuckDbWalletDriver
-
-			const walletId = "000"
-			const walletPassword = "password"
-
-			BeforeAll(func() {
-				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
-				DeferCleanup(func() {
-					createKmdServiceCleanup(walletDirName)
-				})
-
-				By("Creating a wallet")
-				err := duckDbDriver.CreateWallet(
-					[]byte("Foo"),
-					[]byte(walletId),
-					[]byte(walletPassword),
-					algoTypes.MasterDerivationKey{},
-				)
+			XIt("updates the account rekeyed-to address and returns the account with the new rekeyed-to address", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acctAddr)
 				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Attempting to update account rekeyed-to address")
+				acct, _ := testWallet.UpdateAccountRekeyedTo(
+					acctAddr,
+					"3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY",
+					[]byte(walletPassword),
+				)
+				Expect(acct.Name).To(Equal("Test Account"), "Returned account has correct name")
+				Expect(acct.Address).To(
+					Equal(algoTypes.Digest(decodedAddr)), "Returned account has correct address")
+
+				addr, err := algoTypes.DigestFromString("3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY")
+				Expect(acct.RekeyedTo).To(Equal(addr), "Returned account has correct rekeyed-to address")
 			})
 
-			It("fails if there are no accounts stored in the wallet", func() {
-				// TODO
+			XIt("fails if given the wrong password", func() {
+				By("Attempting to update account name")
+				_, err := testWallet.UpdateAccountRekeyedTo(
+					acctAddr,
+					"3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY",
+					[]byte("not the password"),
+				)
+				Expect(err).To(HaveOccurred(), "Failed to update account rekeyed-to address")
 			})
 
-			It("moves the given account below the given reference account", func() {
-				// TODO
-			})
-
-			It("moves account to the end if no reference address is given", func() {
-				// TODO
-			})
-
-			It("fails if the account for the given address is not stored in the non-empty wallet", func() {
-				// TODO
-			})
-
-			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
-				// TODO
+			XIt("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				_, err := testWallet.UpdateAccountRekeyedTo(
+					"3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY",
+					"3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY",
+					[]byte("not the password"),
+				)
+				Expect(err).To(HaveOccurred(), "Failed to update account rekeyed-to address")
 			})
 		})
 
-		PDescribe("AddAccountAbove()", Ordered, func() {
+		Describe("AddAccountAbove()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_add_acct_above"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acct1Addr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acct2Addr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+			const acct3Addr = "H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"
+			const acct4Addr = "V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1830,27 +1913,107 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("adds the given account above the given reference account", func() {
-				// TODO
+			XIt("adds the given account if there are no accounts in the wallet", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountAbove(&wallet.Account{
+					Name:    "Test Account 1",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(1), "Wallet now contains 1 account")
 			})
 
-			It("adds account to the beginning if no reference address is given", func() {
-				// TODO
+			XIt("adds the given account above the given reference account", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountAbove(&wallet.Account{
+					Name:    "Test Account 2",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct1Addr)
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(2), "Wallet now contains 2 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 2"), "New account is first")
+				Expect(addrs[1].Name).To(Equal("Test Account 1"), "Reference account is second")
 			})
 
-			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
-				// TODO
+			XIt("fails if an account with the given reference address is not stored in the non-empty wallet", func() {
+				By("Attempting to add account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountAbove(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct4Addr)
+				Expect(err).To(MatchError("reference account does exist in wallet"), "Failed to add account")
+			})
+
+			XIt("adds account to the beginning if no reference address is given", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountAbove(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct1Addr)
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet now contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 3"), "New account is first")
+				Expect(addrs[1].Name).To(Equal("Test Account 2"))
+				Expect(addrs[2].Name).To(Equal("Test Account 1"))
+			})
+
+			XIt("fails if an account with the same address exists in the wallet", func() {
+				By("Attempting to add account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountAbove(&wallet.Account{
+					Name:    "Test Account 1 (again)",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).To(MatchError("account already exists in wallet"), "Failed to add account")
 			})
 		})
 
-		PDescribe("AddAccountBelow()", Ordered, func() {
+		Describe("AddAccountBelow()", Ordered, func() {
 			const walletDirName = ".test_ddb_wallet_add_acct_below"
 			var duckDbDriver driver.DuckDbWalletDriver
 
 			const walletId = "000"
 			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acct1Addr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acct2Addr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+			const acct3Addr = "H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"
+			const acct4Addr = "V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU"
 
 			BeforeAll(func() {
 				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
@@ -1866,22 +2029,316 @@ var _ = Describe("DuckDB Wallet Driver", func() {
 					algoTypes.MasterDerivationKey{},
 				)
 				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("adds the given account below the given reference account", func() {
-				// TODO
+			XIt("adds the given account if there are no accounts in the wallet", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 1",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(1), "Wallet now contains 1 account")
 			})
 
-			It("adds account to the end if no reference address is given (empty wallet)", func() {
-				// TODO
+			XIt("adds the given account below the given reference account", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 2",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct1Addr)
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(2), "Wallet now contains 2 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 1"), "Reference account is first")
+				Expect(addrs[1].Name).To(Equal("Test Account 2"), "New account is second")
 			})
 
-			It("adds account to the end if no reference address is given (non-empty wallet)", func() {
-				// TODO
+			XIt("fails if an account with the given reference address is not stored in the non-empty wallet", func() {
+				By("Attempting to add account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct4Addr)
+				Expect(err).To(MatchError("reference account does exist in wallet"), "Failed to add account")
 			})
 
-			It("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
-				// TODO
+			XIt("adds account to the end if no reference address is given", func() {
+				By("Adding account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, acct1Addr)
+				Expect(err).ToNot(HaveOccurred(), "Account added")
+
+				By("Checking if account has been added")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet now contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 1"))
+				Expect(addrs[1].Name).To(Equal("Test Account 2"))
+				Expect(addrs[2].Name).To(Equal("Test Account 3"), "New account is last")
+			})
+
+			XIt("fails if an account with the same address exists in the wallet", func() {
+				By("Attempting to add account")
+				decodedAddr, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 1 (again)",
+					Address: algoTypes.Digest(decodedAddr),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).To(MatchError("account already exists in wallet"), "Failed to add account")
+			})
+		})
+
+		Describe("MoveAccountAbove()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_move_acct_above"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acct1Addr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acct2Addr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+			const acct3Addr = "H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"
+			const acct4Addr = "V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			XIt("fails if there are no accounts stored in the wallet", func() {
+				By("Attempting to move account")
+				err := testWallet.MoveAccountAbove(acct1Addr, "")
+				Expect(err).To(MatchError("account does not exists in wallet"), "Failed to move account")
+			})
+
+			XIt("moves the given account above the given reference account", func() {
+				By("Adding Account #1")
+				decodedAddr1, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 1",
+					Address: algoTypes.Digest(decodedAddr1),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Adding Account #2")
+				decodedAddr2, err := algoTypes.DecodeAddress(acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 2",
+					Address: algoTypes.Digest(decodedAddr2),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Adding Account #3")
+				decodedAddr3, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr3),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Moving Account #3 above Account #2")
+				err = testWallet.MoveAccountAbove(acct3Addr, acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking order of accounts")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 1"))
+				Expect(addrs[1].Name).To(Equal("Test Account 3"), "Account was moved")
+				Expect(addrs[2].Name).To(Equal("Test Account 2"))
+			})
+
+			XIt("moves account to the beginning if no reference address is given", func() {
+				By("Moving Account #2 to the beginning")
+				err := testWallet.MoveAccountAbove(acct2Addr, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking order of accounts")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 2"), "Account was moved")
+				Expect(addrs[1].Name).To(Equal("Test Account 1"))
+				Expect(addrs[2].Name).To(Equal("Test Account 3"))
+			})
+
+			XIt("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				By("Attempt to move account")
+				err := testWallet.MoveAccountAbove(acct4Addr, "")
+				Expect(err).To(MatchError("account does not exists in wallet"), "Failed to move account")
+			})
+
+			XIt("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				By("Attempt to move account")
+				err := testWallet.MoveAccountAbove(acct1Addr, acct4Addr)
+				Expect(err).To(MatchError("reference account does not exists in wallet"), "Failed to move account")
+			})
+		})
+
+		Describe("MoveAccountBelow()", Ordered, func() {
+			const walletDirName = ".test_ddb_wallet_move_acct_below"
+			var duckDbDriver driver.DuckDbWalletDriver
+
+			const walletId = "000"
+			const walletPassword = "password"
+			var testWallet wallet.Wallet
+
+			const acct1Addr = "RMAZSNHVLAMY5AUWWTSDON4S2HIUV7AYY6MWWEMKYH63YLHAKLZNHQIL3A"
+			const acct2Addr = "3F3FPW6ZQQYD6JDC7FKKQHNGVVUIBIZOUI5WPSJEHBRABZDRN6LOTBMFEY"
+			const acct3Addr = "H3PFTYORQCTLIN7PEPDCYI4ALUHNE4CE5GJIPLZA3ZBKWG23TWND4IP47A"
+			const acct4Addr = "V3NC4VRDRP33OI2R5AQXEOOXFXXRYHWDKJOCGB64C7QRCF2IWNWHPFZ4QU"
+
+			BeforeAll(func() {
+				setupDuckDbWalletDriver(&duckDbDriver, walletDirName)
+				DeferCleanup(func() {
+					createKmdServiceCleanup(walletDirName)
+				})
+
+				By("Creating a wallet")
+				err := duckDbDriver.CreateWallet(
+					[]byte("Foo"),
+					[]byte(walletId),
+					[]byte(walletPassword),
+					algoTypes.MasterDerivationKey{},
+				)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Fetching the wallet and initializing it")
+				testWallet, err = duckDbDriver.FetchWallet([]byte(walletId))
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.Init([]byte(walletPassword))
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			XIt("fails if there are no accounts stored in the wallet", func() {
+				By("Attempting to move account")
+				err := testWallet.MoveAccountBelow(acct1Addr, "")
+				Expect(err).To(MatchError("account does not exists in wallet"), "Failed to move account")
+			})
+
+			XIt("moves the given account below the given reference account", func() {
+				By("Adding Account #1")
+				decodedAddr1, err := algoTypes.DecodeAddress(acct1Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 1",
+					Address: algoTypes.Digest(decodedAddr1),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Adding Account #2")
+				decodedAddr2, err := algoTypes.DecodeAddress(acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 2",
+					Address: algoTypes.Digest(decodedAddr2),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Adding Account #3")
+				decodedAddr3, err := algoTypes.DecodeAddress(acct3Addr)
+				Expect(err).ToNot(HaveOccurred())
+				err = testWallet.AddAccountBelow(&wallet.Account{
+					Name:    "Test Account 3",
+					Address: algoTypes.Digest(decodedAddr3),
+					Type:    wallet.AcctTypeKMD,
+				}, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Moving Account #2 below Account #3")
+				err = testWallet.MoveAccountBelow(acct3Addr, acct2Addr)
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking order of accounts")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 1"))
+				Expect(addrs[1].Name).To(Equal("Test Account 3"))
+				Expect(addrs[2].Name).To(Equal("Test Account 2"), "Account was moved")
+			})
+
+			XIt("moves account to the beginning if no reference address is given", func() {
+				By("Moving Account #1 to the end")
+				err := testWallet.MoveAccountBelow(acct2Addr, "")
+				Expect(err).ToNot(HaveOccurred())
+
+				By("Checking order of accounts")
+				addrs, err := testWallet.ListAccounts()
+				Expect(err).ToNot(HaveOccurred())
+				Expect(addrs).To(HaveLen(3), "Wallet contains 3 accounts")
+				Expect(addrs[0].Name).To(Equal("Test Account 3"))
+				Expect(addrs[1].Name).To(Equal("Test Account 2"))
+				Expect(addrs[2].Name).To(Equal("Test Account 1"), "Account was moved")
+			})
+
+			XIt("fails if the account for the given address is not stored in the non-empty wallet", func() {
+				By("Attempt to move account")
+				err := testWallet.MoveAccountBelow(acct4Addr, "")
+				Expect(err).To(MatchError("account does not exists in wallet"), "Failed to move account")
+			})
+
+			XIt("fails if the account for the given reference address is not stored in the non-empty wallet", func() {
+				By("Attempt to move account")
+				err := testWallet.MoveAccountBelow(acct1Addr, acct4Addr)
+				Expect(err).To(MatchError("reference account does not exists in wallet"), "Failed to move account")
 			})
 		})
 	})
